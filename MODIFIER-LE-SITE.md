@@ -32,6 +32,3 @@ Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fich
 # Messages
 
 Onglet « Messages » de `/gestion` : envoi d'un mail à la main (aperçu avec les infos de la personne, modifiable avant l'envoi), modèles de texte (les 4 messages automatiques — confirmation, déplacement, rappel de la veille, annulation — et 4 modèles à la main ; modifiables par les comptes principaux, avec des champs `{{prenom}}`, `{{date}}`, `{{heure}}`, `{{salle}}`, `{{therapeute}}`…), et historique de tous les envois (les comptes principaux voient tout, les autres seulement les leurs). Textes par défaut : `netlify/lib/modeles.mjs`.
-
-## Étude d'efficacité (comptes principaux)
-Onglet « Efficacité » : indicateurs et graphiques calculés à partir des mesures saisies par les thérapeutes. Après chaque séance réalisée, la plateforme propose deux notes (0 à 10) : bien-être de la semaine écoulée (début de séance) et utilité de la séance (fin de séance). Elles se corrigent ensuite depuis la fiche patient (« modifier » / « + mesures »). En fin de suivi, la fiche patient permet de noter le changement perçu (1 à 7). Les mesures sont aussi dans les exports (séances, patients). Données descriptives, sans groupe de comparaison : à présenter comme telles.

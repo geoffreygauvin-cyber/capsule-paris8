@@ -37,13 +37,6 @@ function checkToken(t) {
 }
 const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000b-\u001f]+/g, " ").slice(0, n);
 
-const mesures = (b) => {
-  const o = {}; const n = (v) => (v === null || v === "" || v === undefined ? null : Number(v));
-  const be = n(b.bienEtre), sa = n(b.satisfaction);
-  if (be !== null && Number.isInteger(be) && be >= 0 && be <= 10) o.bienEtre = be;
-  if (sa !== null && Number.isInteger(sa) && sa >= 0 && sa <= 10) o.satisfaction = sa;
-  return o;
-};
 export default async (req) => {
   const ac = getStore("comptes");
   if (req.method === "GET") return J({ comptesPrincipaux: Object.keys(comptes()).length, secret: !!process.env.SESSION_SECRET });
@@ -165,29 +158,12 @@ export default async (req) => {
       if (!r.rdvDate || r.statut !== "rdv_fixe") return J({ error: "Pas de rendez-vous en cours." }, 400);
       if (!["realisee", "absence"].includes(b.issue)) return J({ error: "Issue invalide." }, 400);
       if (parisToUTC(r.rdvDate, r.rdvHeure) > Date.now()) return J({ error: "Ce rendez-vous n'a pas encore eu lieu." }, 400);
-      const sc = { date: r.rdvDate, heure: r.rdvHeure, salle: r.salle, therapeute: r.therapeute, issue: b.issue, par: user, le: new Date().toISOString() };
-      if (b.issue === "realisee") Object.assign(sc, mesures(b)); r.seances.push(sc);
+      r.seances.push({ date: r.rdvDate, heure: r.rdvHeure, salle: r.salle, therapeute: r.therapeute, issue: b.issue, par: user, le: new Date().toISOString() });
       r.seq = (r.seq || 0) + 1;
       Object.assign(r, { rdvDate: "", rdvHeure: "", salle: "", invitEnvoyee: false, rappelEnvoye: false, statut: b.issue === "realisee" ? "en_cours" : "a_recontacter" });
     } else {
       const i = Number(b.index); if (!Number.isInteger(i) || !r.seances[i]) return J({ error: "Séance introuvable." }, 404);
       r.seances.splice(i, 1);
-    }
-    r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r });
-  }
-
-  if (b.action === "seance_mesure" || b.action === "changement") {
-    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
-    const r = cur.rec; r.seances = r.seances || [];
-    if (b.action === "seance_mesure") {
-      const i = Number(b.index); const sc = r.seances[i];
-      if (!Number.isInteger(i) || !sc || sc.issue !== "realisee") return J({ error: "Séance introuvable." }, 404);
-      delete sc.bienEtre; delete sc.satisfaction; Object.assign(sc, mesures(b)); sc.mesurePar = user;
-    } else {
-      if (!r.seances.some((x) => x.issue === "realisee")) return J({ error: "Aucune séance réalisée." }, 400);
-      const v = b.valeur === null || b.valeur === "" || b.valeur === undefined ? null : Number(b.valeur);
-      if (v === null) delete r.changement; else if (Number.isInteger(v) && v >= 1 && v <= 7) r.changement = { v, le: new Date().toISOString(), par: user }; else return J({ error: "Valeur invalide." }, 400);
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
     return J({ ok: true, item: r });
