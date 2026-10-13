@@ -9,6 +9,9 @@ export const config = { path: "/api/gestion" };
 
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 const h = (x) => createHash("sha256").update(String(x)).digest();
+const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"];
+const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
+const MAX_FICHIER = 4 * 1024 * 1024;
 const STATUTS = ["nouvelle", "a_recontacter", "contactee", "rdv_fixe", "en_cours", "terminee", "sans_suite"];
 
 // GESTION_COMPTES = "violette:code1,equipe:code2"
@@ -87,9 +90,11 @@ export default async (req) => {
     const items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean);
     items.sort((a, z) => z.creeLe.localeCompare(a.creeLe));
     const { blobs: cb } = await ac.list();
+    const rs = getStore("ressources"); const { blobs: rb } = await rs.list({ prefix: "m/" });
+    const ressources = (await Promise.all(rb.map((x) => rs.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => z.le.localeCompare(a.le));
     const ps = getStore("profils"); const { blobs: pb } = await ps.list();
     const photos = Object.fromEntries((await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" }))?.photo || ""]))).filter((x) => x[1]));
-    return J({ ok: true, items, compte: user, admin, photos, equipe: [...Object.keys(comptes()), ...cb.map((x) => x.key)], cfg: { seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, compte: user, admin, photos, ressources, equipe: [...Object.keys(comptes()), ...cb.map((x) => x.key)], cfg: { categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -161,6 +166,37 @@ export default async (req) => {
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
     return J({ ok: true, item: r });
+  }
+
+  if (b.action === "res_get") {
+    const rs = getStore("ressources"), m = await rs.get("m/" + String(b.id), { type: "json" });
+    if (!m || m.type !== "fichier") return J({ error: "Fichier introuvable." }, 404);
+    const buf = await rs.get("f/" + m.id, { type: "arrayBuffer" }); if (!buf) return J({ error: "Fichier introuvable." }, 404);
+    return J({ ok: true, nom: m.nom, mime: m.mime, data: Buffer.from(buf).toString("base64") });
+  }
+  if (["res_add", "res_upd", "res_del"].includes(b.action)) {
+    if (!admin) return J({ error: "Réservé aux comptes principaux." }, 403);
+    const rs = getStore("ressources");
+    if (b.action === "res_del") { const id = String(b.id); await rs.delete("m/" + id); await rs.delete("f/" + id); return J({ ok: true }); }
+    const titre = clean(b.titre, 120).trim(), description = clean(b.description, 500).trim(), categorie = CATS.includes(b.categorie) ? b.categorie : CATS[0];
+    if (!titre) return J({ error: "Donnez un titre." }, 400);
+    if (b.action === "res_upd") {
+      const m = await rs.get("m/" + String(b.id), { type: "json" }); if (!m) return J({ error: "Introuvable." }, 404);
+      Object.assign(m, { titre, description, categorie }); await rs.setJSON("m/" + m.id, m); return J({ ok: true, item: m });
+    }
+    const id = randomUUID(), now = new Date().toISOString(); let m;
+    if (b.lien) {
+      if (!/^https?:\/\/[^\s]+$/i.test(String(b.lien))) return J({ error: "Le lien doit commencer par http:// ou https://." }, 400);
+      m = { id, type: "lien", titre, description, categorie, url: String(b.lien).slice(0, 500), par: user, le: now };
+    } else {
+      const nom = clean(b.nom, 150).replace(/[\\/]/g, "_"), ext = nom.split(".").pop().toLowerCase();
+      if (!MIMES[ext]) return J({ error: "Format non accepté (PDF, Word, Excel, PowerPoint, image, texte)." }, 400);
+      if (typeof b.data !== "string" || !/^[A-Za-z0-9+/=]+$/.test(b.data)) return J({ error: "Fichier invalide." }, 400);
+      const buf = Buffer.from(b.data, "base64"); if (!buf.length || buf.length > MAX_FICHIER) return J({ error: "Fichier trop lourd (4 Mo maximum). Pour un fichier plus gros, ajoutez un lien." }, 413);
+      await rs.set("f/" + id, buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+      m = { id, type: "fichier", titre, description, categorie, nom, mime: MIMES[ext], taille: buf.length, par: user, le: now };
+    }
+    await rs.setJSON("m/" + id, m); return J({ ok: true, item: m });
   }
 
   if (b.action === "update") {

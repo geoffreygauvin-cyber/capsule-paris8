@@ -24,3 +24,7 @@ Mails : variables Netlify `MAIL_USER` (capsule-contact@gmail.com) et `MAIL_PASS`
 # Patients, séances et profils
 
 Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisée » ou « Absent·e ») : c'est ce qui alimente le décompte des séances par patient et par thérapeute. Onglet « Patients » : base des personnes accompagnées (fiche, historique, export CSV). Photo de profil : clic sur son nom en bas du menu. Les données sont dans Netlify Blobs (stores « demandes », « comptes », « profils »).
+
+# Ressources
+
+Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Tous les comptes peuvent les télécharger. Stockage : Netlify Blobs, store « ressources ».
