@@ -9,3 +9,8 @@ Repères : `[[mot]]` met le mot en couleur, `**mot**` le met en gras.
 Limites : on modifie les textes existants (pas les images ni la structure).
 
 Technique : les textes enregistrés sont stockés dans Netlify Blobs (fonction `netlify/functions/contenu.mjs`) ; `contenu.json` est le contenu par défaut. Le mot de passe est la variable `EDIT_PASSWORD` dans Netlify.
+
+# Demandes de contact
+
+Le formulaire « Être recontacté·e » enregistre les demandes dans Netlify Blobs (`netlify/functions/demande.mjs`).
+La page privée est `/gestion` (comptes dans la variable Netlify `GESTION_COMPTES`, format `compte:code,compte2:code2`, secret de session dans `SESSION_SECRET`). Statuts, attribution, rendez-vous, notes, export CSV, suppression.

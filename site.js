@@ -25,7 +25,7 @@
   function render() {
     var email = (C.contact && C.contact.email) || '';
     var rdvUrl = (C.contact && C.contact.lienRendezVous) || '';
-    var rdvHref = rdvUrl ? safeUrl(rdvUrl) : (email ? 'mailto:' + esc(email) : '#rdv');
+    var rdvHref = rdvUrl ? safeUrl(rdvUrl) : '#demande';
     var rdvExt = rdvUrl ? ' target="_blank" rel="noopener"' : '';
     function rdvBtn(label, p) { return '<a class="btn" href="' + rdvHref + '"' + rdvExt + '>' + E(p, label) + '</a>'; }
     function head(titre, texte, p) {
@@ -54,6 +54,18 @@
       '<div class="book"><div class="bk">' + imgs.echange + '<div><h3>' + E('rendezVous.encartTitre', v.encartTitre) + '</h3><p>' + E('rendezVous.encartTexte', v.encartTexte) + '</p>' +
       (!rdvUrl && email ? '<p class="mail" style="display:block">' + E('rendezVous.encartMail', v.encartMail) + ' <a class="textlink" href="mailto:' + esc(email) + '">' + esc(email) + '</a></p>' : '') +
       '</div></div>' + rdvBtn(C.boutonRendezVous, 'boutonRendezVous') + '</div></section>';
+
+    h += '<section id="demande" style="padding-top:24px"><form class="dem" id="demform" novalidate>' +
+      '<div class="head"><div class="rule"><i></i><i></i><i></i></div><h2>Être recontacté·e</h2><p>Laissez-nous vos coordonnées : un·e étudiant·e de l’équipe vous écrit pour fixer un premier rendez-vous. C’est gratuit et sans engagement.</p></div>' +
+      '<div class="dg"><label>Prénom<input name="prenom" required maxlength="60" autocomplete="given-name"></label>' +
+      '<label>Adresse mail<input name="email" type="email" required maxlength="120" autocomplete="email"></label>' +
+      '<label>Téléphone <small>(facultatif)</small><input name="tel" type="tel" maxlength="25" autocomplete="tel"></label>' +
+      '<fieldset><legend>Jours qui vous conviennent</legend><label class="ck"><input type="checkbox" name="cr" value="Lundi"> Lundi</label><label class="ck"><input type="checkbox" name="cr" value="Mardi"> Mardi</label><label class="ck"><input type="checkbox" name="cr" value="Mercredi"> Mercredi</label></fieldset></div>' +
+      '<label>Un mot si vous le souhaitez <small>(facultatif, évitez les détails personnels : on en parlera ensemble)</small><textarea name="message" rows="3" maxlength="400"></textarea></label>' +
+      '<input class="hp" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+      '<label class="ck"><input type="checkbox" name="consentement" required> J’accepte que mes coordonnées soient conservées par l’équipe CAPSULE uniquement pour me recontacter, et supprimées ensuite.</label>' +
+      '<div class="actions"><button class="btn" type="submit">Envoyer ma demande</button><span id="demmsg" role="status"></span></div>' +
+      '<p class="fine">En cas d’urgence, ne passez pas par ce formulaire : voir les numéros en bas de page.</p></form></section>';
     h += '<section id="infos" style="padding-top:24px"><div class="info"><div class="ig">' + C.infosPratiques.map(function (t, i) {
       var p = 'infosPratiques.' + i;
       var isMail = String(t.valeur).indexOf('{email}') > -1;
@@ -179,6 +191,24 @@
     e.preventDefault();
     var t = (e.clipboardData || window.clipboardData).getData('text/plain');
     document.execCommand('insertText', false, t);
+  });
+
+
+  document.addEventListener('submit', function (e) {
+    if (e.target.id !== 'demform' || EDIT) { if (e.target.id === 'demform') e.preventDefault(); return; }
+    e.preventDefault();
+    var f = e.target, m = document.getElementById('demmsg'), btn = f.querySelector('button');
+    var cr = Array.prototype.map.call(f.querySelectorAll('input[name=cr]:checked'), function (x) { return x.value; });
+    if (!f.prenom.value.trim() || !f.email.value.trim()) { m.textContent = 'Prénom et adresse mail sont nécessaires.'; return; }
+    if (!f.consentement.checked) { m.textContent = 'Merci de cocher la case de consentement.'; return; }
+    btn.disabled = true; m.textContent = 'Envoi…';
+    fetch('/api/demande', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prenom: f.prenom.value, email: f.email.value, tel: f.tel.value, message: f.message.value, creneaux: cr, consentement: true, site: f.site.value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok) { f.innerHTML = '<div class="head"><h2>Merci, c’est envoyé.</h2><p>Un·e étudiant·e de l’équipe vous écrira bientôt à l’adresse indiquée. Pensez à regarder vos courriers indésirables.</p></div>'; }
+        else { m.textContent = d.error || 'Une erreur est survenue.'; btn.disabled = false; }
+      })
+      .catch(function () { m.textContent = 'Connexion impossible. Écrivez-nous : ' + ((C.contact && C.contact.email) || ''); btn.disabled = false; });
   });
 
   /* ---------- chargement ---------- */
