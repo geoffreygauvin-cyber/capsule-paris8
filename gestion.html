@@ -145,6 +145,23 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .rc .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.04em;color:#fff;margin-bottom:4px}
 .rc h3{margin:0;font-size:16px}.rc p{margin:0;color:var(--muted);font-size:14px;flex:1}.rc small{color:var(--muted);font-size:12px}
 .rc .row{margin-top:10px;flex-wrap:nowrap;gap:8px}.rc .row .link{margin:0;white-space:nowrap}.rc .row .link:nth-of-type(1){margin-left:auto}
+
+/* charte : cartes pastel, trame de points, pastilles d'icône */
+.pastel{position:relative;overflow:hidden;isolation:isolate;border:0!important}
+.pastel::before{content:"";position:absolute;inset:0;z-index:-1;background-image:radial-gradient(var(--dot,rgba(174,22,78,.4)) 1.5px,transparent 1.8px);background-size:9px 9px;-webkit-mask-image:linear-gradient(225deg,#000 0%,transparent 62%);mask-image:linear-gradient(225deg,#000 0%,transparent 62%)}
+.t1{background:var(--rose);--dot:rgba(174,22,78,.42)}.t2{background:var(--lilac);--dot:rgba(123,32,107,.42)}.t3{background:var(--blush);--dot:rgba(227,15,27,.36)}
+.bd{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.88);display:grid;place-items:center;margin-bottom:12px;flex:none}
+.bd svg{width:22px;height:22px;stroke:var(--rasp);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.t2 .bd svg{stroke:var(--purple)}.t3 .bd svg{stroke:var(--poppy)}
+.stat{padding:18px 20px}.stat b{font-size:32px}.stat.t2 b{color:var(--purple)}.stat.t3 b{color:var(--poppy)}
+.tag{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--rasp);margin:8px 0 0}
+.kpi.pastel{padding:14px 16px}.kpi:nth-child(3n+1){background:var(--rose);--dot:rgba(174,22,78,.42)}.kpi:nth-child(3n+2){background:var(--lilac);--dot:rgba(123,32,107,.42)}.kpi:nth-child(3n){background:var(--blush);--dot:rgba(227,15,27,.36)}
+.kpi:nth-child(3n+2) b{color:var(--purple)}.kpi:nth-child(3n) b{color:var(--poppy)}
+.rc:nth-child(3n+1){background:var(--rose);--dot:rgba(174,22,78,.42)}.rc:nth-child(3n+2){background:var(--lilac);--dot:rgba(123,32,107,.42)}.rc:nth-child(3n){background:var(--blush);--dot:rgba(227,15,27,.36)}
+.rc p,.rc small{color:#5E4B55}
+.lbox{position:relative;overflow:hidden;isolation:isolate}.lbox::before{content:"";position:absolute;inset:0;z-index:-1;background-image:radial-gradient(rgba(174,22,78,.35) 1.5px,transparent 1.8px);background-size:9px 9px;-webkit-mask-image:linear-gradient(225deg,#000 0%,transparent 45%);mask-image:linear-gradient(225deg,#000 0%,transparent 45%)}
+.rdvbox{position:relative;overflow:hidden;isolation:isolate}
+.mkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}.mkpis .kpi{padding:18px}.mkpis .kpi b{font-size:34px}
 </style></head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
 <h1>Espace équipe</h1><p>Demandes de rendez-vous et planning des consultations.</p>
@@ -163,32 +180,32 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <div class="uni">Université Paris 8<br>UFR de psychologie</div><button class="me" id="meb" title="Mon profil"><span id="av"></span><span class="tx"><span id="whoname"></span><small id="whoc"></small></span></button></aside>
 <main>
 <div class="mobtop"><button id="whom" style="font-weight:600;color:var(--ink);text-decoration:none"></button><button id="logout2">Se déconnecter</button></div>
-<section id="v1"><div class="rule"><i></i><i></i><i></i></div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p>
+<section id="v1"><div class="tag">Recontacter</div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p>
 <div class="stats" id="stats"></div>
 <div class="filters" id="tabs"></div>
 <div class="tools"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher"></div>
 <div id="list"></div>
 <p class="note" style="margin-top:18px">Données sensibles : dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
 
-<section id="v2" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p>
+<section id="v2" class="hide"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p>
 <div class="wk"><button class="ib" id="wp" aria-label="Semaine précédente">‹</button><div class="t" id="wt"></div><button class="ib" id="wn" aria-label="Semaine suivante">›</button><button class="btn l s" id="wt0">Aujourd’hui</button></div>
 <div class="opts"><label><input type="checkbox" id="mine"> Mes rendez-vous seulement</label><div class="legend" id="leg"></div></div>
 <div class="dtabs" id="dtabs"></div><div class="days d0" id="cal"></div>
 <div id="feed" class="note feed hide"></div></section>
 
-<section id="v4" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p>
+<section id="v4" class="hide"><div class="tag">Suivi</div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p>
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button></div>
 <div class="tbl" id="ptbl"></div></section>
-<section id="v5" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Activité</h1><p class="sub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p>
-<div class="filters" id="atabs"></div>
+<section id="v5" class="hide"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p>
+<div class="filters" id="atabs"></div><div id="amy" class="hide"></div>
 <div class="tbl" id="atbl"></div>
 </section>
-<section id="v6" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Ressources</h1><p class="sub">Les documents et liens utiles pour les étudiant·es de l’équipe.</p>
+<section id="v6" class="hide"><div class="tag">Documents</div><h1>Ressources</h1><p class="sub">Les documents et liens utiles pour les étudiant·es de l’équipe.</p>
 <div class="filters" id="rtabs"></div>
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
-<section id="v3" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
+<section id="v3" class="hide"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
 <div class="row"><button class="btn" id="tadd">Créer le compte</button></div><div id="tmsg"></div></div></section>
@@ -250,7 +267,9 @@ function stats(){
  var lim=iso(new Date(Date.now()+7*864e5)),today=iso(new Date());
  var r=items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate>=today&&i.rdvDate<=lim}).length;
  var a=items.filter(function(i){return i.statut==='a_recontacter'}).length,cf=items.filter(aConfirmer).length;
- $('stats').innerHTML='<button class="stat" data-s="nouvelle"><b>'+n+'</b><span>à traiter</span></button><button class="stat k2" data-s="rdv_fixe"><b>'+r+'</b><span>rendez-vous cette semaine</span></button><button class="stat k3" data-s="a_recontacter"><b>'+a+'</b><span>à recontacter</span></button>'+(cf?'<button class="stat k3" data-s="rdv_fixe"><b>'+cf+'</b><span>séance'+(cf>1?'s':'')+' à confirmer</span></button>':'');
+ var IC={inbox:'<path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',tel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
+ function tile(cls,ic,k,num,lab){return '<button class="stat pastel '+cls+'" data-s="'+k+'"><span class="bd"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg></span><b>'+num+'</b><span>'+lab+'</span></button>'}
+ $('stats').innerHTML=tile('t1','inbox','nouvelle',n,'à traiter')+tile('t2','cal','rdv_fixe',r,'rendez-vous cette semaine')+tile('t3','tel','a_recontacter',a,'à recontacter')+(cf?tile('t1','ok','rdv_fixe',cf,'séance'+(cf>1?'s':'')+' à confirmer'):'');
  var nb=$('nbn');nb.textContent=n;nb.classList.toggle('hide',!n)}
 function rdvBox(i){
  if(i.statut==='rdv_fixe'&&i.rdvDate)return '<div class="rdvbox"><div><div class="big">📅 '+esc(cap(fday(i.rdvDate)))+', '+fh(i.rdvHeure)+'</div><small>'+esc(i.salle)+' · avec '+esc(cap(i.therapeute))+' · '+(i.invitEnvoyee?'invitation envoyée':'invitation non envoyée')+'</small></div><button class="btn l s" data-a="det" style="margin-left:auto">Gérer</button>'+(aConfirmer(i)?'<div class="row" style="width:100%;margin:2px 0 0"><b>Cette séance a eu lieu ?</b><button class="btn s" data-a="ok">Séance réalisée</button><button class="btn l s" data-a="abs">Absent·e</button></div>':'')+'</div>';
@@ -372,7 +391,7 @@ $('ptbl').onclick=function(e){var b=e.target.closest('button[data-id]');if(b)fic
 function fiche(id){var i=byId(id);if(!i)return;var n=nS(i),a=nS(i,'absence'),pc=Math.min(100,Math.round(n/cfg.seancesMax*100)),mk=Math.round(6/cfg.seancesMax*100);
  var hist=(i.seances||[]).map(function(s,k){return {s:s,k:k}}).reverse();
  openM('<div class="prof">'+av(i.prenom,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(i.prenom)+'</h3><span class="pill s-'+i.statut+'">'+esc(SL[i.statut])+'</span><p class="sub" style="margin:6px 0 0">'+(i.source==='manuel'?'Ajouté à la main':'Demande reçue '+ago(i.creeLe))+'</p></div></div>'+
- '<div class="kpis"><div class="kpi"><b>'+n+'</b><span>séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+'</span></div><div class="kpi"><b>'+a+'</b><span>absence'+(a>1?'s':'')+'</span></div><div class="kpi"><b style="font-size:16px;line-height:1.5">'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+'<br>'+fh(i.rdvHeure):'—')+'</b><span>prochain rendez-vous</span></div></div>'+
+ '<div class="kpis"><div class="kpi pastel"><b>'+n+'</b><span>séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+a+'</b><span>absence'+(a>1?'s':'')+'</span></div><div class="kpi pastel"><b style="font-size:16px;line-height:1.5">'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+'<br>'+fh(i.rdvHeure):'—')+'</b><span>prochain rendez-vous</span></div></div>'+
  '<div class="prog"><i style="width:'+pc+'%"></i><u style="left:'+mk+'%"></u></div><p class="sub" style="font-size:12.5px">Suivi habituel : 6 à 8 séances (repère à 6).</p>'+
  (i.statut==='rdv_fixe'&&i.rdvDate?rdvBox(i).replace(/data-a=/g,'data-m=').replace(/data-m="det"/,'data-m="det2" data-id="'+esc(id)+'"').replace(/data-m="ok"/,'data-m="ok" data-id="'+esc(id)+'"').replace(/data-m="abs"/,'data-m="abs" data-id="'+esc(id)+'"'):'<div class="cta"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier une séance</button></div>')+
  '<div class="g2"><label class="f">Prénom<input id="fp" value="'+esc(i.prenom)+'" maxlength="60"></label><label class="f">Mail<input id="fm" value="'+esc(i.email)+'"></label><label class="f">Téléphone<input id="ft" value="'+esc(i.tel||'')+'"></label>'+
@@ -388,7 +407,7 @@ function csv(rows,name){var t=rows.map(function(r){return r.map(function(v){v=St
 /* ---- profil ---- */
 function profil(){var ms=mesStats(moi);
  openM('<div class="prof">'+av(moi,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(cap(moi))+'</h3><p class="sub" style="margin:0 0 10px">'+(isAdmin?'Compte principal':'Thérapeute')+'</p><button class="btn l s" data-m="photo">'+(photos[moi]?'Changer la photo':'Ajouter une photo')+'</button> '+(photos[moi]?'<button class="link" data-m="nophoto" style="margin-left:6px">retirer</button>':'')+'<input type="file" id="pf" accept="image/*" class="hide"></div></div>'+
- '<div class="kpis"><div class="kpi"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
+ '<div class="kpis"><div class="kpi pastel"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi pastel"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi pastel"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
  '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
  $('pf').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);savePhoto(c.toDataURL('image/jpeg',.82))};im.onerror=function(){toast('Image illisible.')};im.src=rd.result};rd.readAsDataURL(f)}}
 function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
@@ -397,7 +416,20 @@ $('meb').onclick=profil;$('whom').onclick=profil;
 
 /* ---- activité par étudiant·e ---- */
 var ap='tout';
+var MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function drawActMe(){
+ var ms=mesStats(moi),par={};
+ items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==moi||s.issue!=='realisee')return;var k=s.date.slice(0,7);(par[k]=par[k]||{h:0,p:{}}).h++;par[k].p[i.id]=1})});
+ var ks=Object.keys(par).sort().reverse();
+ $('atabs').classList.add('hide');$('atbl').classList.add('hide');$('amy').classList.remove('hide');
+ $('asub').textContent='Vos heures de consultation et les personnes que vous accompagnez. Une séance réalisée = 1 h.';
+ var IC2={h:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',p:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/>',s:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
+ function k(c,ic,n,l){return '<div class="kpi pastel '+c+'"><span class="bd"><svg viewBox="0 0 24 24">'+IC2[ic]+'</svg></span><b>'+n+'</b><span>'+l+'</span></div>'}
+ $('amy').innerHTML='<div class="mkpis">'+k('t1','h',ms.total+' h','de consultation au total')+k('t2','h',ms.mois+' h','ce mois-ci')+k('t3','p',ms.patients,'personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':''))+k('t2','s',ms.avenir,'rendez-vous à venir')+'</div>'+
+  '<div class="tbl"><div class="pr ph act"><span>Mois</span><span class="c2">Heures</span><span class="c3">Patients</span><span></span></div>'+(ks.length?ks.map(function(m){var y=m.slice(0,4),mo=+m.slice(5);return '<div class="pr act"><span><b style="text-transform:capitalize">'+MOIS[mo-1]+' '+y+'</b></span><span class="c2"><b style="font-size:20px;color:var(--rasp)">'+par[m].h+'</b> h</span><span class="c3"><b>'+Object.keys(par[m].p).length+'</b> patient'+(Object.keys(par[m].p).length>1?'s':'')+'</span><span></span></div>'}).join(''):'<div class="empty" style="border:0"><b>Pas encore de séance</b>Vos heures apparaîtront ici dès que vous aurez confirmé votre première séance réalisée.</div>')+'</div>'}
 function drawAct(){
+ if(!isAdmin){drawActMe();return}
+ $('atabs').classList.remove('hide');$('atbl').classList.remove('hide');$('amy').classList.add('hide');
  var mois=iso(new Date()).slice(0,7),mm=ap==='mois'?mois:null;
  $('atabs').innerHTML='<button class="chip'+(ap==='tout'?' on':'')+'" data-a2="tout">Depuis le début</button><button class="chip'+(ap==='mois'?' on':'')+'" data-a2="mois">Ce mois-ci</button>';
  var rows=equipe.map(function(n){var x=stat(n,mm);x.nom=n;x.avenir=mesStats(n).avenir;return x}).sort(function(a,z){return z.heures-a.heures||a.nom.localeCompare(z.nom,'fr')});
@@ -422,7 +454,7 @@ function drawRes(){
  $('rtabs').innerHTML='<button class="chip'+(rc==='tous'?' on':'')+'" data-c="tous">Tout<i>'+ress.length+'</i></button>'+cats.map(function(c){var n=ress.filter(function(r){return r.categorie===c}).length;return n||isAdmin?'<button class="chip'+(rc===c?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'<i>'+n+'</i></button>':''}).join('');
  var l=ress.filter(function(r){return(rc==='tous'||r.categorie===rc)&&(!q||(r.titre+' '+r.description).toLowerCase().indexOf(q)>-1)});
  $('rlist').innerHTML=l.length?l.map(function(r){var e=ext(r);
-  return '<article class="rc" data-id="'+esc(r.id)+'"><span class="ico" style="background:'+(RCOL[e]||'#6B5861')+'">'+(e==='lien'?'LIEN':esc(e.toUpperCase().slice(0,4)))+'</span><h3>'+esc(r.titre)+'</h3>'+(r.description?'<p>'+esc(r.description)+'</p>':'<p></p>')+
+  return '<article class="rc pastel" data-id="'+esc(r.id)+'"><span class="ico" style="background:'+(RCOL[e]||'#6B5861')+'">'+(e==='lien'?'LIEN':esc(e.toUpperCase().slice(0,4)))+'</span><h3>'+esc(r.titre)+'</h3>'+(r.description?'<p>'+esc(r.description)+'</p>':'<p></p>')+
   '<small>'+esc(r.categorie)+(r.type==='fichier'?' · '+fsize(r.taille):'')+' · ajouté par '+esc(cap(r.par))+' le '+esc(fday(r.le.slice(0,10)))+'</small>'+
   '<div class="row">'+(r.type==='lien'?'<a class="btn s" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Ouvrir le lien</a>':'<button class="btn s" data-r="dl">Télécharger</button>')+(isAdmin?'<button class="link" data-r="edit">modifier</button><button class="link" data-r="del">supprimer</button>':'')+'</div></article>'}).join(''):'<div class="empty" style="grid-column:1/-1"><b>'+(ress.length?'Aucun résultat':'Aucune ressource pour le moment')+'</b>'+(ress.length?'Essayez un autre mot.':isAdmin?'Ajoutez un premier document avec le bouton ci-dessus.':'Les documents ajoutés par les responsables apparaîtront ici.')+'</div>'}
 $('rtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){rc=b.dataset.c;drawRes()}};
