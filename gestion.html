@@ -136,6 +136,9 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
  #toast{bottom:90px}
 }
 .mobtop{display:none;justify-content:space-between;align-items:center;margin-bottom:14px}.mobtop button{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
+
+.pr.act{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.6fr)}.pr.act.selfrow{background:var(--rose)}.pr.act.tot{background:#F7F0EA;font-weight:500}
+@media (max-width:860px){.pr.act{grid-template-columns:1fr auto auto;gap:10px}.pr.act .c2,.pr.act .c3{display:block}.pr.act>span:last-child{display:none}}
 </style></head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
 <h1>Espace équipe</h1><p>Demandes de rendez-vous et planning des consultations.</p>
@@ -148,6 +151,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <button class="nv on" data-v="1"><svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></svg>Demandes<b id="nbn" class="hide"></b></button>
 <button class="nv" data-v="2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendrier</button>
 <button class="nv" data-v="4"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/></svg>Patients</button>
+<button class="nv" data-v="5"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Activité</button>
 <button class="nv hide" data-v="3" id="nvt"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2 .6 3.3 2.5 3.5 6"/></svg>Équipe</button>
 <div class="uni">Université Paris 8<br>UFR de psychologie</div><button class="me" id="meb" title="Mon profil"><span id="av"></span><span class="tx"><span id="whoname"></span><small id="whoc"></small></span></button></aside>
 <main>
@@ -169,6 +173,10 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button><button class="btn l s" id="pcsv">Exporter</button></div>
 <div class="tbl" id="ptbl"></div></section>
+<section id="v5" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Activité</h1><p class="sub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p>
+<div class="filters" id="atabs"></div>
+<div class="tbl" id="atbl"></div>
+<div class="row"><button class="btn l s" id="acsv">Exporter le tableau</button></div></section>
 <section id="v3" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
@@ -208,6 +216,8 @@ function logo(h,c){return '<svg role="img" aria-label="Logo CAPSULE" viewBox="20
 Array.prototype.forEach.call(document.querySelectorAll('[data-logo]'),function(el){var m=el.getAttribute('data-mono');el.innerHTML=logo(el.getAttribute('data-logo'),m?{top:m,side:m,bot:m,s:m,d1:m,d2:m}:COL)});
 /* décomptes */
 function nS(i,issue){return(i.seances||[]).filter(function(s){return s.issue===(issue||'realisee')}).length}
+function stat(name,mois){var t=0,a=0,pat={};items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name||(mois&&s.date.slice(0,7)!==mois))return;if(s.issue==='realisee'){t++;pat[i.id]=1}else a++})});return{seances:t,heures:t,abs:a,patients:Object.keys(pat).length}}
+function fhh(n){return n+' h'}
 function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),avenir=0;
  items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});if(i.statut==='rdv_fixe'&&i.therapeute===name&&i.rdvDate&&!past(i.rdvDate,i.rdvHeure))avenir++});
  return{total:t,mois:m,abs:a,patients:Object.keys(pat).length,avenir:avenir}}
@@ -220,7 +230,7 @@ function load(cb){api({action:'list'}).then(function(d){
  items=d.items;photos=d.photos||{};equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
  $('nvt').classList.toggle('hide',!isAdmin);
  $('login').classList.add('hide');$('app').classList.remove('hide');
- $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi);$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=ms.total+' séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'');
+ $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi);$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'');
  if(!week)week=monday(iso(new Date()));
  draw();drawCal();if(cb)cb()})}
 /* ---- demandes ---- */
@@ -246,7 +256,7 @@ function card(i){
  '<label class="f w">Notes organisationnelles<textarea rows="2" maxlength="1000" data-f="notes">'+esc(i.notes)+'</textarea></label></div>'+
  '<div class="row"><button class="btn l s" data-a="save">Enregistrer</button><span class="ok"></span><button class="link" data-a="del">Supprimer définitivement</button></div></div></article>'}
 function draw(){
- stats();drawPat();
+ stats();drawPat();drawAct();
  var q=$('q').value.toLowerCase();
  $('tabs').innerHTML=ST.map(function(s){var n=items.filter(function(i){return i.statut===s[0]}).length;return '<button class="chip'+(filtre===s[0]?' on':'')+'" data-s="'+s[0]+'">'+s[1]+'<i>'+n+'</i></button>'}).join('')+'<button class="chip'+(filtre==='tous'?' on':'')+'" data-s="tous">Toutes<i>'+items.length+'</i></button>';
  var l=items.filter(function(i){return(filtre==='tous'||i.statut===filtre)&&(!q||(i.prenom+' '+i.email+' '+i.tel).toLowerCase().indexOf(q)>-1)});
@@ -298,6 +308,7 @@ $('ov').onclick=function(e){
  else if(m==='det2'){detail(id)}
  else if(m==='photo')$('pf').click();
  else if(m==='nophoto')savePhoto('');
+ else if(m==='releve')releve();
  else if(m==='logout'){closeM();logout()}
  else if(m==='rm'){if(confirm('Retirer cette séance du décompte ?'))api({action:'seance_supprimer',id:id,index:+b.dataset.k}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});draw();drawCal();refreshMe();fiche(id)}else toast(r.error)})}
  else if(m==='fdel'){if(confirm('Supprimer définitivement cette fiche et son historique ?'))api({action:'delete',id:id}).then(function(r){if(r.ok){items=items.filter(function(x){return x.id!==id});closeM();draw();drawCal();toast('Fiche supprimée.')}else toast(r.error)})}
@@ -319,7 +330,7 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function nav(n){[1,2,3,4].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat()}
+function nav(n){[1,2,3,4,5].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -328,7 +339,7 @@ function issue(id,iss){api({action:'seance_issue',id:id,issue:iss}).then(functio
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
  if(iss==='realisee'){var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
  else toast('Absence enregistrée. La personne repasse « à recontacter ».')})}
-function refreshMe(){var ms=mesStats(moi);$('whoc').textContent=ms.total+' séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')}
+function refreshMe(){var ms=mesStats(moi);$('whoc').textContent=ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'')}
 /* ---- patients ---- */
 var pf='suivi';
 function base(){return items.filter(function(i){return i.statut!=='nouvelle'||nS(i)||nS(i,'absence')})}
@@ -367,11 +378,30 @@ function csv(rows,name){var t=rows.map(function(r){return r.map(function(v){v=St
 /* ---- profil ---- */
 function profil(){var ms=mesStats(moi);
  openM('<div class="prof">'+av(moi,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(cap(moi))+'</h3><p class="sub" style="margin:0 0 10px">'+(isAdmin?'Compte principal':'Thérapeute')+'</p><button class="btn l s" data-m="photo">'+(photos[moi]?'Changer la photo':'Ajouter une photo')+'</button> '+(photos[moi]?'<button class="link" data-m="nophoto" style="margin-left:6px">retirer</button>':'')+'<input type="file" id="pf" accept="image/*" class="hide"></div></div>'+
- '<div class="kpis"><div class="kpi"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.mois+'</b><span>ce mois-ci</span></div><div class="kpi"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
- '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
+ '<div class="kpis"><div class="kpi"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
+ '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
  $('pf').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);savePhoto(c.toDataURL('image/jpeg',.82))};im.onerror=function(){toast('Image illisible.')};im.src=rd.result};rd.readAsDataURL(f)}}
 function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
 $('meb').onclick=profil;$('whom').onclick=profil;
+
+
+/* ---- activité par étudiant·e ---- */
+var ap='tout';
+function drawAct(){
+ var mois=iso(new Date()).slice(0,7),mm=ap==='mois'?mois:null;
+ $('atabs').innerHTML='<button class="chip'+(ap==='tout'?' on':'')+'" data-a2="tout">Depuis le début</button><button class="chip'+(ap==='mois'?' on':'')+'" data-a2="mois">Ce mois-ci</button>';
+ var rows=equipe.map(function(n){var x=stat(n,mm);x.nom=n;x.avenir=mesStats(n).avenir;return x}).sort(function(a,z){return z.heures-a.heures||a.nom.localeCompare(z.nom,'fr')});
+ var T=rows.reduce(function(t,r){t.h+=r.heures;t.a+=r.abs;t.v+=r.avenir;return t},{h:0,a:0,v:0});
+ var pats=Object.keys(items.reduce(function(o,i){(i.seances||[]).forEach(function(s){if(s.issue==='realisee'&&(!mm||s.date.slice(0,7)===mm))o[i.id]=1});return o},{})).length;
+ $('atbl').innerHTML='<div class="pr ph act"><span>Étudiant·e</span><span class="c2">Heures</span><span class="c3">Patients</span><span>Absences · à venir</span></div>'+rows.map(function(r){
+  return '<div class="pr act'+(r.nom===moi?' selfrow':'')+'"><span class="n">'+av(r.nom)+'<span class="tx"><b>'+esc(cap(r.nom))+(r.nom===moi?' <small style="display:inline">(vous)</small>':'')+'</b></span></span><span class="c2"><b style="font-size:20px;color:var(--rasp)">'+r.heures+'</b> h</span><span class="c3"><b>'+r.patients+'</b> patient'+(r.patients>1?'s':'')+'</span><span>'+r.abs+' abs. · '+r.avenir+' RDV</span></div>'}).join('')+
+  '<div class="pr act tot"><span class="n"><b>Total équipe</b></span><span class="c2"><b>'+T.h+'</b> h</span><span class="c3"><b>'+pats+'</b> patient'+(pats>1?'s':'')+'</span><span>'+T.a+' abs. · '+T.v+' RDV</span></div>'}
+$('atabs').onclick=function(e){var b=e.target.closest('.chip');if(b){ap=b.dataset.a2;drawAct()}};
+$('acsv').onclick=function(){var mm=ap==='mois'?iso(new Date()).slice(0,7):null;csv([['Étudiant·e','Heures','Séances réalisées','Patients accompagnés','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n,mm);return[cap(n),x.heures,x.seances,x.patients,x.abs,mesStats(n).avenir]})),'activite-capsule'+(mm?'-'+mm:'')+'.csv')};
+function releve(){var rows=[['Date','Heure','Durée (h)','Lieu']];
+ items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute===moi&&s.issue==='realisee')rows.push([s.date,s.heure,1,s.salle])})});
+ rows=[rows[0]].concat(rows.slice(1).sort(function(a,b){return(a[0]+a[1]).localeCompare(b[0]+b[1])}));
+ rows.push(['Total','',rows.length-1,'']);csv(rows,'releve-heures-'+moi+'.csv')}
 
 /* ---- connexion ---- */
 $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var b=this.querySelector('button');b.disabled=true;
@@ -380,7 +410,7 @@ $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var 
   token=d.token;try{sessionStorage.setItem('cap_t',token)}catch(e){}$('p').value='';load()})};
 $('logout2').onclick=logout;$('refresh').onclick=function(){load(function(){toast('À jour.')})};$('q').oninput=draw;
 /* ---- équipe ---- */
-function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>compte principal · '+mesStats(n).total+' séance(s)</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' séance(s) · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
+function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>compte principal · '+mesStats(n).total+' h</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' h · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
 function loadTeam(){api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})}
 function shown(n,d){if(d.ok){team(d);$('tmsg').innerHTML='<span class="code">'+esc(n)+' · '+esc(d.code)+'</span><small style="color:var(--muted)">À noter et à transmettre maintenant : il ne sera plus affiché.</small>';$('tn').value='';$('tc').value='';load()}else $('tmsg').innerHTML='<div class="err" style="margin-top:10px">'+esc(d.error||'Erreur')+'</div>'}
 $('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value}).then(function(d){shown(n,d)})};
