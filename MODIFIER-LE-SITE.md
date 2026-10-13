@@ -20,3 +20,7 @@ La page privée est `/gestion`. Comptes principaux (administrateurs) : variable 
 Onglet « Calendrier » de `/gestion` : 3 salles (Salle 1 à 3), créneaux d'1 h de 9 h à 17 h, du lundi au mercredi (réglages dans `netlify/lib/rdv.mjs`).
 Planifier = invitation par mail (fichier .ics, s'ajoute à l'agenda) + rappel automatique la veille (`netlify/functions/rappels.mjs`, tous les jours vers 17-18 h).
 Mails : variables Netlify `MAIL_USER` (capsule-contact@gmail.com) et `MAIL_PASS` (mot de passe d'application Google). Flux d'agenda général : `/api/calendrier.ics?k=<CAL_TOKEN>`.
+
+# Patients, séances et profils
+
+Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisée » ou « Absent·e ») : c'est ce qui alimente le décompte des séances par patient et par thérapeute. Onglet « Patients » : base des personnes accompagnées (fiche, historique, export CSV). Photo de profil : clic sur son nom en bas du menu. Les données sont dans Netlify Blobs (stores « demandes », « comptes », « profils »).

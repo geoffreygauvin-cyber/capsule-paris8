@@ -66,7 +66,7 @@ export default async (req) => {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
       if (b.action === "compte_create" && await ac.get(n, { type: "json" })) return J({ error: "Ce compte existe déjà." }, 400);
       if (b.action !== "compte_create" && !(await ac.get(n, { type: "json" }))) return J({ error: "Compte introuvable." }, 404);
-      if (b.action === "compte_delete") { await ac.delete(n); }
+      if (b.action === "compte_delete") { await ac.delete(n); await getStore("profils").delete(n); }
       else {
         const code = String(b.code || "").trim() || genCode();
         if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
@@ -87,7 +87,9 @@ export default async (req) => {
     const items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean);
     items.sort((a, z) => z.creeLe.localeCompare(a.creeLe));
     const { blobs: cb } = await ac.list();
-    return J({ ok: true, items, compte: user, admin, equipe: [...Object.keys(comptes()), ...cb.map((x) => x.key)], cfg: { salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    const ps = getStore("profils"); const { blobs: pb } = await ps.list();
+    const photos = Object.fromEntries((await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" }))?.photo || ""]))).filter((x) => x[1]));
+    return J({ ok: true, items, compte: user, admin, photos, equipe: [...Object.keys(comptes()), ...cb.map((x) => x.key)], cfg: { seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -129,12 +131,47 @@ export default async (req) => {
     return J({ ok: true, item: r, mail });
   }
 
+  if (b.action === "profil_photo") {
+    const ps = getStore("profils"), ph = String(b.photo || "");
+    if (!ph) { await ps.delete(user); return J({ ok: true, photo: "" }); }
+    if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ph) || ph.length > 70000) return J({ error: "Image invalide ou trop lourde." }, 400);
+    await ps.setJSON(user, { photo: ph }); return J({ ok: true, photo: ph });
+  }
+  if (b.action === "creer") {
+    const prenom = clean(b.prenom, 60).trim(), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).trim();
+    if (!prenom) return J({ error: "Indiquez un prénom." }, 400);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse mail invalide." }, 400);
+    const id = randomUUID(), now = new Date().toISOString();
+    const rec = { id, creeLe: now, prenom, email, tel, creneaux: [], message: "", statut: "a_recontacter", assigne: "", notes: "", source: "manuel", seances: [], maj: now, majPar: user };
+    await store.setJSON("d/" + now + "_" + id, rec); return J({ ok: true, item: rec });
+  }
+  if (b.action === "seance_issue" || b.action === "seance_supprimer") {
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
+    const r = cur.rec; r.seances = r.seances || [];
+    if (b.action === "seance_issue") {
+      if (!r.rdvDate || r.statut !== "rdv_fixe") return J({ error: "Pas de rendez-vous en cours." }, 400);
+      if (!["realisee", "absence"].includes(b.issue)) return J({ error: "Issue invalide." }, 400);
+      if (parisToUTC(r.rdvDate, r.rdvHeure) > Date.now()) return J({ error: "Ce rendez-vous n'a pas encore eu lieu." }, 400);
+      r.seances.push({ date: r.rdvDate, heure: r.rdvHeure, salle: r.salle, therapeute: r.therapeute, issue: b.issue, par: user, le: new Date().toISOString() });
+      r.seq = (r.seq || 0) + 1;
+      Object.assign(r, { rdvDate: "", rdvHeure: "", salle: "", invitEnvoyee: false, rappelEnvoye: false, statut: b.issue === "realisee" ? "en_cours" : "a_recontacter" });
+    } else {
+      const i = Number(b.index); if (!Number.isInteger(i) || !r.seances[i]) return J({ error: "Séance introuvable." }, 404);
+      r.seances.splice(i, 1);
+    }
+    r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
+    return J({ ok: true, item: r });
+  }
+
   if (b.action === "update") {
     const k = await key(String(b.id)); if (!k) return J({ error: "Demande introuvable." }, 404);
     const r = await store.get(k, { type: "json" }); const p = b.patch || {};
     if ("statut" in p && STATUTS.includes(p.statut)) r.statut = p.statut;
     if ("assigne" in p) r.assigne = clean(p.assigne, 40);
     if ("notes" in p) r.notes = clean(p.notes, 1000);
+    if ("prenom" in p && clean(p.prenom, 60).trim()) r.prenom = clean(p.prenom, 60).trim();
+    if ("tel" in p) r.tel = clean(p.tel, 25).trim();
+    if ("email" in p && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(p.email, 120).trim())) r.email = clean(p.email, 120).trim().toLowerCase();
     r.maj = new Date().toISOString(); r.majPar = user;
     await store.setJSON(k, r);
     return J({ ok: true, item: r });
