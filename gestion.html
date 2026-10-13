@@ -245,7 +245,7 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 <div class="filters" id="rtabs"></div>
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
-<section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées.</p></header><div id="efbody"></div></section>
+<section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées. À terme, le questionnaire en ligne alimentera cet onglet ; en attendant, les notes se saisissent à la main après chaque séance.</p></header><div id="efbody"></div></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
 <section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
@@ -661,7 +661,7 @@ function drawEff(){
  var mes=real.filter(function(r){return r.s.bienEtre!=null||r.s.satisfaction!=null}).length;
  var kp=function(b,l,sm){return '<div class="kpi pastel"><b>'+b+'</b><span>'+l+'</span>'+(sm?'<small>'+sm+'</small>':'')+'</div>'};
  var h='<div class="ekp">'+kp(suivis.length,'personnes suivies','au moins 1 séance')+kp(real.length,'séances réalisées',pct(real.length,real.length+abs)+' % de présence')+kp(f1(med(perP)),'séances par personne','médiane')+kp(delais.length?f1(med(delais))+' j':'—','délai avant la 1ʳᵉ séance','médiane, demande → séance')+'</div>';
- if(!mes&&!chg.length){$('efbody').innerHTML=h+'<div class="empty"><b>Pas encore de mesures</b>Après chaque séance réalisée, la plateforme propose de noter le bien-être de la semaine et l’utilité de la séance (0 à 10). En fin de suivi, la fiche patient permet d’indiquer le changement perçu (1 à 7). Les graphiques apparaîtront ici dès les premières notes.</div>';return}
+ if(!mes&&!chg.length){$('efbody').innerHTML=h+'<div class="empty"><b>Pas encore de mesures</b>Après chaque séance réalisée, la plateforme propose de noter le bien-être de la semaine et l’utilité de la séance (0 à 10). En fin de suivi, la fiche patient permet d’indiquer le changement perçu (1 à 7). Les graphiques apparaîtront ici dès les premières notes. Un questionnaire en ligne pourra ensuite remplir ces indicateurs automatiquement.</div>';return}
  var ins='';
  if(withBE.length)ins+='Chez <b>'+withBE.length+'</b> personne'+(withBE.length>1?'s':'')+' avec au moins deux mesures, le bien-être passe de <b>'+f1(avg(first))+'</b> à <b>'+f1(avg(last))+'</b> sur 10 (<b>'+(md>=0?'+':'')+f1(md)+'</b>'+(dz!=null?', d de Cohen = '+f1(dz):'')+'). ';
  if(sats.length)ins+='Satisfaction moyenne : <b>'+f1(avg(sats))+'/10</b>, <b>'+pct(sats.filter(function(v){return v>=8}).length,sats.length)+' %</b> des séances notées 8 ou plus. ';
