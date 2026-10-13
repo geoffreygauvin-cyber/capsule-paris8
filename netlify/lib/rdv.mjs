@@ -51,21 +51,6 @@ export function icsFeed(rdvs) {
     .replace("CALSCALE:GREGORIAN", "CALSCALE:GREGORIAN\r\nX-WR-CALNAME:CAPSULE – rendez-vous");
 }
 
-const quand = (r) => `${jourLong(r.rdvDate)} à ${heureFr(r.rdvHeure)}`;
-const pied = "\n\nSi vous avez un empêchement, répondez simplement à ce mail.\nL'équipe CAPSULE, Université Paris 8";
-export function texteInvitation(r, modif) {
-  return {
-    subject: `${modif ? "Rendez-vous modifié" : "Votre rendez-vous"} CAPSULE, ${quand(r)}`,
-    text: `Bonjour ${r.prenom},\n\n${modif ? "Votre rendez-vous a été déplacé." : "Votre rendez-vous est confirmé."}\n\nQuand : ${quand(r)} (durée : 1 h)\nOù : ${r.salle}, ${LIEU}\nAvec : ${cap(r.therapeute)}, étudiant·e de M2 en psychologie\n\nMétro ligne 13, station Saint-Denis–Université. Pas besoin d'apporter quoi que ce soit.\nL'invitation jointe s'ajoute à votre agenda, et nous vous enverrons un rappel la veille.${pied}`,
-  };
-}
-export function texteRappel(r) {
-  return { subject: `Rappel : rendez-vous CAPSULE demain à ${heureFr(r.rdvHeure)}`, text: `Bonjour ${r.prenom},\n\nPetit rappel : votre rendez-vous CAPSULE a lieu demain, ${quand(r)}.\nOù : ${r.salle}, ${LIEU}\nAvec : ${cap(r.therapeute)}${pied}` };
-}
-export function texteAnnulation(r) {
-  return { subject: `Rendez-vous CAPSULE annulé, ${quand(r)}`, text: `Bonjour ${r.prenom},\n\nVotre rendez-vous du ${quand(r)} est annulé. Nous reviendrons vers vous pour en fixer un nouveau.${pied}` };
-}
-
 export async function chargerTout(store) {
   const { blobs } = await store.list({ prefix: "d/" });
   return (await Promise.all(blobs.map(async (x) => { const rec = await store.get(x.key, { type: "json" }); return rec && { key: x.key, rec }; }))).filter(Boolean);

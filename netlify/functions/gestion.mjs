@@ -1,7 +1,8 @@
 import { getStore } from "@netlify/blobs";
 import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes } from "node:crypto";
 
-import { SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout, texteInvitation, texteAnnulation } from "../lib/rdv.mjs";
+import { SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout } from "../lib/rdv.mjs";
+import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
 
@@ -118,7 +119,7 @@ export default async (req) => {
     const had = !!r.uid; r.uid = r.uid || randomUUID(); r.seq = had ? (r.seq || 0) + 1 : 0;
     Object.assign(r, { rdvDate: date, rdvHeure: heure, salle, therapeute: th, assigne: th, statut: "rdv_fixe", rappelEnvoye: false, maj: new Date().toISOString(), majPar: user });
     let mail = "non_envoye";
-    if (b.envoyer) mail = await mailMsg(() => envoyer(r, texteInvitation(r, modif), "REQUEST"));
+    if (b.envoyer) mail = await mailMsg(async () => envoyer(r, await texte(modif ? "modification" : "invitation", r), "REQUEST", { modele: modif ? "modification" : "invitation", par: user, type: "auto" }));
     r.invitEnvoyee = mail === "envoye";
     await store.setJSON(cur.key, r);
     return J({ ok: true, item: r, mail });
@@ -126,10 +127,10 @@ export default async (req) => {
   if (b.action === "annuler_rdv" || b.action === "renvoyer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur || !cur.rec.rdvDate) return J({ error: "Rendez-vous introuvable." }, 404);
     const r = cur.rec; let mail = "non_envoye";
-    if (b.action === "renvoyer") { mail = await mailMsg(() => envoyer(r, texteInvitation(r, false), "REQUEST")); if (mail === "envoye") r.invitEnvoyee = true; }
+    if (b.action === "renvoyer") { mail = await mailMsg(async () => envoyer(r, await texte("invitation", r), "REQUEST", { modele: "invitation", par: user, type: "auto" })); if (mail === "envoye") r.invitEnvoyee = true; }
     else {
       r.seq = (r.seq || 0) + 1;
-      if (b.envoyer && r.invitEnvoyee) mail = await mailMsg(() => envoyer(r, texteAnnulation(r), "CANCEL"));
+      if (b.envoyer && r.invitEnvoyee) mail = await mailMsg(async () => envoyer(r, await texte("annulation", r), "CANCEL", { modele: "annulation", par: user, type: "auto" }));
       Object.assign(r, { rdvDate: "", rdvHeure: "", salle: "", therapeute: "", statut: "a_recontacter", invitEnvoyee: false, rappelEnvoye: false });
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
@@ -197,6 +198,32 @@ export default async (req) => {
       m = { id, type: "fichier", titre, description, categorie, nom, mime: MIMES[ext], taille: buf.length, par: user, le: now };
     }
     await rs.setJSON("m/" + id, m); return J({ ok: true, item: m });
+  }
+
+  if (b.action === "messages_data") {
+    const ms = getStore("messages"); const { blobs } = await ms.list({ prefix: "l/" });
+    let journal = (await Promise.all(blobs.sort((x, y) => y.key.localeCompare(x.key)).slice(0, 200).map((x) => ms.get(x.key, { type: "json" })))).filter(Boolean);
+    if (!admin) journal = journal.filter((j) => j.par === user);
+    return J({ ok: true, modeles: Object.values(await chargerModeles()), variables: VARIABLES, journal, mail: mailReady() });
+  }
+  if (b.action === "modele_save" || b.action === "modele_reset") {
+    if (!admin) return J({ error: "Réservé aux comptes principaux." }, 403);
+    const id = String(b.id); if (!DEFAUTS[id]) return J({ error: "Modèle inconnu." }, 404);
+    const st = getStore("modeles");
+    if (b.action === "modele_reset") await st.delete(id);
+    else { const objet = clean(b.objet, 200).trim(), corps = clean(b.corps, 4000).trim(); if (id !== "libre" && (!objet || !corps)) return J({ error: "L'objet et le texte ne peuvent pas être vides." }, 400); await st.setJSON(id, { objet, corps }); }
+    return J({ ok: true, modeles: Object.values(await chargerModeles()) });
+  }
+  if (b.action === "message_apercu" || b.action === "message_envoyer") {
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
+    const r = cur.rec, m = (await chargerModeles())[String(b.modele)]; if (!m) return J({ error: "Modèle inconnu." }, 404);
+    const v = variables(r);
+    if (b.action === "message_apercu") return J({ ok: true, objet: rendre(m.objet, v), corps: rendre(m.corps, v), manquants: [...new Set([...manquants(m.objet, v), ...manquants(m.corps, v)])], email: r.email });
+    const objet = clean(b.objet, 200).trim(), corps = clean(b.corps, 4000).trim();
+    if (!objet || !corps) return J({ error: "L'objet et le message sont obligatoires." }, 400);
+    const mail = await mailMsg(async () => envoyer(r, { subject: objet, text: corps }, null, { modele: m.id, par: user, type: "manuel" }));
+    if (mail === "envoye") { r.maj = new Date().toISOString(); r.majPar = user; if (r.statut === "nouvelle") r.statut = "contactee"; await store.setJSON(cur.key, r); }
+    return J({ ok: mail === "envoye", mail, item: r, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
   if (b.action === "update") {

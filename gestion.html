@@ -162,6 +162,17 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .lbox{position:relative;overflow:hidden;isolation:isolate}.lbox::before{content:"";position:absolute;inset:0;z-index:-1;background-image:radial-gradient(rgba(174,22,78,.35) 1.5px,transparent 1.8px);background-size:9px 9px;-webkit-mask-image:linear-gradient(225deg,#000 0%,transparent 45%);mask-image:linear-gradient(225deg,#000 0%,transparent 45%)}
 .rdvbox{position:relative;overflow:hidden;isolation:isolate}
 .mkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}.mkpis .kpi{padding:18px}.mkpis .kpi b{font-size:34px}
+
+.msgbox{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.msgbox .info{background:var(--lilac);border-radius:12px;padding:8px 14px;font-size:14px;margin:14px 0 4px}
+.warn{background:var(--blush);color:var(--poppy);border-radius:12px;padding:8px 14px;font-size:13.5px;margin:10px 0}
+.vars{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.vars button{border:0;background:var(--lilac);color:var(--purple);border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:500}.vars button:hover{background:var(--rose);color:var(--rasp)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.mc{border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:6px}.mc h3{margin:0;font-size:16px}.mc p{margin:0;font-size:13.5px;color:#5E4B55}.mc .obj{font-size:13px;color:var(--ink);background:rgba(255,255,255,.7);border-radius:10px;padding:6px 10px;margin-top:4px}
+.mc:nth-child(3n+1){background:var(--rose);--dot:rgba(174,22,78,.42)}.mc:nth-child(3n+2){background:var(--lilac);--dot:rgba(123,32,107,.42)}.mc:nth-child(3n){background:var(--blush);--dot:rgba(227,15,27,.36)}
+.mc .row{margin-top:auto;padding-top:8px}
+.pr.hi{grid-template-columns:minmax(0,1.5fr) minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,.9fr)}
+@media (max-width:860px){.pr.hi{grid-template-columns:1fr auto}}
 </style></head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
 <h1>Espace équipe</h1><p>Demandes de rendez-vous et planning des consultations.</p>
@@ -176,6 +187,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <button class="nv" data-v="4"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/></svg>Patients</button>
 <button class="nv" data-v="5"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Activité</button>
 <button class="nv" data-v="6"><svg viewBox="0 0 24 24"><path d="M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M5 17a3 3 0 013-3h10M9 8h5"/></svg>Ressources</button>
+<button class="nv" data-v="7"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5L12 13l8.5-5.5"/></svg>Messages</button>
 <button class="nv hide" data-v="3" id="nvt"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2 .6 3.3 2.5 3.5 6"/></svg>Équipe</button>
 <div class="uni">Université Paris 8<br>UFR de psychologie</div><button class="me" id="meb" title="Mon profil"><span id="av"></span><span class="tx"><span id="whoname"></span><small id="whoc"></small></span></button></aside>
 <main>
@@ -205,6 +217,8 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <div class="filters" id="rtabs"></div>
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
+<section id="v7" class="hide"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p>
+<div class="filters" id="mtabs"></div><div id="mbody"></div></section>
 <section id="v3" class="hide"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
@@ -334,6 +348,7 @@ $('ov').onclick=function(e){
  if(m==='x')closeM();
  else if(m==='ok'||m==='abs')issue(id,m==='ok'?'realisee':'absence');
  else if(m==='fiche')fiche(id);
+ else if(m==='msg'){closeM();mto=id;mk='envoyer';nav(7)}
  else if(m==='plan2'){closeM();planner(id)}
  else if(m==='det2'){detail(id)}
  else if(m==='photo')$('pf').click();
@@ -360,7 +375,7 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function nav(n){[1,2,3,4,5,6].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes()}
+function nav(n){[1,2,3,4,5,6,7].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -399,7 +414,7 @@ function fiche(id){var i=byId(id);if(!i)return;var n=nS(i),a=nS(i,'absence'),pc=
  '<label class="f">Statut<select id="fs">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===i.statut?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></label>'+
  '<label class="f w">Notes organisationnelles<textarea id="fn" rows="2" maxlength="1000">'+esc(i.notes)+'</textarea></label></div>'+
  '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span><button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+
- '<div class="row"><button class="btn" data-m="fsave" data-id="'+esc(id)+'">Enregistrer</button><button class="btn l" data-m="x">Fermer</button><span class="ok" id="fok"></span><button class="link" data-m="fdel" data-id="'+esc(id)+'">Supprimer la fiche</button></div>')}
+ '<div class="row"><button class="btn" data-m="fsave" data-id="'+esc(id)+'">Enregistrer</button><button class="btn l" data-m="msg" data-id="'+esc(id)+'">Envoyer un message</button><button class="btn l" data-m="x">Fermer</button><span class="ok" id="fok"></span><button class="link" data-m="fdel" data-id="'+esc(id)+'">Supprimer la fiche</button></div>')}
 function addPerson(){openM('<h3>Ajouter une personne</h3><p class="sub">Pour quelqu’un qui n’est pas passé par le formulaire du site.</p><div class="g2"><label class="f">Prénom<input id="np" maxlength="60"></label><label class="f">Mail<input id="nm" type="email"></label><label class="f">Téléphone (facultatif)<input id="nt"></label></div><div class="row"><button class="btn" id="ngo">Ajouter</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="nerr" style="margin-top:10px"></div>',true);
  $('ngo').onclick=function(){this.disabled=true;api({action:'creer',prenom:$('np').value,email:$('nm').value,tel:$('nt').value}).then(function(r){if(!r.ok){$('nerr').textContent=r.error;$('ngo').disabled=false;return}items.unshift(r.item);draw();fiche(r.item.id);toast('Personne ajoutée.')})}}
 $('padd').onclick=addPerson;
@@ -485,6 +500,54 @@ function resForm(r){var cats=cfg.categories||[],edit=!!r;
   if(f.size>4*1024*1024){btn.disabled=false;$('rerr').textContent='Fichier trop lourd (4 Mo maximum). Ajoutez plutôt un lien.';return}
   var rd=new FileReader();rd.onload=function(){base.nom=f.name;base.data=String(rd.result).split(',')[1];api(base).then(fin)};rd.readAsDataURL(f)}}
 $('radd').onclick=function(){resForm(null)};
+
+
+/* ---- messages ---- */
+var mk='envoyer',mdata=null,mto='',mmod='premier_contact';
+function msgs(){api({action:'messages_data'}).then(function(d){if(d.ok){mdata=d;drawMsgs()}else toast(d.error||'Erreur')});drawMsgs()}
+function drawMsgs(){
+ $('mtabs').innerHTML=[['envoyer','Envoyer un message'],['modeles','Modèles'],['histo','Historique']].map(function(t){return '<button class="chip'+(mk===t[0]?' on':'')+'" data-k="'+t[0]+'">'+t[1]+'</button>'}).join('');
+ if(!mdata){$('mbody').innerHTML='<div class="empty">Chargement…</div>';return}
+ if(mk==='envoyer')drawSend();else if(mk==='modeles')drawModeles();else drawHisto()}
+$('mtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){mk=b.dataset.k;drawMsgs()}};
+function drawSend(){
+ var peo=items.slice().sort(function(a,z){return(a.statut==='nouvelle'?0:1)-(z.statut==='nouvelle'?0:1)||a.prenom.localeCompare(z.prenom,'fr')});
+ if(!peo.length){$('mbody').innerHTML='<div class="empty"><b>Personne à qui écrire</b>Les personnes apparaissent ici dès qu’une demande arrive.</div>';return}
+ if(!mto||!byId(mto))mto=peo[0].id;
+ $('mbody').innerHTML=(mdata.mail?'':'<div class="note" style="color:var(--rasp)">L’envoi de mails n’est pas encore configuré : vous pouvez préparer le message puis l’ouvrir dans votre messagerie.</div>')+
+ '<div class="msgbox"><div class="g2"><label class="f">Destinataire<select id="mp">'+peo.map(function(i){return '<option value="'+esc(i.id)+'"'+(i.id===mto?' selected':'')+'>'+esc(i.prenom+' · '+i.email+' · '+(SL[i.statut]||''))+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Modèle<select id="mm">'+mdata.modeles.filter(function(m){return !m.auto}).concat(mdata.modeles.filter(function(m){return m.auto})).map(function(m){return '<option value="'+m.id+'"'+(m.id===mmod?' selected':'')+'>'+esc(m.nom)+(m.auto?' (automatique)':'')+'</option>'}).join('')+'</select></label></div><div id="mpv"></div></div>';
+ $('mp').onchange=function(){mto=this.value;prev()};$('mm').onchange=function(){mmod=this.value;prev()};prev()}
+var MV={date:'la date du rendez-vous',heure:'l’heure du rendez-vous',salle:'la salle',therapeute:'le thérapeute'};
+function prev(){
+ $('mpv').innerHTML='<p class="sub" style="margin:14px 0 0">Chargement…</p>';
+ api({action:'message_apercu',id:mto,modele:mmod}).then(function(d){
+  if(!d.ok){$('mpv').innerHTML='<div class="err" style="margin-top:12px">'+esc(d.error||'Erreur')+'</div>';return}
+  $('mpv').innerHTML='<div class="info">À : <b>'+esc(d.email)+'</b></div>'+(d.manquants.length?'<div class="warn">Ce modèle utilise '+d.manquants.map(function(k){return MV[k]||k}).join(', ')+', pas encore connu·e pour cette personne : complétez le texte à la main ou planifiez d’abord un rendez-vous.</div>':'')+
+  '<label class="f" style="margin-top:12px">Objet<input id="mo" value="'+esc(d.objet)+'" maxlength="200"></label><label class="f" style="margin-top:12px">Message<textarea id="mc" rows="12" maxlength="4000">'+esc(d.corps)+'</textarea></label>'+
+  '<div class="row"><button class="btn" id="msend"'+(mdata.mail?'':' disabled')+'>Envoyer</button><button class="btn l" id="mmail">Ouvrir dans ma messagerie</button><span id="mok" class="ok"></span></div>';
+  $('mmail').onclick=function(){location.href='mailto:'+encodeURIComponent(d.email).replace('%40','@')+'?subject='+encodeURIComponent($('mo').value)+'&body='+encodeURIComponent($('mc').value)};
+  $('msend').onclick=function(){var b=this;b.disabled=true;$('mok').className='ok';$('mok').textContent='Envoi…';
+   api({action:'message_envoyer',id:mto,modele:mmod,objet:$('mo').value,corps:$('mc').value}).then(function(r){
+    if(r.ok){items=items.map(function(x){return x.id===mto?r.item:x});draw();toast('Message envoyé à '+r.item.prenom+'.');api({action:'messages_data'}).then(function(z){if(z.ok)mdata=z;prev()})}
+    else{b.disabled=false;$('mok').className='err';$('mok').textContent=r.error||'Erreur'}})}})}
+function drawModeles(){
+ $('mbody').innerHTML='<div class="mgrid">'+mdata.modeles.map(function(m){return '<article class="mc pastel"><h3>'+esc(m.nom)+'</h3><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--rasp)">'+(m.auto?'Envoi automatique':'Envoi à la main')+(m.modifie?' · modifié':'')+'</span><p>'+esc(m.quand)+'</p><div class="obj">'+esc(m.objet||'(objet libre)')+'</div><div class="row"><button class="btn s" data-mod="'+m.id+'">'+(isAdmin?'Voir / modifier':'Voir le texte')+'</button></div></article>'}).join('')+'</div>'}
+$('mbody').onclick=function(e){var b=e.target.closest('button[data-mod]');if(b)modeleForm(b.dataset.mod)};
+function modeleForm(id){var m=mdata.modeles.filter(function(x){return x.id===id})[0],ro=!isAdmin;
+ openM('<h3>'+esc(m.nom)+'</h3><p class="sub">'+esc(m.quand)+(m.auto?' · envoyé automatiquement avec une invitation d’agenda':'')+'</p>'+
+ '<label class="f">Objet<input id="eo" value="'+esc(m.objet)+'"'+(ro?' readonly':'')+'></label><label class="f" style="margin-top:12px">Texte<textarea id="ec" rows="13"'+(ro?' readonly':'')+'>'+esc(m.corps)+'</textarea></label>'+
+ (ro?'':'<p class="sub" style="margin:10px 0 2px;font-size:12.5px">Cliquez pour insérer une information qui se remplit toute seule :</p><div class="vars">'+mdata.variables.map(function(v){return '<button type="button" data-v="'+v[0]+'" title="'+esc(v[1])+'">{{'+v[0]+'}}</button>'}).join('')+'</div>')+
+ '<div class="row">'+(ro?'':'<button class="btn" id="esave">Enregistrer</button>')+(!ro&&m.modifie?'<button class="btn l" id="ereset">Rétablir le texte d’origine</button>':'')+'<button class="btn l" data-m="x">Fermer</button><span class="err" id="eerr"></span></div>');
+ if(ro)return;
+ $('md').querySelector('.vars').onclick=function(e){var b=e.target.closest('button[data-v]');if(!b)return;var t=$('ec'),p=t.selectionStart||0,tx='{{'+b.dataset.v+'}}';t.value=t.value.slice(0,p)+tx+t.value.slice(t.selectionEnd||p);t.focus();t.selectionStart=t.selectionEnd=p+tx.length};
+ function done(r){if(!r.ok){$('eerr').textContent=r.error||'Erreur';return}mdata.modeles=r.modeles;closeM();drawMsgs();toast('Modèle enregistré.')}
+ $('esave').onclick=function(){api({action:'modele_save',id:id,objet:$('eo').value,corps:$('ec').value}).then(done)};
+ if($('ereset'))$('ereset').onclick=function(){if(confirm('Rétablir le texte d’origine ?'))api({action:'modele_reset',id:id}).then(done)}}
+function drawHisto(){
+ var j=mdata.journal,N={};mdata.modeles.forEach(function(m){N[m.id]=m.nom});
+ $('mbody').innerHTML=j.length?'<div class="tbl"><div class="pr ph hi"><span>Destinataire</span><span class="c2">Objet</span><span class="c3">Date</span><span>Statut</span></div>'+j.map(function(x){
+  return '<div class="pr hi"><span class="n">'+av(x.nom||'?')+'<span class="tx"><b>'+esc(x.nom||'')+'</b><span>'+esc(x.a)+'</span></span></span><span class="c2">'+esc(x.objet)+'<small>'+esc(N[x.modele]||x.modele||'')+' · '+(x.type==='auto'?'automatique':'envoyé par '+esc(cap(x.par)))+'</small></span><span class="c3">'+esc(ago(x.le))+'<small>'+new Date(x.le).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+'</small></span><span><span class="pill '+(x.statut==='envoye'?'s-rdv_fixe':'s-a_recontacter')+'" title="'+esc(x.erreur||'')+'">'+(x.statut==='envoye'?'Envoyé':'Échec')+'</span></span></div>'}).join('')+'</div>':'<div class="empty"><b>Aucun message pour le moment</b>'+(isAdmin?'Tous les mails envoyés par la plateforme apparaîtront ici.':'Les messages que vous envoyez apparaîtront ici.')+'</div>'}
 
 /* ---- connexion ---- */
 $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var b=this.querySelector('button');b.disabled=true;

@@ -28,3 +28,7 @@ Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisé
 # Ressources
 
 Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Tous les comptes peuvent les télécharger. Stockage : Netlify Blobs, store « ressources ».
+
+# Messages
+
+Onglet « Messages » de `/gestion` : envoi d'un mail à la main (aperçu avec les infos de la personne, modifiable avant l'envoi), modèles de texte (les 4 messages automatiques — confirmation, déplacement, rappel de la veille, annulation — et 4 modèles à la main ; modifiables par les comptes principaux, avec des champs `{{prenom}}`, `{{date}}`, `{{heure}}`, `{{salle}}`, `{{therapeute}}`…), et historique de tous les envois (les comptes principaux voient tout, les autres seulement les leurs). Textes par défaut : `netlify/lib/modeles.mjs`.
