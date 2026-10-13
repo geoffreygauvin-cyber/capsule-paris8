@@ -1,0 +1,8 @@
+CAPSULE – site statique (HTML + images)
+
+Contenu : index.html + dossier img/. Aucun serveur, aucune base de données.
+Hébergement : déposer le dossier tel quel (Netlify, GitHub Pages, serveur web).
+Adresse de contact et lien de rendez-vous : voir « var CFG » dans index.html (bas du fichier).
+Police : Poppins est chargée depuis Google Fonts (ligne <link> en haut). Pour un hébergement universitaire (RGPD),
+la télécharger et l'héberger localement, puis remplacer cette ligne par des règles @font-face.
+Logo : recréation vectorielle, à remplacer par le fichier officiel.
