@@ -36,7 +36,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 .empty{text-align:center;color:var(--muted);padding:40px}
 .hide{display:none}
 </style></head><body>
-<header><div><b>CAPSULE</b> <span>· gestion des demandes</span></div><div id="who" class="hide"><span id="whoname"></span> <button class="btn l" id="logout">Se déconnecter</button></div></header>
+<header><div><b>CAPSULE</b> <span>· gestion des demandes</span></div><div id="who" class="hide"><span id="whoname"></span> <button class="btn l hide" id="teambtn">Équipe</button> <button class="btn l" id="logout">Se déconnecter</button></div></header>
 <main>
 <form id="login" class="login"><h1>Accès équipe</h1>
 <label>Compte<input id="u" autocomplete="username" required></label>
@@ -44,6 +44,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 <button class="btn" type="submit">Se connecter</button><div class="err" id="lerr"></div></form>
 <section id="app" class="hide">
 <p class="note">Données sensibles : n’écrivez dans les notes que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p>
+<div id="team" class="card hide"><h3 style="margin:0 0 4px">Comptes de l’équipe</h3>
+<p style="margin:0 0 12px;color:var(--muted);font-size:14px">Les comptes principaux gèrent les comptes ; les autres comptes accèdent seulement aux demandes. Le code d’un nouveau compte n’est affiché qu’une fois.</p>
+<div id="tl"></div>
+<div class="grid"><label>Nom du compte<input id="tn" maxlength="30" placeholder="ex. camille"></label><label>Code (laisser vide : généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
+<div class="row"><button class="btn" id="tadd">Créer le compte</button><span class="ok" id="tmsg"></span></div></div>
 <div class="tabs" id="tabs"></div>
 <div class="bar"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…"><button class="btn l" id="csv">Exporter en CSV</button><button class="btn l" id="refresh">Actualiser</button></div>
 <div id="list"></div></section>
@@ -51,7 +56,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 <script>
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
-var token='',items=[],equipe=[],filtre='nouvelle',moi='';
+var token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false;
 try{token=sessionStorage.getItem('cap_t')||'';moi=sessionStorage.getItem('cap_u')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -61,7 +66,7 @@ function logout(){token='';try{sessionStorage.clear()}catch(e){}$('app').classLi
 function load(){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){alert(d.error||'Erreur');return}
- items=d.items;equipe=d.equipe;moi=d.compte;
+ items=d.items;equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;$('teambtn').classList.toggle('hide',!isAdmin);
  $('login').classList.add('hide');$('app').classList.remove('hide');$('who').classList.remove('hide');$('whoname').textContent='Connecté·e : '+moi;draw()})}
 function draw(){
  var q=$('q').value.toLowerCase();
@@ -81,7 +86,14 @@ $('login').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';
  api({action:'login',compte:$('u').value,code:$('p').value}).then(function(d){
   if(!d.ok){$('lerr').textContent=d.error||'Erreur';return}
   token=d.token;try{sessionStorage.setItem('cap_t',token);sessionStorage.setItem('cap_u',d.compte)}catch(e){}$('p').value='';load()})};
-$('logout').onclick=logout;$('refresh').onclick=load;$('q').oninput=draw;
+$('logout').onclick=logout;
+function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="row"><b>'+esc(n)+'</b><span style="color:var(--muted)">compte principal</span></div>'}).join('')+m.map(function(x){return '<div class="row"><b>'+esc(x.nom)+'</b><span style="color:var(--muted)">créé par '+esc(x.creePar||'')+'</span><button class="btn l" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="del" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
+$('teambtn').onclick=function(){var t=$('team');t.classList.toggle('hide');if(!t.classList.contains('hide'))api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})};
+function shown(n,d){if(d.ok){team(d);$('tmsg').textContent='Compte « '+n+' » — code : '+d.code+' (à noter maintenant)';$('tn').value='';$('tc').value=''}else $('tmsg').textContent=d.error||'Erreur'}
+$('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value}).then(function(d){shown(n,d)})};
+$('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)return;var n=b.dataset.n;
+ if(b.dataset.t==='reset'){if(confirm('Générer un nouveau code pour '+n+' ? L’ancien ne fonctionnera plus.'))api({action:'compte_reset',nom:n}).then(function(d){shown(n,d)})}
+ else if(confirm('Supprimer le compte '+n+' ?'))api({action:'compte_delete',nom:n}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Compte supprimé.'}else $('tmsg').textContent=d.error})};$('refresh').onclick=load;$('q').oninput=draw;
 $('tabs').onclick=function(e){var s=e.target.closest('.tab');if(s){filtre=s.dataset.s;draw()}};
 $('list').onclick=function(e){
  var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.card'),id=c.dataset.id;

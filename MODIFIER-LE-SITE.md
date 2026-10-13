@@ -13,4 +13,4 @@ Technique : les textes enregistrés sont stockés dans Netlify Blobs (fonction `
 # Demandes de contact
 
 Le formulaire « Être recontacté·e » enregistre les demandes dans Netlify Blobs (`netlify/functions/demande.mjs`).
-La page privée est `/gestion` (comptes dans la variable Netlify `GESTION_COMPTES`, format `compte:code,compte2:code2`, secret de session dans `SESSION_SECRET`). Statuts, attribution, rendez-vous, notes, export CSV, suppression.
+La page privée est `/gestion`. Comptes principaux (administrateurs) : variable Netlify `GESTION_COMPTES` (`compte:code,compte2:code2`, le premier est Geoffrey). Les autres comptes se créent depuis la page, bouton « Équipe » (stockés avec codes chiffrés). Secret de session : `SESSION_SECRET`. Statuts, attribution, rendez-vous, notes, export CSV, suppression.
