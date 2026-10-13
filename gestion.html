@@ -135,7 +135,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
  #ov{align-items:flex-end;padding:0}#md{border-radius:26px 26px 0 0;max-height:92vh}
  #toast{bottom:90px}
 }
-.mobtop{display:none;justify-content:space-between;align-items:center;margin-bottom:14px}.mobtop button{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
+.mobtop{display:none;justify-content:space-between;align-items:center;margin-bottom:14px}#whom{flex:1;text-align:left}.mobtop button{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
 
 .pr.act{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.6fr)}.pr.act.selfrow{background:var(--rose)}.pr.act.tot{background:#F7F0EA;font-weight:500}
 @media (max-width:860px){.pr.act{grid-template-columns:1fr auto auto;gap:10px}.pr.act .c2,.pr.act .c3{display:block}.pr.act>span:last-child{display:none}}
@@ -173,6 +173,25 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .mc .row{margin-top:auto;padding-top:8px}
 .pr.hi{grid-template-columns:minmax(0,1.5fr) minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,.9fr)}
 @media (max-width:860px){.pr.hi{grid-template-columns:1fr auto}}
+
+/* finitions */
+.ph0{border-radius:24px;padding:24px 28px;margin-bottom:22px}.ph0 .tag{margin:0}.ph0 h1{font-size:30px;margin:6px 0 4px}.ph0 .sub{margin:0;color:#5E4B55;max-width:60ch}
+.ph0::before{-webkit-mask-image:linear-gradient(250deg,#000 0%,transparent 55%)!important;mask-image:linear-gradient(250deg,#000 0%,transparent 55%)!important}
+section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#md{animation:pop .22s ease both;position:relative}@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){section,#md{animation:none}.stat{transition:none}}
+.mx{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1.5px var(--line);font-size:20px;line-height:1;color:var(--muted);z-index:2}.mx:hover{color:var(--rasp);box-shadow:inset 0 0 0 1.5px var(--rasp)}
+#md h3{padding-right:40px}
+.today{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.today .hi{min-width:170px}.today .hi b{display:block;font-size:17px}.today .hi span{font-size:13px;color:var(--muted);text-transform:capitalize}
+.today .tl{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.tchip{border:0;border-radius:14px;padding:8px 14px;background:var(--lilac);color:var(--ink);font-size:13.5px;text-align:left;line-height:1.3}.tchip:hover{background:var(--rose)}.tchip b{color:var(--purple);margin-right:6px}.tchip.todo{box-shadow:inset 0 0 0 2px var(--poppy)}
+.today .none{color:var(--muted);font-size:14px}
+.rtop{display:flex;align-items:center;gap:8px;padding-right:14px}.rtop .rh{flex:1;min-width:0}
+.qa{display:flex;gap:6px;flex:none}.qa .btn{padding:7px 14px;font-size:13px;white-space:nowrap}
+.req:hover{box-shadow:0 6px 18px rgba(117,21,31,.07)}
+.day td.h.now{color:var(--rasp);font-weight:700}
+@media (max-width:860px){.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{padding:12px 10px!important}.stat b{font-size:24px!important}.stat span,.stat small{font-size:11px}.today .tl{flex:1 1 100%;flex-direction:column}.tchip{width:100%;text-align:left}aside{overflow-x:auto;justify-content:flex-start;scrollbar-width:none}aside::-webkit-scrollbar{display:none}.nv{flex:1 0 auto;width:auto;min-width:68px}.ph0{padding:18px 20px;border-radius:20px}.ph0 h1{font-size:25px}.qa .lbl{display:none}.qa .btn{padding:8px 11px}.mobtop{gap:10px}.mobtop .lg{flex:none}}
 </style></head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
 <h1>Espace équipe</h1><p>Demandes de rendez-vous et planning des consultations.</p>
@@ -191,35 +210,35 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <button class="nv hide" data-v="3" id="nvt"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2 .6 3.3 2.5 3.5 6"/></svg>Équipe</button>
 <div class="uni">Université Paris 8<br>UFR de psychologie</div><button class="me" id="meb" title="Mon profil"><span id="av"></span><span class="tx"><span id="whoname"></span><small id="whoc"></small></span></button></aside>
 <main>
-<div class="mobtop"><button id="whom" style="font-weight:600;color:var(--ink);text-decoration:none"></button><button id="logout2">Se déconnecter</button></div>
-<section id="v1"><div class="tag">Recontacter</div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p>
-<div class="stats" id="stats"></div>
+<div class="mobtop"><span class="lg" data-logo="30"></span><button id="whom" style="font-weight:600;color:var(--ink);text-decoration:none"></button><button id="logout2">Se déconnecter</button></div>
+<section id="v1"><header class="ph0 pastel t1"><div class="tag">Recontacter</div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p></header>
+<div id="today"></div><div class="stats" id="stats"></div>
 <div class="filters" id="tabs"></div>
 <div class="tools"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher"></div>
 <div id="list"></div>
 <p class="note" style="margin-top:18px">Données sensibles : dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
 
-<section id="v2" class="hide"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p>
+<section id="v2" class="hide"><header class="ph0 pastel t2"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p></header>
 <div class="wk"><button class="ib" id="wp" aria-label="Semaine précédente">‹</button><div class="t" id="wt"></div><button class="ib" id="wn" aria-label="Semaine suivante">›</button><button class="btn l s" id="wt0">Aujourd’hui</button></div>
 <div class="opts"><label><input type="checkbox" id="mine"> Mes rendez-vous seulement</label><div class="legend" id="leg"></div></div>
 <div class="dtabs" id="dtabs"></div><div class="days d0" id="cal"></div>
 <div id="feed" class="note feed hide"></div></section>
 
-<section id="v4" class="hide"><div class="tag">Suivi</div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p>
+<section id="v4" class="hide"><header class="ph0 pastel t3"><div class="tag">Suivi</div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p></header>
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button></div>
 <div class="tbl" id="ptbl"></div></section>
-<section id="v5" class="hide"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p>
+<section id="v5" class="hide"><header class="ph0 pastel t1"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p></header>
 <div class="filters" id="atabs"></div><div id="amy" class="hide"></div>
 <div class="tbl" id="atbl"></div>
 </section>
-<section id="v6" class="hide"><div class="tag">Documents</div><h1>Ressources</h1><p class="sub">Les documents et liens utiles pour les étudiant·es de l’équipe.</p>
+<section id="v6" class="hide"><header class="ph0 pastel t2"><div class="tag">Documents</div><h1>Ressources</h1><p class="sub">Les documents et liens utiles pour les étudiant·es de l’équipe.</p></header>
 <div class="filters" id="rtabs"></div>
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
-<section id="v7" class="hide"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p>
+<section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
-<section id="v3" class="hide"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
+<section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
 <div class="row"><button class="btn" id="tadd">Créer le compte</button></div><div id="tmsg"></div></div></section>
@@ -276,7 +295,11 @@ function load(cb){api({action:'list'}).then(function(d){
  if(!week)week=monday(iso(new Date()));
  draw();drawCal();if(cb)cb()})}
 /* ---- demandes ---- */
-function stats(){
+function drawToday(){
+ var t=iso(new Date()),l=items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate===t}).sort(function(a,z){return a.rdvHeure.localeCompare(z.rdvHeure)}),d=new Date();
+ $('today').innerHTML='<div class="today"><div class="hi"><b>Bonjour '+esc(cap(moi))+'</b><span>'+JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()]+'</span></div><div class="tl">'+(l.length?l.map(function(i){return '<button class="tchip'+(aConfirmer(i)?' todo':'')+'" data-id="'+esc(i.id)+'"><b>'+fh(i.rdvHeure)+'</b>'+esc(i.prenom)+' · '+esc(i.salle)+' · '+esc(cap(i.therapeute))+'</button>'}).join(''):'<span class="none">Pas de rendez-vous aujourd’hui.</span>')+'</div></div>'}
+$('today').onclick=function(e){var b=e.target.closest('.tchip');if(b)detail(b.dataset.id)};
+function stats(){drawToday();
  var n=items.filter(function(i){return i.statut==='nouvelle'}).length;
  var lim=iso(new Date(Date.now()+7*864e5)),today=iso(new Date());
  var r=items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate>=today&&i.rdvDate<=lim}).length;
@@ -290,8 +313,9 @@ function rdvBox(i){
  return '<div class="cta"><button class="btn" data-a="plan">Planifier un rendez-vous</button></div>'}
 function card(i){
  var o=openId===i.id,quick=(i.statut==='nouvelle'||i.statut==='a_recontacter')&&!o;
- return '<article class="req '+i.statut+(o?' open':'')+'" data-id="'+esc(i.id)+'"><button class="rh" data-a="tog" aria-expanded="'+o+'">'+av(i.prenom)+
- '<span class="who"><b>'+esc(i.prenom)+'</b><span>'+esc(i.email)+'</span></span><span class="rt"><span class="pill s-'+i.statut+'">'+esc(SL[i.statut]||i.statut)+'</span><span>'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+', '+fh(i.rdvHeure):ago(i.creeLe))+'</span></span></button>'+
+ var qa=(i.statut==='nouvelle'||i.statut==='a_recontacter')?'<div class="qa"><button class="btn s" data-a="plan" title="Planifier un rendez-vous">📅<span class="lbl"> Planifier</span></button><button class="btn l s" data-a="mail" title="Écrire un message">✉<span class="lbl"> Écrire</span></button></div>':'';
+ return '<article class="req '+i.statut+(o?' open':'')+'" data-id="'+esc(i.id)+'"><div class="rtop"><button class="rh" data-a="tog" aria-expanded="'+o+'">'+av(i.prenom)+
+ '<span class="who"><b>'+esc(i.prenom)+'</b><span>'+esc(i.email)+'</span></span><span class="rt"><span class="pill s-'+i.statut+'">'+esc(SL[i.statut]||i.statut)+'</span><span>'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+', '+fh(i.rdvHeure):ago(i.creeLe))+'</span></span></button>'+qa+'</div>'+
  '<div class="rb"><div class="meta"><a href="mailto:'+esc(i.email)+'">✉ '+esc(i.email)+'</a>'+(i.tel?'<a href="tel:'+esc(i.tel)+'">☎ '+esc(i.tel)+'</a>':'')+'<span style="color:var(--muted)">reçue '+ago(i.creeLe)+(i.majPar?' · modifiée par '+esc(cap(i.majPar)):'')+'</span></div>'+
  (i.creneaux&&i.creneaux.length?'<div class="dispo" title="Jours qui conviennent">'+i.creneaux.map(function(c){return '<span>'+esc(c)+'</span>'}).join('')+'</div>':'')+
  (i.message?'<div class="quote">'+esc(i.message)+'</div>':'')+rdvBox(i)+
@@ -310,7 +334,7 @@ function gridHtml(wk,picking){
  var today=iso(new Date()),h='';
  cfg.jours.forEach(function(j){var d=addDays(wk,j-1),n=cfg.heures.filter(function(hh){return cfg.salles.some(function(s){return occ(d,hh,s)})}).length;
   h+='<div class="day'+(d===today?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(d===today?'Aujourd’hui':n?n+' RDV':'')+'</em></h4><table><tr><th></th>'+cfg.salles.map(function(s){return '<th>'+esc(s.replace('Salle ','S'))+'</th>'}).join('')+'</tr>';
-  cfg.heures.forEach(function(hh){h+='<tr><td class="h">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
+  cfg.heures.forEach(function(hh){h+='<tr><td class="h'+(d===today&&parseInt(hh,10)===new Date().getHours()?' now':'')+'">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
    if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" data-id="'+esc(o.id)+'" style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'">'+esc(o.prenom)+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
    return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':' aria-label="Planifier le '+esc(fday(d))+' à '+fh(hh)+', '+esc(s)+'"')+'>'+(past(d,hh)?'':'+')+'</button></td>'}).join('')+'</tr>'});
   h+='</table></div>'});return h}
@@ -321,7 +345,7 @@ function drawCal(){
  $('leg').innerHTML=equipe.map(function(e){return '<span style="background:'+col(e)+'">'+esc(cap(e))+'</span>'}).join('');
  var f=$('feed');if(cfg.calUrl){f.classList.remove('hide');f.innerHTML='<b>Agenda général</b> pour Google Agenda ou Outlook (prénom, salle, thérapeute). Copiez ce lien puis, dans Google Agenda : Autres agendas › À partir de l’URL.<input readonly value="'+esc(location.origin+cfg.calUrl)+'" onclick="this.select()"><small>Mis à jour environ une fois par jour ; ce calendrier-ci est toujours à jour.</small>'}}
 /* ---- fenêtre ---- */
-function openM(h,small){$('md').className=small?'sm':'';$('md').innerHTML=h;$('ov').classList.remove('hide')}
+function openM(h,small){$('md').className=small?'sm':'';$('md').innerHTML='<button class="mx" data-m="x" aria-label="Fermer">×</button>'+h;$('ov').classList.remove('hide')}
 function closeM(){$('ov').classList.add('hide');$('md').innerHTML=''}
 var plan={id:null,week:''};
 function planner(id){plan={id:id,week:week};var i=byId(id);
@@ -569,7 +593,7 @@ $('stats').onclick=function(e){var s=e.target.closest('.stat');if(s){filtre=s.da
 $('list').onclick=function(e){
  var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.req'),id=c.dataset.id,a=b.dataset.a;
  if(a==='tog'){openId=openId===id?null:id;draw();if(openId){var el=document.querySelector('.req.open');el&&el.scrollIntoView({block:'nearest',behavior:'smooth'})}return}
- if(a==='plan'){planner(id);return}if(a==='det'){detail(id);return}if(a==='ok'||a==='abs'){issue(id,a==='ok'?'realisee':'absence');return}
+ if(a==='plan'){planner(id);return}if(a==='mail'){mto=id;mk='envoyer';nav(7);return}if(a==='det'){detail(id);return}if(a==='ok'||a==='abs'){issue(id,a==='ok'?'realisee':'absence');return}
  if(a==='del'){if(!confirm('Supprimer cette demande définitivement ?'))return;api({action:'delete',id:id}).then(function(d){if(d.ok){items=items.filter(function(x){return x.id!==id});openId=null;draw();drawCal();toast('Demande supprimée.')}else toast(d.error)});return}
  var p={};Array.prototype.forEach.call(c.querySelectorAll('[data-f]'),function(f){p[f.dataset.f]=f.value});
  var ok=c.querySelector('.ok');ok.textContent='…';
