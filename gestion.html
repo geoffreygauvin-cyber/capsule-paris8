@@ -1,21 +1,26 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow"><title>CAPSULE · Gestion des demandes</title>
+<meta name="robots" content="noindex, nofollow"><title>CAPSULE · Gestion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <style>
 :root{--cream:#FDF5EB;--ink:#1F1217;--muted:#5E4B55;--line:#E8D9D3;--rasp:#AE164E;--purple:#7B206B;--maroon:#75151F;--rose:#F9DEE5;--lilac:#EADCF0}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:400 15px/1.5 Poppins,system-ui,sans-serif}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--maroon);color:var(--cream)}
 header b{font-weight:700;letter-spacing:.04em}header span{opacity:.85;font-size:13px}
-main{max-width:1000px;margin:0 auto;padding:24px 16px 80px}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 80px}
 button,select,input,textarea{font:inherit}
 .btn{border:0;border-radius:999px;padding:9px 20px;background:var(--rasp);color:#fff;font-weight:600;cursor:pointer}
 .btn.l{background:transparent;color:var(--rasp);border:1.5px solid var(--rasp)}header .btn.l{color:var(--cream);border-color:var(--cream)}
+.btn:disabled{opacity:.5;cursor:default}
 .login{max-width:380px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px}
 .login h1{font-size:22px;margin:0 0 16px}.login label{display:block;margin:12px 0;font-weight:500;font-size:14px}
 input,select,textarea{font-weight:400;text-transform:none;letter-spacing:0;width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+input[type=checkbox]{width:auto}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 .err{color:var(--rasp);font-weight:500;margin-top:10px}
+.nav{display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+.nav button{background:none;border:0;padding:10px 18px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.nav button.on{color:var(--rasp);border-bottom-color:var(--rasp)}
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
 .tab{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:500;font-size:14px}
 .tab.on{background:var(--purple);border-color:var(--purple);color:#fff}.tab i{font-style:normal;opacity:.7;margin-left:4px}
@@ -27,6 +32,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 .meta{display:flex;flex-wrap:wrap;gap:4px 18px;margin:6px 0;color:var(--muted);font-size:14px}
 .meta a{color:var(--purple);font-weight:500}
 .msg{background:var(--rose);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14px}
+.rdvbox{background:var(--lilac);border-radius:14px;padding:10px 14px;margin:10px 0;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.rdvbox b{font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;margin-top:10px}
 .grid label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .grid label.w{grid-column:1/-1}
@@ -34,76 +41,180 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 .del{margin-left:auto;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px}
 .note{background:var(--lilac);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:16px}
 .empty{text-align:center;color:var(--muted);padding:40px}
-.hide{display:none}
+.hide{display:none!important}
+/* calendrier */
+.wk{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}.wk b{flex:1;min-width:180px;text-align:center}
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.day{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;overflow-x:auto}
+.day h4{margin:0 0 8px;font-size:15px;text-transform:capitalize}
+.day table{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+.day th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.day td.h{width:38px;font-size:12px;color:var(--muted);text-align:right;padding-right:4px}
+.slot,.occ{width:100%;min-height:44px;border-radius:10px;border:1.5px dashed var(--line);background:#fff;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;line-height:1.2}
+.slot:hover{border-color:var(--rasp);color:var(--rasp);background:var(--rose)}
+.slot:disabled{background:#f6f1ec;cursor:default;border-style:solid;opacity:.6}
+.occ{border:0;text-align:left;color:var(--ink);font-weight:600;overflow:hidden}.occ small{display:block;font-weight:400;color:var(--muted)}
+.occ.me{outline:2px solid var(--purple)}
+.legend{font-size:13px;color:var(--muted);margin:10px 0}
+/* fenêtre */
+#ov{position:fixed;inset:0;background:rgba(31,18,23,.55);z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px}
+#md{background:var(--cream);border-radius:24px;padding:22px;width:100%;max-width:760px}
+#md h3{margin:0 0 4px;font-size:19px}#md .sub{color:var(--muted);margin:0 0 12px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;z-index:60;max-width:90%;font-weight:500}
+.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:14px}
 </style></head><body>
-<header><div><b>CAPSULE</b> <span>· gestion des demandes</span></div><div id="who" class="hide"><span id="whoname"></span> <button class="btn l hide" id="teambtn">Équipe</button> <button class="btn l" id="logout">Se déconnecter</button></div></header>
+<header><div><b>CAPSULE</b> <span>· gestion</span></div><div id="who" class="hide"><span id="whoname"></span> <button class="btn l hide" id="teambtn">Équipe</button> <button class="btn l" id="logout">Se déconnecter</button></div></header>
 <main>
 <form id="login" class="login"><h1>Accès équipe</h1>
 <label>Compte<input id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
 <label>Code d’accès<input id="p" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" required></label>
 <button class="btn" type="submit">Se connecter</button><div class="err" id="lerr"></div></form>
 <section id="app" class="hide">
-<p class="note">Données sensibles : n’écrivez dans les notes que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p>
 <div id="team" class="card hide"><h3 style="margin:0 0 4px">Comptes de l’équipe</h3>
-<p style="margin:0 0 12px;color:var(--muted);font-size:14px">Les comptes principaux gèrent les comptes ; les autres comptes accèdent seulement aux demandes. Le code d’un nouveau compte n’est affiché qu’une fois.</p>
+<p style="margin:0 0 12px;color:var(--muted);font-size:14px">Un compte par étudiant·e : son nom de compte apparaît comme thérapeute dans les invitations. Le code d’un nouveau compte n’est affiché qu’une fois.</p>
 <div id="tl"></div>
-<div class="grid"><label>Nom du compte<input id="tn" maxlength="30" placeholder="ex. camille"></label><label>Code (laisser vide : généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
+<div class="grid"><label>Nom du compte (prénom)<input id="tn" maxlength="30" placeholder="ex. camille"></label><label>Code (laisser vide : généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
 <div class="row"><button class="btn" id="tadd">Créer le compte</button><span class="ok" id="tmsg"></span></div></div>
+<div class="nav"><button id="nv1" class="on">Demandes</button><button id="nv2">Calendrier</button></div>
+
+<div id="v1"><p class="note">Données sensibles : n’écrivez dans les notes que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p>
 <div class="tabs" id="tabs"></div>
 <div class="bar"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…"><button class="btn l" id="csv">Exporter en CSV</button><button class="btn l" id="refresh">Actualiser</button></div>
-<div id="list"></div></section>
-</main>
+<div id="list"></div></div>
+
+<div id="v2" class="hide"><div class="wk"><button class="btn l" id="wp">‹</button><b id="wt"></b><button class="btn l" id="wn">›</button><button class="btn l" id="wt0">Aujourd’hui</button><label class="ck" style="margin:0"><input type="checkbox" id="mine"> Mes rendez-vous</label></div>
+<div class="days" id="cal"></div>
+<p class="legend">Cliquez sur un créneau libre (+) pour y placer une personne, ou sur un rendez-vous pour le modifier ou l’annuler. 3 salles, créneaux d’1 h, du lundi au mercredi.</p>
+<div id="feed" class="note hide"></div></div>
+</section></main>
+<div id="ov" class="hide"><div id="md"></div></div><div id="toast" class="hide"></div>
 <script>
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
-var token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false;
-try{token=sessionStorage.getItem('cap_t')||'';moi=sessionStorage.getItem('cap_u')||''}catch(e){}
+var token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='';
+try{token=sessionStorage.getItem('cap_t')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1)}
 function api(b){b.token=token;return fetch('/api/gestion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){d._s=r.status;return d})}).catch(function(){return{error:'Connexion impossible.'}})}
 function fmt(d){return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
+function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.add('hide')},5000)}
+/* dates */
+function pad(n){return(n<10?'0':'')+n}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parse(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2],12)}
+function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
+function monday(s){return addDays(s,-((parse(s).getDay()+6)%7))}
+var JN=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],MN=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function fday(s){var d=parse(s);return JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()]}
+function fh(h){var p=h.split(':');return(+p[0])+' h'+(p[1]!=='00'?' '+p[1]:'')}
+function past(s,h){return new Date(s+'T'+h+':00')<new Date()}
+function occ(d,h,s){return items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate===d&&i.rdvHeure===h&&i.salle===s})[0]}
+var PAL=['#F9DEE5','#EADCF0','#FFDAD6','#DDEBDD','#DCE6F2','#F6EBCB','#E6E0D4','#E3F0F0'];
+function col(n){var h=0;String(n).split('').forEach(function(c){h=(h*31+c.charCodeAt(0))>>>0});return PAL[h%PAL.length]}
+/* session */
 function logout(){token='';try{sessionStorage.clear()}catch(e){}$('app').classList.add('hide');$('who').classList.add('hide');$('login').classList.remove('hide')}
-function load(){api({action:'list'}).then(function(d){
+function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
- if(!d.ok){alert(d.error||'Erreur');return}
- items=d.items;equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;$('teambtn').classList.toggle('hide',!isAdmin);
- $('login').classList.add('hide');$('app').classList.remove('hide');$('who').classList.remove('hide');$('whoname').textContent='Connecté·e : '+moi;draw()})}
+ if(!d.ok){toast(d.error||'Erreur');return}
+ items=d.items;equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
+ $('teambtn').classList.toggle('hide',!isAdmin);
+ $('login').classList.add('hide');$('app').classList.remove('hide');$('who').classList.remove('hide');$('whoname').textContent='Connecté·e : '+cap(moi);
+ if(!week)week=monday(iso(new Date()));draw();drawCal();if(cb)cb()})}
+/* demandes */
+function rdvBox(i){
+ if(i.statut==='rdv_fixe'&&i.rdvDate)return '<div class="rdvbox"><span>📅 <b>'+esc(fday(i.rdvDate))+', '+fh(i.rdvHeure)+'</b> · '+esc(i.salle)+' · avec '+esc(cap(i.therapeute))+'</span><span style="color:var(--muted);font-size:13px">'+(i.invitEnvoyee?'invitation envoyée':'invitation non envoyée')+'</span><button class="btn l" data-a="det">Gérer</button></div>';
+ return '<div class="row"><button class="btn" data-a="plan">Planifier un rendez-vous</button></div>'}
 function draw(){
  var q=$('q').value.toLowerCase();
  $('tabs').innerHTML=ST.map(function(s){var n=items.filter(function(i){return i.statut===s[0]}).length;return '<button class="tab'+(filtre===s[0]?' on':'')+'" data-s="'+s[0]+'">'+s[1]+'<i>'+n+'</i></button>'}).join('')+'<button class="tab'+(filtre==='tous'?' on':'')+'" data-s="tous">Toutes<i>'+items.length+'</i></button>';
  var l=items.filter(function(i){return(filtre==='tous'||i.statut===filtre)&&(!q||(i.prenom+' '+i.email+' '+i.tel).toLowerCase().indexOf(q)>-1)});
  $('list').innerHTML=l.length?l.map(card).join(''):'<div class="empty">Aucune demande ici.</div>'}
 function card(i){
- return '<article class="card '+i.statut+'" data-id="'+esc(i.id)+'"><div class="top"><h3>'+esc(i.prenom)+'</h3><small>reçue le '+fmt(i.creeLe)+(i.majPar?' · modifiée par '+esc(i.majPar):'')+'</small></div>'+
+ return '<article class="card '+i.statut+'" data-id="'+esc(i.id)+'"><div class="top"><h3>'+esc(i.prenom)+'</h3><small>reçue le '+fmt(i.creeLe)+(i.majPar?' · modifiée par '+esc(cap(i.majPar)):'')+'</small></div>'+
  '<div class="meta"><a href="mailto:'+esc(i.email)+'">'+esc(i.email)+'</a>'+(i.tel?'<a href="tel:'+esc(i.tel)+'">'+esc(i.tel)+'</a>':'')+(i.creneaux&&i.creneaux.length?'<span>Disponible : '+esc(i.creneaux.join(', '))+'</span>':'')+'</div>'+
- (i.message?'<div class="msg">'+esc(i.message)+'</div>':'')+
+ (i.message?'<div class="msg">'+esc(i.message)+'</div>':'')+rdvBox(i)+
  '<div class="grid"><label>Statut<select data-f="statut">'+ST.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===i.statut?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select></label>'+
- '<label>Pris en charge par<select data-f="assigne"><option value=""></option>'+equipe.map(function(e){return '<option'+(e===i.assigne?' selected':'')+'>'+esc(e)+'</option>'}).join('')+'</select></label>'+
- '<label>Rendez-vous<input type="datetime-local" data-f="rdv" value="'+esc(i.rdv)+'"></label>'+
+ '<label>Pris en charge par<select data-f="assigne"><option value=""></option>'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===i.assigne?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
  '<label class="w">Notes organisationnelles<textarea rows="2" maxlength="1000" data-f="notes">'+esc(i.notes)+'</textarea></label></div>'+
- '<div class="row"><button class="btn" data-a="save">Enregistrer</button><span class="ok"></span><button class="del" data-a="del">Supprimer définitivement</button></div></article>'}
+ '<div class="row"><button class="btn l" data-a="save">Enregistrer</button><span class="ok"></span><button class="del" data-a="del">Supprimer définitivement</button></div></article>'}
+/* calendrier */
+function gridHtml(wk,pickable){
+ var h='';cfg.jours.forEach(function(j){var d=addDays(wk,j-1);
+  h+='<div class="day"><h4>'+esc(fday(d))+'</h4><table><tr><th></th>'+cfg.salles.map(function(s){return '<th>'+esc(s)+'</th>'}).join('')+'</tr>';
+  cfg.heures.forEach(function(hh){h+='<tr><td class="h">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
+   if(o){var dim=$('mine').checked&&o.therapeute!==moi&&!pickable;return '<td><button class="occ'+(o.therapeute===moi?' me':'')+'" data-id="'+esc(o.id)+'" style="background:'+col(o.therapeute)+(dim?';opacity:.3':'')+'">'+esc(o.prenom)+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
+   return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':'')+'>+</button></td>'}).join('')+'</tr>'});
+  h+='</table></div>'});return h}
+function wkTitle(){return 'Semaine du '+fday(week)}
+function drawCal(){$('wt').textContent=wkTitle();$('cal').innerHTML=gridHtml(week,false);
+ var f=$('feed');if(cfg.calUrl){f.classList.remove('hide');f.innerHTML='Agenda général pour Google Agenda ou Outlook (prénom, salle, thérapeute) : <input readonly style="margin-top:6px" value="'+esc(location.origin+cfg.calUrl)+'" onclick="this.select()"><br><small>Google Agenda › Autres agendas › À partir de l’URL. Il se met à jour environ une fois par jour ; ce calendrier-ci est toujours à jour.</small>'}}
+/* fenêtre */
+function openM(h){$('md').innerHTML=h;$('ov').classList.remove('hide')}
+function closeM(){$('ov').classList.add('hide');$('md').innerHTML=''}
+var plan={id:null,week:''};
+function planner(id){plan={id:id,week:week};var i=items.filter(function(x){return x.id===id})[0];
+ var h='<h3>Choisir un créneau pour '+esc(i.prenom)+'</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un créneau libre.</p><div class="wk"><button class="btn l" data-m="wp">‹</button><b>'+esc('Semaine du '+fday(plan.week))+'</b><button class="btn l" data-m="wn">›</button><button class="btn l" data-m="x">Fermer</button></div><div class="days">'+gridHtml(plan.week,true)+'</div>';
+ openM(h)}
+function confirmPick(d,hh,s,id){
+ var libres=items.filter(function(x){return x.statut!=='rdv_fixe'&&x.statut!=='terminee'&&x.statut!=='sans_suite'});
+ var cur=id?items.filter(function(x){return x.id===id})[0]:null;
+ var h='<h3>'+esc(cap(fday(d)))+', '+fh(hh)+' · '+esc(s)+'</h3><p class="sub">Durée : 1 h.</p><div class="grid">'+
+ (cur?'<label>Personne<input readonly value="'+esc(cur.prenom+' ('+cur.email+')')+'"></label>':'<label>Personne<select id="pp">'+(libres.length?libres.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.prenom+' · '+x.email)+'</option>'}).join(''):'<option value="">Aucune demande à planifier</option>')+'</select></label>')+
+ '<label>Thérapeute<select id="pt">'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===(cur&&cur.assigne||moi)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label></div>'+
+ '<label class="ck"><input type="checkbox" id="pm"'+(cfg.mail?' checked':' disabled')+'><span>Envoyer l’invitation par mail (elle s’ajoute à l’agenda de la personne, avec un rappel la veille)'+(cfg.mail?'':'<br><small style="color:var(--rasp)">L’envoi de mails n’est pas encore configuré : le rendez-vous sera seulement enregistré.</small>')+'</span></label>'+
+ '<div class="row"><button class="btn" id="pgo"'+(cur||libres.length?'':' disabled')+'>Confirmer le rendez-vous</button><button class="btn l" data-m="x">Annuler</button><span class="err" id="perr"></span></div>';
+ openM(h);
+ $('pgo').onclick=function(){var pid=cur?cur.id:$('pp').value;this.disabled=true;
+  api({action:'planifier',id:pid,date:d,heure:hh,salle:s,therapeute:$('pt').value,envoyer:$('pm').checked}).then(function(r){
+   if(!r.ok){$('perr').textContent=r.error||'Erreur';$('pgo').disabled=false;return}
+   items=items.map(function(x){return x.id===r.item.id?r.item:x});closeM();draw();drawCal();
+   toast(r.mail==='envoye'?'Rendez-vous enregistré, invitation envoyée.':r.mail==='echec'?'Rendez-vous enregistré, mais l’envoi du mail a échoué.':'Rendez-vous enregistré.')})}}
+function detail(id){var i=items.filter(function(x){return x.id===id})[0];if(!i)return;
+ openM('<h3>'+esc(i.prenom)+'</h3><p class="sub">'+esc(i.email)+(i.tel?' · '+esc(i.tel):'')+'</p><div class="rdvbox"><span>📅 <b>'+esc(cap(fday(i.rdvDate)))+', '+fh(i.rdvHeure)+'</b> · '+esc(i.salle)+' · avec '+esc(cap(i.therapeute))+'</span></div><p class="sub">'+(i.invitEnvoyee?'Invitation envoyée par mail.':'Aucune invitation envoyée.')+(i.rappelEnvoye?' Rappel de la veille envoyé.':'')+'</p>'+
+ '<div class="row">'+(cfg.mail?'<button class="btn l" data-m="resend" data-id="'+esc(id)+'">'+(i.invitEnvoyee?'Renvoyer':'Envoyer')+' l’invitation</button>':'')+'<button class="btn l" data-m="move" data-id="'+esc(id)+'">Changer de créneau</button><button class="btn" data-m="cancel" data-id="'+esc(id)+'">Annuler le rendez-vous</button><button class="btn l" data-m="x">Fermer</button></div>')}
+$('ov').onclick=function(e){
+ if(e.target===$('ov')){closeM();return}
+ var b=e.target.closest('button');if(!b)return;var m=b.dataset.m,id=b.dataset.id;
+ if(m==='x')closeM();
+ else if(m==='wp'||m==='wn'){plan.week=addDays(plan.week,m==='wp'?-7:7);week=plan.week;planner(plan.id);drawCal()}
+ else if(b.classList.contains('slot')){confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,plan.id)}
+ else if(m==='move'){closeM();planner(id)}
+ else if(m==='resend'){b.disabled=true;api({action:'renvoyer',id:id}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();toast(r.mail==='envoye'?'Invitation envoyée.':'L’envoi du mail a échoué.')}else toast(r.error)})}
+ else if(m==='cancel'){var i=items.filter(function(x){return x.id===id})[0];
+  if(!confirm('Annuler ce rendez-vous'+(i.invitEnvoyee?' et prévenir '+i.prenom+' par mail':'')+' ?'))return;
+  api({action:'annuler_rdv',id:id,envoyer:true}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();toast('Rendez-vous annulé.'+(r.mail==='envoye'?' La personne a été prévenue.':''))}else toast(r.error)})}};
+$('cal').onclick=function(e){var b=e.target.closest('button');if(!b)return;
+ if(b.classList.contains('slot'))confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,null);
+ else if(b.dataset.id)detail(b.dataset.id)};
+$('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=function(){week=addDays(week,7);drawCal()};
+$('wt0').onclick=function(){week=monday(iso(new Date()));drawCal()};$('mine').onchange=drawCal;
+function nav(n){$('v1').classList.toggle('hide',n!==1);$('v2').classList.toggle('hide',n!==2);$('nv1').classList.toggle('on',n===1);$('nv2').classList.toggle('on',n===2);if(n===2)drawCal()}
+$('nv1').onclick=function(){nav(1)};$('nv2').onclick=function(){nav(2)};
+/* connexion, équipe */
 $('login').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';
  api({action:'login',compte:$('u').value,code:$('p').value}).then(function(d){
   if(!d.ok){$('lerr').textContent=d.error||'Erreur';return}
-  token=d.token;try{sessionStorage.setItem('cap_t',token);sessionStorage.setItem('cap_u',d.compte)}catch(e){}$('p').value='';load()})};
-$('logout').onclick=logout;
-function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="row"><b>'+esc(n)+'</b><span style="color:var(--muted)">compte principal</span></div>'}).join('')+m.map(function(x){return '<div class="row"><b>'+esc(x.nom)+'</b><span style="color:var(--muted)">créé par '+esc(x.creePar||'')+'</span><button class="btn l" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="del" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
+  token=d.token;try{sessionStorage.setItem('cap_t',token)}catch(e){}$('p').value='';load()})};
+$('logout').onclick=logout;$('refresh').onclick=function(){load()};$('q').oninput=draw;
+function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="row"><b>'+esc(cap(n))+'</b><span style="color:var(--muted)">compte principal</span></div>'}).join('')+m.map(function(x){return '<div class="row"><b>'+esc(cap(x.nom))+'</b><span style="color:var(--muted)">créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="del" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
 $('teambtn').onclick=function(){var t=$('team');t.classList.toggle('hide');if(!t.classList.contains('hide'))api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})};
-function shown(n,d){if(d.ok){team(d);$('tmsg').textContent='Compte « '+n+' » — code : '+d.code+' (à noter maintenant)';$('tn').value='';$('tc').value=''}else $('tmsg').textContent=d.error||'Erreur'}
+function shown(n,d){if(d.ok){team(d);$('tmsg').textContent='Compte « '+n+' » — code : '+d.code+' (à noter maintenant)';$('tn').value='';$('tc').value='';load()}else $('tmsg').textContent=d.error||'Erreur'}
 $('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value}).then(function(d){shown(n,d)})};
 $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)return;var n=b.dataset.n;
  if(b.dataset.t==='reset'){if(confirm('Générer un nouveau code pour '+n+' ? L’ancien ne fonctionnera plus.'))api({action:'compte_reset',nom:n}).then(function(d){shown(n,d)})}
- else if(confirm('Supprimer le compte '+n+' ?'))api({action:'compte_delete',nom:n}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Compte supprimé.'}else $('tmsg').textContent=d.error})};$('refresh').onclick=load;$('q').oninput=draw;
+ else if(confirm('Supprimer le compte '+n+' ?'))api({action:'compte_delete',nom:n}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Compte supprimé.';load()}else $('tmsg').textContent=d.error})};
 $('tabs').onclick=function(e){var s=e.target.closest('.tab');if(s){filtre=s.dataset.s;draw()}};
 $('list').onclick=function(e){
- var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.card'),id=c.dataset.id;
- if(b.dataset.a==='del'){if(!confirm('Supprimer cette demande définitivement ?'))return;api({action:'delete',id:id}).then(function(d){if(d.ok){items=items.filter(function(x){return x.id!==id});draw()}else alert(d.error)});return}
+ var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.card'),id=c.dataset.id,a=b.dataset.a;
+ if(a==='plan'){planner(id);return}if(a==='det'){detail(id);return}
+ if(a==='del'){if(!confirm('Supprimer cette demande définitivement ?'))return;api({action:'delete',id:id}).then(function(d){if(d.ok){items=items.filter(function(x){return x.id!==id});draw();drawCal()}else toast(d.error)});return}
  var p={};Array.prototype.forEach.call(c.querySelectorAll('[data-f]'),function(f){p[f.dataset.f]=f.value});
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
-  if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré';if(d.item.statut!==filtre&&filtre!=='tous')setTimeout(draw,700)}else ok.textContent=d.error||'Erreur'})};
+  if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré';if(d.item.statut!==filtre&&filtre!=='tous')setTimeout(function(){draw();drawCal()},700)}else ok.textContent=d.error||'Erreur'})};
 $('csv').onclick=function(){
- var rows=[['Reçue le','Prénom','Mail','Téléphone','Disponibilités','Statut','Pris en charge par','Rendez-vous']].concat(items.map(function(i){return[i.creeLe,i.prenom,i.email,i.tel,(i.creneaux||[]).join('/'),i.statut,i.assigne,i.rdv]}));
+ var rows=[['Reçue le','Prénom','Mail','Téléphone','Disponibilités','Statut','Thérapeute','Date RDV','Heure','Salle']].concat(items.map(function(i){return[i.creeLe,i.prenom,i.email,i.tel,(i.creneaux||[]).join('/'),i.statut,i.therapeute||i.assigne,i.rdvDate||'',i.rdvHeure||'',i.salle||'']}));
  var t=rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'}).join(';')}).join('\n');
  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download='demandes-capsule.csv';a.click()};
 if(token)load();
