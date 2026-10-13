@@ -192,6 +192,13 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 .req:hover{box-shadow:0 6px 18px rgba(117,21,31,.07)}
 .day td.h.now{color:var(--rasp);font-weight:700}
 @media (max-width:860px){.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{padding:12px 10px!important}.stat b{font-size:24px!important}.stat span,.stat small{font-size:11px}.today .tl{flex:1 1 100%;flex-direction:column}.tchip{width:100%;text-align:left}aside{overflow-x:auto;justify-content:flex-start;scrollbar-width:none}aside::-webkit-scrollbar{display:none}.nv{flex:1 0 auto;width:auto;min-width:68px}.ph0{padding:18px 20px;border-radius:20px}.ph0 h1{font-size:25px}.qa .lbl{display:none}.qa .btn{padding:8px 11px}.mobtop{gap:10px}.mobtop .lg{flex:none}}
+.sc{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 16px}.sc button{flex:1 0 34px;min-width:34px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font:600 14px Poppins,sans-serif;color:var(--ink,#2b1d22);cursor:pointer}.sc button.on{background:var(--rasp);border-color:var(--rasp);color:#fff}.sc.c7 button{height:42px}
+.scl{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;margin-top:-10px;margin-bottom:14px}.mq b{font-size:14.5px}.mq span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.egrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;margin-bottom:16px}.ec{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}.ec h3{margin:0 0 2px;font-size:16px}.ec .cap{font-size:13px;color:var(--muted);margin:0 0 10px}.ec svg{width:100%;height:auto;display:block}
+.eins{background:var(--rose);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;font-size:14.5px;line-height:1.55}.eins b{color:var(--rasp)}.enote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 2px 24px}
+.ekp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}.ekp .kpi{padding:16px}.ekp .kpi b{font-size:30px}.ekp .kpi small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.mchip{font-size:12px;color:var(--muted);background:var(--rose);border-radius:999px;padding:2px 9px}
+@media (max-width:860px){.egrid{grid-template-columns:1fr}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
@@ -206,6 +213,7 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 <button class="nv" data-v="2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendrier</button>
 <button class="nv" data-v="4"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/></svg>Patients</button>
 <button class="nv" data-v="5"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Activité</button>
+<button class="nv hide" data-v="8" id="nve"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M7.5 15l3.5-4 3 2.5L19 7"/><circle cx="19" cy="7" r="1.2"/></svg>Efficacité</button>
 <button class="nv" data-v="6"><svg viewBox="0 0 24 24"><path d="M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M5 17a3 3 0 013-3h10M9 8h5"/></svg>Ressources</button>
 <button class="nv" data-v="7"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5L12 13l8.5-5.5"/></svg>Messages</button>
 <button class="nv hide" data-v="3" id="nvt"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2 .6 3.3 2.5 3.5 6"/></svg>Équipe</button>
@@ -237,6 +245,7 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 <div class="filters" id="rtabs"></div>
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
+<section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées.</p></header><div id="efbody"></div></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
 <section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
@@ -292,7 +301,7 @@ function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){toast(d.error||'Erreur');return}
  items=d.items;photos=d.photos||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
- $('nvt').classList.toggle('hide',!isAdmin);$('radd').classList.toggle('hide',!isAdmin);
+ $('nvt').classList.toggle('hide',!isAdmin);$('nve').classList.toggle('hide',!isAdmin);$('radd').classList.toggle('hide',!isAdmin);
  $('login').classList.add('hide');$('app').classList.remove('hide');
  $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+(moi==='geoffrey'||moi==='violette'?' ('+titre(moi)+')':'');$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=(moi==='geoffrey'||moi==='violette'?titre(moi)+' · ':'')+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'');
  if(!week)week=monday(iso(new Date()));
@@ -371,8 +380,14 @@ function detail(id){var i=byId(id);if(!i)return;
  (aConfirmer(i)?'<div class="rdvbox"><b>Cette séance a eu lieu ?</b><button class="btn s" data-m="ok" data-id="'+esc(id)+'">Séance réalisée</button><button class="btn l s" data-m="abs" data-id="'+esc(id)+'">Absent·e</button></div>':'')+'<div class="row">'+(cfg.mail?'<button class="btn l s" data-m="resend" data-id="'+esc(id)+'">'+(i.invitEnvoyee?'Renvoyer':'Envoyer')+' l’invitation</button>':'')+'<button class="btn l s" data-m="move" data-id="'+esc(id)+'">Changer de créneau</button><button class="btn s" data-m="cancel" data-id="'+esc(id)+'">Annuler le rendez-vous</button></div><div class="row"><button class="link" data-m="x" style="margin:0">Fermer</button></div>',true)}
 $('ov').onclick=function(e){
  if(e.target===$('ov')){closeM();return}
- var b=e.target.closest('button');if(!b)return;var m=b.dataset.m,id=b.dataset.id;
+ var b=e.target.closest('button');if(!b)return;
+ if(b.dataset.sc){var v=+b.dataset.v;if(b.dataset.sc==='be')mBE=mBE===v?null:v;else mSA=mSA===v?null:v;Array.prototype.forEach.call(b.parentNode.children,function(x){x.classList.toggle('on',x===b&&(b.dataset.sc==='be'?mBE:mSA)===v)});return}
+ var m=b.dataset.m,id=b.dataset.id;
  if(m==='x')closeM();
+ else if(m==='mesok')mesSave(false);
+ else if(m==='mesplan')mesSave(true);
+ else if(m==='mes')mesureForm(id,+b.dataset.k,false);
+ else if(m==='chg'){var cv=+b.dataset.v,it=byId(id),cur=it.changement?it.changement.v:null;api({action:'changement',id:id,valeur:cur===cv?null:cv}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});fiche(id)}else toast(r.error||'Erreur')})}
  else if(m==='ok'||m==='abs')issue(id,m==='ok'?'realisee':'absence');
  else if(m==='fiche')fiche(id);
  else if(m==='msg'){closeM();mto=id;mk='envoyer';nav(7)}
@@ -402,14 +417,14 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function nav(n){[1,2,3,4,5,6,7].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs()}
+function nav(n){[1,2,3,4,5,6,7,8].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
 function issue(id,iss){api({action:'seance_issue',id:id,issue:iss}).then(function(r){
  if(!r.ok){toast(r.error||'Erreur');return}
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
- if(iss==='realisee'){var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
+ if(iss==='realisee'){mesureForm(id,r.item.seances.length-1,true);return;var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
  else toast('Absence enregistrée. La personne repasse « à recontacter ».')})}
 function refreshMe(){var ms=mesStats(moi);$('whoc').textContent=ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'')}
 /* ---- patients ---- */
@@ -440,8 +455,8 @@ function fiche(id){var i=byId(id);if(!i)return;var n=nS(i),a=nS(i,'absence'),pc=
  '<label class="f">Thérapeute<select id="fa"><option value="">—</option>'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===(i.assigne||i.therapeute)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Statut<select id="fs">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===i.statut?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></label>'+
  '<label class="f w">Notes organisationnelles<textarea id="fn" rows="2" maxlength="1000">'+esc(i.notes)+'</textarea></label></div>'+
- '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span><button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+
- '<div class="row"><button class="btn" data-m="fsave" data-id="'+esc(id)+'">Enregistrer</button><button class="btn l" data-m="msg" data-id="'+esc(id)+'">Envoyer un message</button><button class="btn l" data-m="x">Fermer</button><span class="ok" id="fok"></span><button class="link" data-m="fdel" data-id="'+esc(id)+'">Supprimer la fiche</button></div>')}
+ '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span>'+(h.s.issue==='realisee'?(h.s.bienEtre!=null||h.s.satisfaction!=null?'<span class="mchip">'+(h.s.bienEtre!=null?'Bien-être '+h.s.bienEtre+'/10':'')+(h.s.bienEtre!=null&&h.s.satisfaction!=null?' · ':'')+(h.s.satisfaction!=null?'Satisf. '+h.s.satisfaction+'/10':'')+'</span><button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">modifier</button>':'<button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">+ mesures</button>'):'')+'<button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+ 
+ chgBlock(i)+'<div class="row"><button class="btn" data-m="fsave" data-id="'+esc(id)+'">Enregistrer</button><button class="btn l" data-m="msg" data-id="'+esc(id)+'">Envoyer un message</button><button class="btn l" data-m="x">Fermer</button><span class="ok" id="fok"></span><button class="link" data-m="fdel" data-id="'+esc(id)+'">Supprimer la fiche</button></div>')}
 function addPerson(){openM('<h3>Ajouter une personne</h3><p class="sub">Pour quelqu’un qui n’est pas passé par le formulaire du site.</p><div class="g2"><label class="f">Prénom<input id="np" maxlength="60"></label><label class="f">Mail<input id="nm" type="email"></label><label class="f">Téléphone (facultatif)<input id="nt"></label></div><div class="row"><button class="btn" id="ngo">Ajouter</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="nerr" style="margin-top:10px"></div>',true);
  $('ngo').onclick=function(){this.disabled=true;api({action:'creer',prenom:$('np').value,email:$('nm').value,tel:$('nt').value}).then(function(r){if(!r.ok){$('nerr').textContent=r.error;$('ngo').disabled=false;return}items.unshift(r.item);draw();fiche(r.item.id);toast('Personne ajoutée.')})}}
 $('padd').onclick=addPerson;
@@ -590,13 +605,87 @@ function shown(n,d){if(d.ok){team(d);$('tmsg').innerHTML='<span class="code">'+e
 function dl(txt,name,mime){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=name;a.click()}
 function nt(i){return Array.isArray(i.notes)?i.notes.map(function(x){return typeof x==='string'?x:(x.texte||x.t||'')}).join(' | '):(i.notes||'')}
 $('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)return;var k=b.dataset.x,d=iso(new Date()),R;
- if(k==='pat'){R=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',(i.creeLe||'').slice(0,10)]}));csv(R,'patients-'+d+'.csv')}
+ if(k==='pat'){R=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Changement perçu (1-7)','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',i.changement?i.changement.v:'',(i.creeLe||'').slice(0,10)]}));csv(R,'patients-'+d+'.csv')}
  else if(k==='dem'){R=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',i.rdvDate?i.rdvDate+' '+(i.rdvHeure||'')+' '+(i.salle||''):'',nt(i)]}));csv(R,'demandes-'+d+'.csv')}
- else if(k==='sea'){R=[['Date','Heure','Salle','Thérapeute','Patient','Issue']];items.forEach(function(i){(i.seances||[]).forEach(function(s){R.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence'])})});R.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(R,'seances-'+d+'.csv')}
+ else if(k==='sea'){R=[['Date','Heure','Salle','Thérapeute','Patient','Issue','Bien-être (0-10)','Satisfaction (0-10)']];items.forEach(function(i){(i.seances||[]).forEach(function(s){R.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence',s.bienEtre==null?'':s.bienEtre,s.satisfaction==null?'':s.satisfaction])})});R.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(R,'seances-'+d+'.csv')}
  else if(k==='act'){R=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(R,'heures-equipe-'+d+'.csv')}
  else if(k==='msg'){api({action:'messages_data'}).then(function(z){if(!z.ok)return toast(z.error||'Erreur');R=[['Date','Destinataire','Adresse','Objet','Modèle','Envoyé par','Statut','Erreur']].concat((z.journal||[]).map(function(x){return[x.le,x.nom,x.a,x.objet,x.modele,x.type==='auto'?'automatique':x.par,x.statut,x.erreur||'']}));csv(R,'messages-'+d+'.csv')})}
  else if(k==='all'){api({action:'messages_data'}).then(function(z){dl(JSON.stringify({exporteLe:new Date().toISOString(),par:moi,demandes:items,equipe:equipe,messages:z.journal||[]},null,1),'capsule-sauvegarde-'+d+'.json','application/json')})}
 };
+/*EFF*/
+/* ---- mesures de séance et changement perçu ---- */
+var CHG=['Beaucoup moins bien','Moins bien','Un peu moins bien','Inchangé','Un peu mieux','Mieux','Beaucoup mieux'];
+var mId='',mK=0,mBE=null,mSA=null,mFresh=false;
+function scale(kind,val,n0,n1){var h='<div class="sc'+(n1-n0<8?' c7':'')+'">';for(var v=n0;v<=n1;v++)h+='<button type="button" data-sc="'+kind+'" data-v="'+v+'"'+(val===v?' class="on"':'')+'>'+v+'</button>';return h+'</div>'}
+function mesureForm(id,k,fresh){var i=byId(id),sc=i.seances[k];mId=id;mK=k;mFresh=!!fresh;mBE=sc.bienEtre==null?null:sc.bienEtre;mSA=sc.satisfaction==null?null:sc.satisfaction;var n=nS(i);
+ openM('<h3>'+(fresh?'Séance enregistrée':'Mesures de la séance')+'</h3><p class="sub">'+esc(i.prenom)+' · séance '+(k+1)+(fresh?' · '+n+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum':'')+'. Facultatif, mais ces deux notes alimentent l’onglet Efficacité.</p>'+
+ '<div class="mq"><b>Bien-être de la semaine écoulée</b><span>Demandé en début de séance : « Comment vous êtes-vous senti·e cette semaine ? »</span></div>'+scale('be',mBE,0,10)+'<div class="scl"><span>0 · très mal</span><span>10 · très bien</span></div>'+
+ '<div class="mq"><b>Utilité de la séance</b><span>Demandé en fin de séance : « Cette séance m’a aidé·e. »</span></div>'+scale('sa',mSA,0,10)+'<div class="scl"><span>0 · pas du tout</span><span>10 · tout à fait</span></div>'+
+ '<div class="row"><button class="btn" data-m="mesok">Enregistrer</button>'+(fresh?'<button class="btn l" data-m="mesplan">Enregistrer et planifier la suivante</button>':'')+'<button class="btn l" data-m="x">'+(fresh?'Plus tard':'Annuler')+'</button></div>',true)}
+function mesSave(go){api({action:'seance_mesure',id:mId,index:mK,bienEtre:mBE,satisfaction:mSA}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}items=items.map(function(x){return x.id===mId?r.item:x});closeM();draw();toast('Mesures enregistrées.');if(go)planner(mId);else if(!mFresh)fiche(mId)})}
+function chgBlock(i){if(!nS(i))return'';var c=i.changement?i.changement.v:null;
+ return '<h4 style="margin:18px 0 0">Changement perçu</h4><p class="sub" style="font-size:12.5px;margin:2px 0 0">À renseigner en fin de suivi : « Par rapport à votre arrivée, comment vous sentez-vous ? »</p><div class="sc c7">'+[1,2,3,4,5,6,7].map(function(v){return '<button type="button" data-m="chg" data-id="'+esc(i.id)+'" data-v="'+v+'"'+(c===v?' class="on"':'')+' title="'+CHG[v-1]+'">'+v+'</button>'}).join('')+'</div><div class="scl" style="margin-top:-10px"><span>'+(c?esc(CHG[c-1]):'Non renseigné')+'</span><span>1 · beaucoup moins bien — 7 · beaucoup mieux</span></div>'}
+
+/* ---- étude d'efficacité ---- */
+function avg(a){return a.length?a.reduce(function(t,x){return t+x},0)/a.length:null}
+function sdv(a){if(a.length<2)return null;var m=avg(a);return Math.sqrt(a.reduce(function(t,x){return t+(x-m)*(x-m)},0)/(a.length-1))}
+function med(a){if(!a.length)return null;var b=a.slice().sort(function(x,y){return x-y}),m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2}
+function f1(x){return x==null?'—':(Math.round(x*10)/10).toString().replace('.',',')}
+function pct(a,b){return b?Math.round(a/b*100):0}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/864e5)}
+function svgLine(pts,ymax,ylab){var W=560,H=230,L=34,R=14,T=22,B=48,iw=W-L-R,ih=H-T-B,n=pts.length;
+ function X(k){return L+(n===1?iw/2:k*iw/(n-1))}function Y(v){return T+ih-v/ymax*ih}
+ var g='';[0,5,10].forEach(function(v){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#EADFD6"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#7a6b70">'+v+'</text>'});
+ var d=pts.map(function(q,k){return(k?'L':'M')+X(k).toFixed(1)+' '+Y(q.y).toFixed(1)}).join(' ');
+ var dots=pts.map(function(q,k){return '<circle cx="'+X(k)+'" cy="'+Y(q.y)+'" r="5" fill="#AE164E" stroke="#fff" stroke-width="2"/><text x="'+X(k)+'" y="'+(Y(q.y)-11)+'" text-anchor="middle" font-size="12" font-weight="600" fill="#75151F">'+f1(q.y)+'</text><text x="'+X(k)+'" y="'+(H-26)+'" text-anchor="middle" font-size="12" fill="#2b1d22">'+q.x+'</text><text x="'+X(k)+'" y="'+(H-10)+'" text-anchor="middle" font-size="10.5" fill="#7a6b70">n='+q.n+'</text>'}).join('');
+ return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(ylab)+'">'+g+(n>1?'<path d="'+d+'" fill="none" stroke="#AE164E" stroke-width="2.5" stroke-linejoin="round"/>':'')+dots+'</svg>'}
+function svgBars(bars,col,xlab){var W=560,H=210,L=10,R=10,T=22,B=40,iw=W-L-R,ih=H-T-B,n=bars.length,mx=Math.max.apply(null,bars.map(function(b){return b.v}).concat([1])),bw=iw/n*0.68,gap=iw/n;
+ var h='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ih)+'" y2="'+(T+ih)+'" stroke="#EADFD6"/>';
+ bars.forEach(function(b,k){var bh=b.v/mx*ih,x=L+k*gap+(gap-bw)/2;h+='<rect x="'+x+'" y="'+(T+ih-bh)+'" width="'+bw+'" height="'+bh+'" rx="4" fill="'+(b.c||col)+'"/>'+(b.v?'<text x="'+(x+bw/2)+'" y="'+(T+ih-bh-6)+'" text-anchor="middle" font-size="12" font-weight="600" fill="#2b1d22">'+b.v+'</text>':'')+'<text x="'+(x+bw/2)+'" y="'+(H-20)+'" text-anchor="middle" font-size="12" fill="#2b1d22">'+b.l+'</text>'});
+ return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(xlab)+'">'+h+'<text x="'+(W/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="11" fill="#7a6b70">'+esc(xlab)+'</text></svg>'}
+function svgStack(parts,W){W=W||560;var tot=parts.reduce(function(t,p){return t+p.v},0)||1,x=0,h='';
+ parts.forEach(function(p){var w=p.v/tot*W;if(p.v){h+='<rect x="'+x+'" y="6" width="'+w+'" height="34" fill="'+p.c+'"/>'+(w>34?'<text x="'+(x+w/2)+'" y="28" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">'+p.v+'</text>':'')}x+=w});
+ var lg='';parts.forEach(function(p,k){lg+='<g transform="translate('+(k*(W/parts.length))+',62)"><rect width="11" height="11" rx="3" fill="'+p.c+'"/><text x="17" y="10" font-size="12" fill="#2b1d22">'+p.l+' · '+pct(p.v,tot)+' %</text></g>'});
+ return '<svg viewBox="0 0 '+W+' 82" role="img" aria-label="Répartition de l’évolution"><clipPath id="rc"><rect y="6" width="'+W+'" height="34" rx="10"/></clipPath><g clip-path="url(#rc)">'+h+'</g>'+lg+'</svg>'}
+function drawEff(){
+ var suivis=items.filter(function(i){return nS(i)>0}),real=[],abs=0;
+ items.forEach(function(i){(i.seances||[]).forEach(function(s,k){if(s.issue==='realisee')real.push({i:i,s:s,k:k});else abs++})});
+ var sc=function(i){return(i.seances||[]).filter(function(s){return s.issue==='realisee'&&s.bienEtre!=null})};
+ var withBE=suivis.filter(function(i){return sc(i).length>=2}),first=[],last=[],diffs=[];
+ withBE.forEach(function(i){var a=sc(i),f=a[0].bienEtre,l=a[a.length-1].bienEtre;first.push(f);last.push(l);diffs.push(l-f)});
+ var md=avg(diffs),sd=sdv(diffs),dz=sd?md/sd:null,up=diffs.filter(function(d){return d>=2}).length,down=diffs.filter(function(d){return d<=-2}).length,flat=diffs.length-up-down;
+ var sats=real.filter(function(r){return r.s.satisfaction!=null}).map(function(r){return r.s.satisfaction});
+ var chg=items.filter(function(i){return i.changement}).map(function(i){return i.changement.v});
+ var perP=suivis.map(function(i){return nS(i)}),ter=items.filter(function(i){return i.statut==='terminee'}).length,ss=items.filter(function(i){return i.statut==='sans_suite'&&nS(i)>0}).length;
+ var delais=suivis.map(function(i){var f=(i.seances||[]).filter(function(s){return s.issue==='realisee'})[0];return i.creeLe&&f?daysBetween(i.creeLe.slice(0,10),f.date):null}).filter(function(x){return x!=null&&x>=0});
+ var mes=real.filter(function(r){return r.s.bienEtre!=null||r.s.satisfaction!=null}).length;
+ var kp=function(b,l,sm){return '<div class="kpi pastel"><b>'+b+'</b><span>'+l+'</span>'+(sm?'<small>'+sm+'</small>':'')+'</div>'};
+ var h='<div class="ekp">'+kp(suivis.length,'personnes suivies','au moins 1 séance')+kp(real.length,'séances réalisées',pct(real.length,real.length+abs)+' % de présence')+kp(f1(med(perP)),'séances par personne','médiane')+kp(delais.length?f1(med(delais))+' j':'—','délai avant la 1ʳᵉ séance','médiane, demande → séance')+'</div>';
+ if(!mes&&!chg.length){$('efbody').innerHTML=h+'<div class="empty"><b>Pas encore de mesures</b>Après chaque séance réalisée, la plateforme propose de noter le bien-être de la semaine et l’utilité de la séance (0 à 10). En fin de suivi, la fiche patient permet d’indiquer le changement perçu (1 à 7). Les graphiques apparaîtront ici dès les premières notes.</div>';return}
+ var ins='';
+ if(withBE.length)ins+='Chez <b>'+withBE.length+'</b> personne'+(withBE.length>1?'s':'')+' avec au moins deux mesures, le bien-être passe de <b>'+f1(avg(first))+'</b> à <b>'+f1(avg(last))+'</b> sur 10 (<b>'+(md>=0?'+':'')+f1(md)+'</b>'+(dz!=null?', d de Cohen = '+f1(dz):'')+'). ';
+ if(sats.length)ins+='Satisfaction moyenne : <b>'+f1(avg(sats))+'/10</b>, <b>'+pct(sats.filter(function(v){return v>=8}).length,sats.length)+' %</b> des séances notées 8 ou plus. ';
+ if(chg.length)ins+='Changement perçu : <b>'+pct(chg.filter(function(v){return v>=5}).length,chg.length)+' %</b> se sentent mieux en fin de suivi.';
+ h+='<div class="eins">'+ins+'</div><div class="egrid">';
+ // 1 courbe par n° de séance
+ var par={};real.forEach(function(r){if(r.s.bienEtre!=null){var k=Math.min(r.k+1,8);(par[k]=par[k]||[]).push(r.s.bienEtre)}});
+ var pts=Object.keys(par).map(Number).sort(function(a,b){return a-b}).map(function(k){return{x:k===8?'8+':String(k),y:avg(par[k]),n:par[k].length}});
+ h+='<article class="ec"><h3>Bien-être au fil des séances</h3><p class="cap">Moyenne sur 10, selon le numéro de séance. Plus haut = mieux.</p>'+(pts.length?svgLine(pts,10,'Bien-être moyen par séance'):'<p class="sub">Pas encore de mesure.</p>')+'</article>';
+ // 2 évolution
+ h+='<article class="ec"><h3>Évolution individuelle du bien-être</h3><p class="cap">Dernière mesure comparée à la première (changement d’au moins 2 points).</p>'+(withBE.length?svgStack([{l:'Amélioré·e',v:up,c:'#AE164E'},{l:'Stable',v:flat,c:'#B9A9B4'},{l:'Dégradé·e',v:down,c:'#75151F'}]):'<p class="sub">Il faut au moins deux séances mesurées pour une même personne.</p>')+(withBE.length?'<p class="cap" style="margin-top:8px">'+withBE.length+' personne'+(withBE.length>1?'s':'')+'</p>':'')+'</article>';
+ // 3 satisfaction
+ var sb=[];for(var v=0;v<=10;v++)sb.push({l:v,v:sats.filter(function(x){return x===v}).length,c:v>=8?'#7B206B':'#C9B3C8'});
+ h+='<article class="ec"><h3>Satisfaction</h3><p class="cap">Notes d’utilité de la séance (0 à 10). En violet : 8 et plus.</p>'+(sats.length?svgBars(sb,'#7B206B','Note (nombre de séances)'):'<p class="sub">Pas encore de note.</p>')+'</article>';
+ // 4 changement perçu
+ var cb=[1,2,3,4,5,6,7].map(function(v){return{l:v,v:chg.filter(function(x){return x===v}).length,c:v>=5?'#E30F1B':v===4?'#C9B3C8':'#75151F'}});
+ h+='<article class="ec"><h3>Changement perçu en fin de suivi</h3><p class="cap">1 = beaucoup moins bien · 4 = inchangé · 7 = beaucoup mieux.</p>'+(chg.length?svgBars(cb,'#E30F1B','Échelle de changement (nombre de personnes)'):'<p class="sub">À renseigner depuis la fiche patient.</p>')+'</article>';
+ // 5 séances par personne
+ var pb=[];for(var q=1;q<=8;q++)pb.push({l:q===8?'8+':q,v:perP.filter(function(x){return q===8?x>=8:x===q}).length,c:'#AE164E'});
+ h+='<article class="ec"><h3>Nombre de séances par personne</h3><p class="cap">Où s’arrêtent les suivis. Repère habituel : 6 à 8 séances.</p>'+(suivis.length?svgBars(pb,'#AE164E','Séances réalisées (nombre de personnes)'):'<p class="sub">Aucun suivi.</p>')+'</article>';
+ // 6 issue des suivis
+ h+='<article class="ec"><h3>Issue des suivis</h3><p class="cap">Suivis terminés comparés aux arrêts sans suite (personnes ayant eu au moins une séance).</p>'+((ter+ss)?svgStack([{l:'Terminés',v:ter,c:'#7B206B'},{l:'Sans suite',v:ss,c:'#B9A9B4'}]):'<p class="sub">Aucun suivi clos pour le moment.</p>')+'</article></div>';
+ h+='<p class="enote">Lecture : données descriptives issues de l’activité courante, sans groupe de comparaison ni outil validé : elles montrent une tendance, pas un effet prouvé. Les petits effectifs (n) sont à interpréter avec prudence. Complétude : '+pct(mes,real.length)+' % des séances réalisées ont au moins une mesure.</p>';
+ $('efbody').innerHTML=h}
 $('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value}).then(function(d){shown(n,d)})};
 $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)return;var n=b.dataset.n;
  if(b.dataset.t==='reset'){if(confirm('Générer un nouveau code pour '+n+' ? L’ancien ne fonctionnera plus.'))api({action:'compte_reset',nom:n}).then(function(d){shown(n,d)})}
