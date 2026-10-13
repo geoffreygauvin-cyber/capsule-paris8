@@ -159,7 +159,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 <section id="v1"><div class="rule"><i></i><i></i><i></i></div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p>
 <div class="stats" id="stats"></div>
 <div class="filters" id="tabs"></div>
-<div class="tools"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher"><button class="btn l s" id="csv">Exporter</button><button class="btn l s" id="refresh">Actualiser</button></div>
+<div class="tools"><input id="q" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher"></div>
 <div id="list"></div>
 <p class="note" style="margin-top:18px">Données sensibles : dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
 
@@ -171,12 +171,12 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 
 <section id="v4" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p>
 <div class="filters" id="ptabs"></div>
-<div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button><button class="btn l s" id="pcsv">Exporter</button></div>
+<div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button></div>
 <div class="tbl" id="ptbl"></div></section>
 <section id="v5" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Activité</h1><p class="sub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p>
 <div class="filters" id="atabs"></div>
 <div class="tbl" id="atbl"></div>
-<div class="row"><button class="btn l s" id="acsv">Exporter le tableau</button></div></section>
+</section>
 <section id="v3" class="hide"><div class="rule"><i></i><i></i><i></i></div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
@@ -373,7 +373,6 @@ function fiche(id){var i=byId(id);if(!i)return;var n=nS(i),a=nS(i,'absence'),pc=
 function addPerson(){openM('<h3>Ajouter une personne</h3><p class="sub">Pour quelqu’un qui n’est pas passé par le formulaire du site.</p><div class="g2"><label class="f">Prénom<input id="np" maxlength="60"></label><label class="f">Mail<input id="nm" type="email"></label><label class="f">Téléphone (facultatif)<input id="nt"></label></div><div class="row"><button class="btn" id="ngo">Ajouter</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="nerr" style="margin-top:10px"></div>',true);
  $('ngo').onclick=function(){this.disabled=true;api({action:'creer',prenom:$('np').value,email:$('nm').value,tel:$('nt').value}).then(function(r){if(!r.ok){$('nerr').textContent=r.error;$('ngo').disabled=false;return}items.unshift(r.item);draw();fiche(r.item.id);toast('Personne ajoutée.')})}}
 $('padd').onclick=addPerson;
-$('pcsv').onclick=function(){var rows=[['Prénom','Mail','Téléphone','Thérapeute','Statut','Séances réalisées','Absences','Dernière séance','Prochain RDV']].concat(base().map(function(i){var l=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.assigne||i.therapeute||'',SL[i.statut],nS(i),nS(i,'absence'),l?l.date:'',i.rdvDate?i.rdvDate+' '+i.rdvHeure:'']}));csv(rows,'patients-capsule.csv')}
 function csv(rows,name){var t=rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'}).join(';')}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download=name;a.click()}
 /* ---- profil ---- */
 function profil(){var ms=mesStats(moi);
@@ -397,7 +396,6 @@ function drawAct(){
   return '<div class="pr act'+(r.nom===moi?' selfrow':'')+'"><span class="n">'+av(r.nom)+'<span class="tx"><b>'+esc(cap(r.nom))+(r.nom===moi?' <small style="display:inline">(vous)</small>':'')+'</b></span></span><span class="c2"><b style="font-size:20px;color:var(--rasp)">'+r.heures+'</b> h</span><span class="c3"><b>'+r.patients+'</b> patient'+(r.patients>1?'s':'')+'</span><span>'+r.abs+' abs. · '+r.avenir+' RDV</span></div>'}).join('')+
   '<div class="pr act tot"><span class="n"><b>Total équipe</b></span><span class="c2"><b>'+T.h+'</b> h</span><span class="c3"><b>'+pats+'</b> patient'+(pats>1?'s':'')+'</span><span>'+T.a+' abs. · '+T.v+' RDV</span></div>'}
 $('atabs').onclick=function(e){var b=e.target.closest('.chip');if(b){ap=b.dataset.a2;drawAct()}};
-$('acsv').onclick=function(){var mm=ap==='mois'?iso(new Date()).slice(0,7):null;csv([['Étudiant·e','Heures','Séances réalisées','Patients accompagnés','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n,mm);return[cap(n),x.heures,x.seances,x.patients,x.abs,mesStats(n).avenir]})),'activite-capsule'+(mm?'-'+mm:'')+'.csv')};
 function releve(){var rows=[['Date','Heure','Durée (h)','Lieu']];
  items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute===moi&&s.issue==='realisee')rows.push([s.date,s.heure,1,s.salle])})});
  rows=[rows[0]].concat(rows.slice(1).sort(function(a,b){return(a[0]+a[1]).localeCompare(b[0]+b[1])}));
@@ -408,7 +406,7 @@ $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var 
  api({action:'login',compte:$('u').value,code:$('p').value}).then(function(d){b.disabled=false;
   if(!d.ok){$('lerr').textContent=d.error||'Erreur';return}
   token=d.token;try{sessionStorage.setItem('cap_t',token)}catch(e){}$('p').value='';load()})};
-$('logout2').onclick=logout;$('refresh').onclick=function(){load(function(){toast('À jour.')})};$('q').oninput=draw;
+$('logout2').onclick=logout;$('q').oninput=draw;
 /* ---- équipe ---- */
 function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>compte principal · '+mesStats(n).total+' h</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' h · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
 function loadTeam(){api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})}
@@ -429,10 +427,6 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-$('csv').onclick=function(){
- var rows=[['Reçue le','Prénom','Mail','Téléphone','Disponibilités','Statut','Thérapeute','Date RDV','Heure','Salle']].concat(items.map(function(i){return[i.creeLe,i.prenom,i.email,i.tel,(i.creneaux||[]).join('/'),i.statut,i.therapeute||i.assigne,i.rdvDate||'',i.rdvHeure||'',i.salle||'']}));
- var t=rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'}).join(';')}).join('\n');
- var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download='demandes-capsule.csv';a.click()};
 if(token)load();
 })();
 </script></body></html>
