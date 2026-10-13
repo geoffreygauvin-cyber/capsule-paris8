@@ -1,11 +1,11 @@
 CAPSULE – site statique (HTML, JavaScript et images)
 
-Pour modifier les textes : voir MODIFIER-LE-SITE.md (tout se fait dans contenu.js).
+Pour modifier les textes : voir MODIFIER-LE-SITE.md (tout se fait dans contenu.json).
 
 Contenu :
 - index.html  : apparence (CSS) et squelette de la page
-- contenu.js  : tous les textes, contacts, horaires, ressources, FAQ
-- site.js     : construit la page à partir de contenu.js
+- contenu.json  : tous les textes, contacts, horaires, ressources, FAQ
+- site.js     : construit la page à partir de contenu.json
 - img/        : illustrations
 
 Hébergement : aucun serveur ni base de données. Netlify republie le site à chaque modification sur GitHub.

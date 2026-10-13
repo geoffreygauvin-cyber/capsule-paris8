@@ -1,0 +1,245 @@
+{
+  "contact": {
+    "email": "capsule-contact@gmail.com",
+    "lienRendezVous": ""
+  },
+  "marque": {
+    "nom": "CAPSULE",
+    "sousTitre": "Psychologie · Paris 8"
+  },
+  "boutonRendezVous": "Prendre rendez-vous",
+  "menu": [
+    {
+      "texte": "Le dispositif",
+      "lien": "#dispositif"
+    },
+    {
+      "texte": "Pourquoi venir",
+      "lien": "#venir"
+    },
+    {
+      "texte": "Rendez-vous",
+      "lien": "#rdv"
+    },
+    {
+      "texte": "Ressources",
+      "lien": "#ressources"
+    },
+    {
+      "texte": "Questions",
+      "lien": "#faq"
+    },
+    {
+      "texte": "Urgences",
+      "lien": "#urgence"
+    }
+  ],
+  "accueil": {
+    "surtitre": "UFR de psychologie · Université Paris 8",
+    "titre": "Un temps pour vous, [[entre deux cours.]]",
+    "intro": "**Des étudiant·es de M2 de psychologie** proposent des consultations psychologiques gratuites aux étudiant·es.",
+    "boutonPrincipal": "Prendre rendez-vous",
+    "lienSecondaire": "Comment ça marche"
+  },
+  "dispositif": {
+    "titre": "Trois choses [[à retenir]]",
+    "texte": "Le dispositif tient en peu de mots, ce qui change des formulaires de l'université.",
+    "cartes": [
+      {
+        "icone": "euro",
+        "etiquette": "Gratuit",
+        "titre": "Zéro euro",
+        "texte": "Les consultations psychologiques sont gratuites pour les étudiant·es. Aucune avance de frais, aucune mutuelle à interroger."
+      },
+      {
+        "icone": "cap",
+        "etiquette": "M2 de psychologie",
+        "titre": "Des étudiant·es formé·es",
+        "texte": "Ce sont des étudiant·es de Master 2 de psychologie qui reçoivent. Elles et ils connaissent le quotidien des études, parce qu'elles et ils le vivent aussi."
+      },
+      {
+        "icone": "campus",
+        "etiquette": "Paris 8",
+        "titre": "Dans l'université",
+        "texte": "CAPSULE est pensé pour les étudiant·es de Paris 8, avec leurs emplois du temps et leurs partiels."
+      }
+    ]
+  },
+  "raisons": {
+    "titre": "Des raisons de [[pousser la porte]]",
+    "texte": "Il n'existe pas de bonne raison officielle. Voici quelques exemples, la liste n'est pas limitative.",
+    "liste": [
+      "Le stress des examens",
+      "Une fatigue qui s'installe",
+      "Un moral en dents de scie",
+      "Des difficultés à s'organiser",
+      "Un sentiment de solitude",
+      "Des relations compliquées",
+      "Une décision à prendre",
+      "Juste le besoin de parler"
+    ]
+  },
+  "rendezVous": {
+    "titre": "Prendre rendez-vous, [[en trois temps]]",
+    "texte": "Pas de dossier à monter ni de justificatif à fournir.",
+    "etapes": [
+      {
+        "icone": "mail",
+        "titre": "Vous nous écrivez",
+        "texte": "Quelques lignes suffisent, pas besoin d'expliquer pourquoi."
+      },
+      {
+        "icone": "chat",
+        "titre": "On vous répond",
+        "texte": "Un·e étudiant·e de l'équipe revient vers vous pour fixer un créneau."
+      },
+      {
+        "icone": "door",
+        "titre": "Vous venez parler",
+        "texte": "Une première rencontre pour voir ensemble ce qui vous aiderait."
+      }
+    ],
+    "encartTitre": "Prêt·e à franchir le pas ?",
+    "encartTexte": "C'est gratuit, réservé aux étudiant·es de Paris 8, et vous pouvez changer d'avis après.",
+    "encartMail": "Ou par mail :"
+  },
+  "infosPratiques": [
+    {
+      "icone": "pin",
+      "etiquette": "Où",
+      "valeur": "Bâtiment C",
+      "detail": "Campus de Paris 8.",
+      "metro": "Métro 13, Saint-Denis–Université"
+    },
+    {
+      "icone": "clock",
+      "etiquette": "Quand",
+      "valeur": "Lun. au mer., 9 h–17 h",
+      "detail": "Sur rendez-vous."
+    },
+    {
+      "icone": "euro",
+      "etiquette": "Combien",
+      "valeur": "Gratuit, 6 à 8 séances",
+      "detail": "Pour les étudiant·es de Paris 8."
+    },
+    {
+      "icone": "mail",
+      "etiquette": "Contact",
+      "valeur": "{email}",
+      "detail": "Écrivez-nous pour prendre rendez-vous."
+    }
+  ],
+  "ressources": {
+    "titre": "Des ressources, [[au-delà de CAPSULE]]",
+    "texte": "D'autres portes, à toute heure et pour d'autres situations. Elles sont gratuites et vous pouvez les utiliser en parallèle.",
+    "liste": [
+      {
+        "icone": "shield",
+        "etiquette": "Dispositif national",
+        "titre": "Santé Psy Étudiant",
+        "texte": "Des séances gratuites chez un·e psychologue partenaire, sur inscription avec votre statut étudiant.",
+        "lien": "https://santepsy.etudiant.gouv.fr",
+        "lienTexte": "santepsy.etudiant.gouv.fr"
+      },
+      {
+        "icone": "moon",
+        "etiquette": "Écoute entre étudiant·es",
+        "titre": "Nightline Paris",
+        "texte": "Une écoute anonyme, la nuit, par des étudiant·es formé·es. Pratique quand tout paraît plus lourd à 2 h du matin.",
+        "lien": "https://www.nightline.fr",
+        "lienTexte": "nightline.fr"
+      },
+      {
+        "icone": "phone",
+        "etiquette": "Jeunes, 12–25 ans",
+        "titre": "Fil Santé Jeunes",
+        "texte": "Une ligne anonyme et gratuite pour parler de santé, de mal-être, de sexualité ou de relations.",
+        "numero": "0 800 235 236"
+      },
+      {
+        "icone": "heart",
+        "etiquette": "Écoute",
+        "titre": "SOS Amitié",
+        "texte": "Une écoute anonyme, jour et nuit, par téléphone ou par tchat, sans avoir besoin d'une raison précise.",
+        "numero": "09 72 39 40 50"
+      },
+      {
+        "icone": "alert",
+        "etiquette": "Violences",
+        "titre": "3919",
+        "texte": "Écoute et orientation pour les victimes de violences sexistes et sexuelles, anonyme et gratuite.",
+        "numero": "3919"
+      },
+      {
+        "icone": "cross",
+        "etiquette": "Sur le campus",
+        "titre": "Santé universitaire",
+        "texte": "Le service de santé de l'université propose consultations médicales et orientation. Les horaires sont sur le site de Paris 8.",
+        "lien": "https://www.univ-paris8.fr",
+        "lienTexte": "univ-paris8.fr"
+      }
+    ]
+  },
+  "questions": {
+    "titre": "Les questions [[qu'on nous pose]]",
+    "liste": [
+      {
+        "q": "C'est vraiment gratuit ?",
+        "r": "Oui, pour les étudiant·es de Paris 8. Il n'y a rien à avancer ni à se faire rembourser."
+      },
+      {
+        "q": "Combien de séances ?",
+        "r": "Entre 6 et 8 séances, gratuites."
+      },
+      {
+        "q": "Qui va me recevoir ?",
+        "r": "Des étudiant·es de Master 2 de psychologie de l'UFR de psychologie de Paris 8."
+      },
+      {
+        "q": "Faut-il aller très mal pour venir ?",
+        "r": "Non. Un coup de fatigue, une décision difficile ou l'envie de parler à quelqu'un suffisent."
+      },
+      {
+        "q": "Est-ce que ce que je dis reste confidentiel ?",
+        "r": "Les échanges avec les psychologues sont soumis à la confidentialité. Vos enseignant·es n'y ont pas accès."
+      },
+      {
+        "q": "Et si j'ai besoin d'un suivi plus long ?",
+        "r": "L'équipe peut vous aider à trouver où poursuivre, à l'université ou en dehors. Les ressources ci-dessus sont un bon début."
+      },
+      {
+        "q": "Est-ce que CAPSULE gère les urgences ?",
+        "r": "Non. En cas de danger immédiat, appelez le 3114, le 15 ou le 112."
+      }
+    ]
+  },
+  "porteur": {
+    "entite": "UFR de\npsychologie",
+    "titre": "Porté par l'UFR [[de psychologie]]",
+    "texte": "CAPSULE est un dispositif de l'**UFR de psychologie de l'Université Paris 8 Vincennes-Saint-Denis**. Les consultations sont proposées par des étudiant·es de Master 2 de psychologie, à destination des étudiant·es."
+  },
+  "urgence": {
+    "titre": "CAPSULE n'est pas un service d'urgence",
+    "texte": "Si vous ou quelqu'un de votre entourage êtes en danger immédiat, ne passez pas par un site web. Appelez.",
+    "numeros": [
+      {
+        "numero": "3114",
+        "texte": "Numéro national de prévention du suicide, gratuit, 24 h/24 et 7 j/7"
+      },
+      {
+        "numero": "15",
+        "texte": "SAMU, urgence médicale"
+      },
+      {
+        "numero": "112",
+        "texte": "Numéro d'urgence européen"
+      }
+    ]
+  },
+  "final": {
+    "titre": "Le premier rendez-vous est le plus long à décider.",
+    "texte": "Ensuite, ça va plutôt vite."
+  },
+  "basDePage": "Un dispositif de l'UFR de psychologie · Université Paris 8 Vincennes-Saint-Denis"
+}
