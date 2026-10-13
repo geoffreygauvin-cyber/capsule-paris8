@@ -39,8 +39,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rasp)}
 <header><div><b>CAPSULE</b> <span>· gestion des demandes</span></div><div id="who" class="hide"><span id="whoname"></span> <button class="btn l hide" id="teambtn">Équipe</button> <button class="btn l" id="logout">Se déconnecter</button></div></header>
 <main>
 <form id="login" class="login"><h1>Accès équipe</h1>
-<label>Compte<input id="u" autocomplete="username" required></label>
-<label>Code d’accès<input id="p" type="password" autocomplete="current-password" required></label>
+<label>Compte<input id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+<label>Code d’accès<input id="p" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" required></label>
 <button class="btn" type="submit">Se connecter</button><div class="err" id="lerr"></div></form>
 <section id="app" class="hide">
 <p class="note">Données sensibles : n’écrivez dans les notes que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p>

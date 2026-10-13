@@ -31,6 +31,7 @@ const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000b-\u001f]+/g
 
 export default async (req) => {
   const ac = getStore("comptes");
+  if (req.method === "GET") return J({ comptesPrincipaux: Object.keys(comptes()).length, secret: !!process.env.SESSION_SECRET });
   if (req.method !== "POST") return J({ error: "Méthode refusée" }, 405);
   let b;
   try { b = await req.json(); } catch { return J({ error: "Requête invalide" }, 400); }
@@ -39,11 +40,11 @@ export default async (req) => {
     const c = comptes(); const u = String(b.compte || "").trim().toLowerCase();
     await new Promise((r) => setTimeout(r, 600)); // freine les essais répétés
     if (u in c) {
-      if (!timingSafeEqual(h(b.code), h(c[u]))) return J({ error: "Compte ou code incorrect." }, 401);
+      if (!timingSafeEqual(h(String(b.code ?? "").trim()), h(c[u].trim()))) return J({ error: "Compte ou code incorrect." }, 401);
       return J({ ok: true, token: makeToken(u, "admin", bind(c[u])), compte: u });
     }
     const a = NAME.test(u) ? await ac.get(u, { type: "json" }) : null;
-    if (!a || !timingSafeEqual(Buffer.from(hashCode(b.code, a.salt)), Buffer.from(a.hash))) return J({ error: "Compte ou code incorrect." }, 401);
+    if (!a || !timingSafeEqual(Buffer.from(hashCode(String(b.code ?? "").trim(), a.salt)), Buffer.from(a.hash))) return J({ error: "Compte ou code incorrect." }, 401);
     return J({ ok: true, token: makeToken(u, "membre", a.hash.slice(0, 10)), compte: u });
   }
 
