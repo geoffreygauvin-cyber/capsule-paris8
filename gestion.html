@@ -258,7 +258,7 @@ function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1)}
 function api(b){b.token=token;return fetch('/api/gestion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){d._s=r.status;return d})}).catch(function(){return{error:'Connexion impossible.'}})}
 function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.add('hide')},5000)}
 function pad(n){return(n<10?'0':'')+n}
-function titre(n){return n==='geoffrey'?'Grand chef':'Compte principal'}
+function titre(n){return n==='geoffrey'?'Grand chef':n==='violette'?'Dr. Assistante':'Compte principal'}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function parse(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2],12)}
 function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
@@ -294,7 +294,7 @@ function load(cb){api({action:'list'}).then(function(d){
  items=d.items;photos=d.photos||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
  $('nvt').classList.toggle('hide',!isAdmin);$('radd').classList.toggle('hide',!isAdmin);
  $('login').classList.add('hide');$('app').classList.remove('hide');
- $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+(moi==='geoffrey'?' (Grand chef)':'');$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=(moi==='geoffrey'?'Grand chef · ':'')+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'');
+ $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+(moi==='geoffrey'||moi==='violette'?' ('+titre(moi)+')':'');$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=(moi==='geoffrey'||moi==='violette'?titre(moi)+' · ':'')+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'');
  if(!week)week=monday(iso(new Date()));
  draw();drawCal();if(cb)cb()})}
 /* ---- demandes ---- */
@@ -583,7 +583,7 @@ $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var 
   token=d.token;try{sessionStorage.setItem('cap_t',token)}catch(e){}$('p').value='';load()})};
 $('logout2').onclick=logout;$('q').oninput=draw;
 /* ---- équipe ---- */
-function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>'+titre(n).toLowerCase().replace(/^g/,'G')+' · '+mesStats(n).total+' h</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' h · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
+function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>'+(n==='geoffrey'||n==='violette'?titre(n):'compte principal')+' · '+mesStats(n).total+' h</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' h · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
 function loadTeam(){api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})}
 function shown(n,d){if(d.ok){team(d);$('tmsg').innerHTML='<span class="code">'+esc(n)+' · '+esc(d.code)+'</span><small style="color:var(--muted)">À noter et à transmettre maintenant : il ne sera plus affiché.</small>';$('tn').value='';$('tc').value='';load()}else $('tmsg').innerHTML='<div class="err" style="margin-top:10px">'+esc(d.error||'Erreur')+'</div>'}
 /* export (comptes principaux) */
