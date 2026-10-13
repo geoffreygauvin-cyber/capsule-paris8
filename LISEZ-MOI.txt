@@ -1,8 +1,14 @@
-CAPSULE – site statique (HTML + images)
+CAPSULE – site statique (HTML, JavaScript et images)
 
-Contenu : index.html + dossier img/. Aucun serveur, aucune base de données.
-Hébergement : déposer le dossier tel quel (Netlify, GitHub Pages, serveur web).
-Adresse de contact et lien de rendez-vous : voir « var CFG » dans index.html (bas du fichier).
-Police : Poppins est chargée depuis Google Fonts (ligne <link> en haut). Pour un hébergement universitaire (RGPD),
-la télécharger et l'héberger localement, puis remplacer cette ligne par des règles @font-face.
-Logo : recréation vectorielle, à remplacer par le fichier officiel.
+Pour modifier les textes : voir MODIFIER-LE-SITE.md (tout se fait dans contenu.js).
+
+Contenu :
+- index.html  : apparence (CSS) et squelette de la page
+- contenu.js  : tous les textes, contacts, horaires, ressources, FAQ
+- site.js     : construit la page à partir de contenu.js
+- img/        : illustrations
+
+Hébergement : aucun serveur ni base de données. Netlify republie le site à chaque modification sur GitHub.
+Police : Poppins est chargée depuis Google Fonts (ligne <link> dans index.html). Pour un hébergement universitaire (RGPD),
+la télécharger et l'héberger localement.
+Logo : recréation vectorielle (dans site.js), à remplacer par le fichier officiel.
