@@ -89,7 +89,7 @@
       }).join('') + '</div>' + imgs.pas + '</div></section>';
     var p = C.porteur;
     h += '<section id="porteur" style="padding-top:24px"><div class="owner"><div class="endorse" aria-label="' + esc(m.nom) + ', ' + esc(p.entite.replace(/\n/g, ' ')) + '">' +
-      '<span class="lk"><span data-logo="84"></span><span class="wm" style="font-size:24px">' + f(m.nom) + '</span></span><span class="bar" aria-hidden="true"></span><span class="ent">' + E('porteur.entite', p.entite) + '</span></div>' +
+      '<span class="lk"><span data-logo="84"></span><span class="wm" style="font-size:24px">' + f(m.nom) + '</span></span><span class="bar" aria-hidden="true"></span><img class="ent-logo" src="img/partenaires/paris8.png" alt="Université Paris 8" width="110" height="58"></div>' +
       '<div><h2>' + E('porteur.titre', p.titre) + '</h2><p>' + E('porteur.texte', p.texte) + '</p></div></div></section>';
     var u = C.urgence;
     h += '<section id="urgence" style="padding-top:24px"><div class="alert" role="note"><div><h2>' + E('urgence.titre', u.titre) + '</h2><p>' + E('urgence.texte', u.texte) + '</p></div><div class="nums">' +
