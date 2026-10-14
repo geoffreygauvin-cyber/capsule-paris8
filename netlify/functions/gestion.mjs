@@ -14,6 +14,7 @@ const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"
 const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
 const MAX_FICHIER = 4 * 1024 * 1024;
 const ROLES = ["etudiant", "admin"];
+const nrm = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, "-");
 const rlv = (v) => (v?.role === "superviseur" ? "desactive" : ROLES.includes(v?.role) ? v.role : "etudiant");
 const HEURES_SUP = Array.from({ length: 23 }, (_, k) => { const m = 8 * 60 + k * 30; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + (m % 60 ? "30" : "00"); });
 const DUREES = [60, 90, 120, 180];
@@ -58,7 +59,7 @@ export default async (req) => {
   try { b = await req.json(); } catch { return J({ error: "Requête invalide" }, 400); }
 
   if (b.action === "login") {
-    const c = comptes(); const u = String(b.compte || "").trim().toLowerCase();
+    const c = comptes(); const u = nrm(b.compte);
     await new Promise((r) => setTimeout(r, 600)); // freine les essais répétés
     if (u in c) {
       const ov = await getStore("codes").get(u, { type: "json" });
@@ -100,7 +101,7 @@ export default async (req) => {
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
-    const c = comptes(); const n = String(b.nom || "").trim().toLowerCase();
+    const c = comptes(); const n = nrm(b.nom);
     const prin = async () => Object.fromEntries(await Promise.all(Object.keys(c).map(async (k) => [k, await prinRole(k)])));
     if (b.action === "compte_reset" && n in c) {
       const code = String(b.code || "").trim() || genCode(), salt = randomBytes(16).toString("hex");
