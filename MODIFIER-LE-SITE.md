@@ -56,3 +56,6 @@ Onglet « Emploi du temps » : la semaine d'une personne (rendez-vous patients +
 
 ## Logos des partenaires
 Bandeau en bas du site : déposer les fichiers dans `img/partenaires/` sous les noms `cvec.png` (bloc complet Crous/CVEC, non modifié), `ars.png`, `paris8.png` (PNG fond transparent de préférence). Tant qu'un fichier manque, le nom s'affiche en texte. Liste et liens : variable `PART` dans `site.js`.
+
+## Espace « Publications » (/gestion)
+Page `gestion-com.js` : visuels réseaux (post carré, story) et supports A4 (affiche, fiche info). Tout est dessiné dans un canvas : aperçu, PNG et PDF viennent du même dessin. Modèles, couleurs et logos : constantes `PRE`, `TH`, `SRC` en haut du fichier. Les brouillons sont enregistrés dans le navigateur de chaque personne (pas sur le serveur). Le PDF contient une image haute définition de la page (texte non sélectionnable).

@@ -37,7 +37,7 @@
   "accueil": {
     "surtitre": "Université Paris 8",
     "titre": "Un temps pour vous, [[entre deux cours.]]",
-    "intro": "**Des étudiant·es de M2 de psychologie** proposent des consultations psychologiques gratuites aux étudiant·es.",
+    "intro": "**Des étudiant·es de Master de psychologie** proposent des consultations psychologiques gratuites aux étudiant·es.",
     "boutonPrincipal": "Prendre rendez-vous",
     "lienSecondaire": "Comment ça marche"
   },
@@ -53,7 +53,7 @@
       },
       {
         "icone": "cap",
-        "etiquette": "M2 de psychologie",
+        "etiquette": "Master de psychologie",
         "titre": "Des étudiant·es formé·es",
         "texte": "Ce sont des étudiant·es de Master de psychologie qui reçoivent. Elles et ils connaissent le quotidien des études, parce qu'elles et ils le vivent aussi."
       },
