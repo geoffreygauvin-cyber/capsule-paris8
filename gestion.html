@@ -726,6 +726,7 @@ function buildNav(){
 /* ---- accueil (vue d'ensemble) ---- */
 function drawHome(){
  if(!$('hbody'))return;
+ if(window.comRappels)setTimeout(window.comRappels,0);
  var d=new Date(),t=iso(d),adm=isAdmin,ms=mesStats(moi),mine=function(x){return x.participants.indexOf(moi)>-1||x.superviseur===moi};
  $('hdate').textContent=JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()];
  $('hav').innerHTML=av(moi,'big');$('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent={admin:'Admin',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy'}[roles[moi]||role]||'Étudiant·e psy';
@@ -851,6 +852,16 @@ function svgStack(parts,W){W=W||560;var tot=parts.reduce(function(t,p){return t+
  parts.forEach(function(p){var w=p.v/tot*W;if(p.v){h+='<rect x="'+x+'" y="6" width="'+w+'" height="34" fill="'+p.c+'"/>'+(w>34?'<text x="'+(x+w/2)+'" y="28" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">'+p.v+'</text>':'')}x+=w});
  var lg='';parts.forEach(function(p,k){lg+='<g transform="translate('+(k*(W/parts.length))+',62)"><rect width="11" height="11" rx="3" fill="'+p.c+'"/><text x="17" y="10" font-size="12" fill="#2b1d22">'+p.l+' · '+pct(p.v,tot)+' %</text></g>'});
  return '<svg viewBox="0 0 '+W+' 82" role="img" aria-label="Répartition de l’évolution"><clipPath id="rc"><rect y="6" width="'+W+'" height="34" rx="10"/></clipPath><g clip-path="url(#rc)">'+h+'</g>'+lg+'</svg>'}
+var STL=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']],MSC=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function svgMonths(mo){var W=620,H=230,L=34,B=34,T=18,mx=Math.max.apply(null,mo.map(function(m){return Math.max(m.dem,m.sea)}).concat([1])),bw=22,gw=(W-L-10)/mo.length,o='',step=mx<=5?1:Math.ceil(mx/5);
+ for(var v=0;v<=mx;v+=step){var y=H-B-(H-B-T)*v/mx;o+='<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="#EBDDD6"/><text x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#6B5861">'+v+'</text>'}
+ mo.forEach(function(m,i){var x=L+gw*i+gw/2,hd=(H-B-T)*m.dem/mx,hs=(H-B-T)*m.sea/mx;
+  o+='<rect x="'+(x-bw-2)+'" y="'+(H-B-hd)+'" width="'+bw+'" height="'+hd+'" rx="4" fill="#AE164E"/><rect x="'+(x+2)+'" y="'+(H-B-hs)+'" width="'+bw+'" height="'+hs+'" rx="4" fill="#7B206B"/>'+(m.dem?'<text x="'+(x-bw/2-2)+'" y="'+(H-B-hd-5)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#AE164E">'+m.dem+'</text>':'')+(m.sea?'<text x="'+(x+bw/2+2)+'" y="'+(H-B-hs-5)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#7B206B">'+m.sea+'</text>':'')+'<text x="'+x+'" y="'+(H-12)+'" text-anchor="middle" font-size="12" fill="#6B5861">'+m.lb+'</text>'});
+ return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Demandes reçues et séances réalisées par mois">'+o+'</svg><div class="cap" style="display:flex;gap:16px;margin:6px 0 0"><span><b style="color:#AE164E">■</b> Demandes reçues</span><span><b style="color:#7B206B">■</b> Séances réalisées</span></div>'}
+function svgStatus(rows){rows=rows.filter(function(r){return r.v>0});if(!rows.length)return '<p class="sub">Aucune demande pour le moment.</p>';var mx=Math.max.apply(null,rows.map(function(r){return r.v})),o='';
+ rows.forEach(function(r,i){var y=8+i*34,w=360*r.v/mx;o+='<text x="0" y="'+(y+17)+'" font-size="13" fill="#1F1217">'+r.l+'</text><rect x="120" y="'+y+'" width="'+Math.max(w,4)+'" height="24" rx="6" fill="'+['#AE164E','#7B206B','#E30F1B','#75151F'][i%4]+'"/><text x="'+(126+Math.max(w,4))+'" y="'+(y+17)+'" font-size="13" font-weight="600" fill="#1F1217">'+r.v+'</text>'});
+ return '<svg viewBox="0 0 560 '+(rows.length*34+12)+'" role="img" aria-label="Répartition des demandes par statut">'+o+'</svg>'}
+var effPts=[];
 function drawEff(){
  var suivis=items.filter(function(i){return nS(i)>0}),real=[],abs=0;
  items.forEach(function(i){(i.seances||[]).forEach(function(s,k){if(s.issue==='realisee')real.push({i:i,s:s,k:k});else abs++})});
@@ -864,7 +875,15 @@ function drawEff(){
  var delais=suivis.map(function(i){var f=(i.seances||[]).filter(function(s){return s.issue==='realisee'})[0];return i.creeLe&&f?daysBetween(i.creeLe.slice(0,10),f.date):null}).filter(function(x){return x!=null&&x>=0});
  var mes=real.filter(function(r){return r.s.bienEtre!=null||r.s.satisfaction!=null}).length;
  var kp=function(b,l,sm){return '<div class="kpi pastel"><b>'+b+'</b><span>'+l+'</span>'+(sm?'<small>'+sm+'</small>':'')+'</div>'};
- var h='<div class="ekp">'+kp(suivis.length,'personnes suivies','au moins 1 séance')+kp(real.length,'séances réalisées',pct(real.length,real.length+abs)+' % de présence')+kp(f1(med(perP)),'séances par personne','médiane')+kp(delais.length?f1(med(delais))+' j':'—','délai avant la 1ʳᵉ séance','médiane, demande → séance')+'</div>';
+ var today=new Date().toISOString().slice(0,10),upc=0;items.forEach(function(i){(i.rdvs||[]).forEach(function(r){if(r.date>=today)upc++})});
+ var sat0=real.filter(function(r){return r.s.satisfaction!=null}).map(function(r){return r.s.satisfaction}),now0=new Date(),mo=[];
+ for(var q0=5;q0>=0;q0--){var x0=new Date(now0.getFullYear(),now0.getMonth()-q0,1);mo.push({k:x0.getFullYear()+'-'+('0'+(x0.getMonth()+1)).slice(-2),lb:MSC[x0.getMonth()],dem:0,sea:0})}
+ items.forEach(function(i){var m=mo.filter(function(z){return z.k===(i.creeLe||'').slice(0,7)})[0];if(m)m.dem++});real.forEach(function(r){var m=mo.filter(function(z){return z.k===(r.s.date||'').slice(0,7)})[0];if(m)m.sea++});
+ var byS=STL.map(function(z){return{l:z[1],v:items.filter(function(i){return i.statut===z[0]}).length}});
+ effPts=[];if(suivis.length)effPts.push(suivis.length+' étudiant·es accompagné·es');if(real.length)effPts.push(real.length+' séances réalisées');if(real.length+abs>=10)effPts.push(pct(real.length,real.length+abs)+' % de présence aux séances');if(sat0.length)effPts.push('Satisfaction moyenne : '+f1(avg(sat0))+'/10');
+ var h='<div class="ekp">'+kp(items.length,'demandes reçues','depuis le début')+kp(suivis.length,'personnes accompagnées','au moins 1 séance')+kp(real.length,'séances réalisées',pct(real.length,real.length+abs)+' % de présence')+kp(upc,'rendez-vous à venir','dans le calendrier')+kp(delais.length?f1(med(delais))+' j':'—','délai avant la 1ʳᵉ séance','médiane, demande → séance')+kp(sat0.length?f1(avg(sat0))+'/10':'—','satisfaction moyenne','notée après les séances')+'</div>'+
+ '<div class="egrid"><article class="ec"><h3>Demandes et séances, mois par mois</h3><p class="cap">Les six derniers mois.</p>'+svgMonths(mo)+'</article><article class="ec"><h3>Où en sont les demandes</h3><p class="cap">Nombre de demandes selon leur statut.</p>'+svgStatus(byS)+'</article></div>'+
+ (isAdmin?'<div class="row" style="margin:0 0 18px;gap:10px;align-items:center"><button class="btn l s" id="effpub">Créer un visuel avec ces chiffres</button><span class="sub" style="margin:0">Totaux sans aucun nom : vérifiez qu’ils sont assez grands avant de les publier.</span></div>':'');
  if(!mes&&!chg.length){$('efbody').innerHTML=h+'<div class="empty"><b>Pas encore de mesures</b>Après chaque séance réalisée, la plateforme propose de noter le bien-être de la semaine et l’utilité de la séance (0 à 10). En fin de suivi, la fiche patient permet d’indiquer le changement perçu (1 à 7). Les graphiques apparaîtront ici dès les premières notes. Un questionnaire en ligne pourra ensuite remplir ces indicateurs automatiquement.</div>';return}
  var ins='';
  if(withBE.length)ins+='Chez <b>'+withBE.length+'</b> personne'+(withBE.length>1?'s':'')+' avec au moins deux mesures, le bien-être passe de <b>'+f1(avg(first))+'</b> à <b>'+f1(avg(last))+'</b> sur 10 (<b>'+(md>=0?'+':'')+f1(md)+'</b>'+(dz!=null?', d de Cohen = '+f1(dz):'')+'). ';
@@ -890,6 +909,7 @@ function drawEff(){
  h+='<article class="ec"><h3>Issue des suivis</h3><p class="cap">Suivis terminés comparés aux arrêts sans suite (personnes ayant eu au moins une séance).</p>'+((ter+ss)?svgStack([{l:'Terminés',v:ter,c:'#7B206B'},{l:'Sans suite',v:ss,c:'#B9A9B4'}]):'<p class="sub">Aucun suivi clos pour le moment.</p>')+'</article></div>';
  h+='<p class="enote">Lecture : données descriptives issues de l’activité courante, sans groupe de comparaison ni outil validé : elles montrent une tendance, pas un effet prouvé. Les petits effectifs (n) sont à interpréter avec prudence. Complétude : '+pct(mes,real.length)+' % des séances réalisées ont au moins une mesure.</p>';
  $('efbody').innerHTML=h}
+$('efbody').addEventListener('click',function(e){if(e.target.closest('#effpub')&&window.comChiffres){nav(12);window.comChiffres(effPts)}});
 $('tadd').onclick=function(){var n=$('tn').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,'-');api({action:'compte_create',nom:n,code:$('tc').value,role:$('tr').value}).then(function(d){shown(n,d)})};
 $('tl').onchange=function(e){var sl=e.target.closest('select[data-t="role"]');if(!sl)return;if(!confirm('Passer '+cap(sl.dataset.n)+' en « '+RL[sl.value]+' » ?')){team(lastT);return}api({action:'compte_role',nom:sl.dataset.n,role:sl.value}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Statut modifié : '+cap(sl.dataset.n)+' est maintenant '+RL[sl.value]+'.';load()}else $('tmsg').textContent=d.error})};
 $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)return;var n=b.dataset.n;
@@ -912,7 +932,7 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-window.CAPSULE={api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles}}};
+window.CAPSULE={nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles}}};
 if(token)load();
 })();
 </script><script src="/gestion-com.js"></script></body></html>

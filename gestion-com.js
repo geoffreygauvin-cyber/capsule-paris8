@@ -326,13 +326,6 @@
   }
 
   /* ---------- brouillons (navigateur) ---------- */
-  function drafts() { try { return JSON.parse(localStorage.getItem(draftKey) || '{}'); } catch (x) { return {}; } }
-  function putDrafts(d) { try { localStorage.setItem(draftKey, JSON.stringify(d)); return true; } catch (x) { note('Brouillon non enregistré (stockage du navigateur indisponible).'); return false; } }
-  function drawDrafts() {
-    var d = drafts(), k = Object.keys(d);
-    $('cmdl').innerHTML = k.length ? k.map(function (n) { return '<span class="cmd"><button class="chip" data-o="' + e(n) + '">' + e(n) + '</button><button class="link" data-x="' + e(n) + '" aria-label="Supprimer ' + e(n) + '">×</button></span>'; }).join('') : '<small style="color:var(--muted)">Aucun brouillon enregistré sur cet appareil.</small>';
-  }
-
   /* ---------- interface ---------- */
   function fields() {
     ['kicker', 'titre', 'texte', 'points', 'date', 'heure', 'lieu', 'cta', 'mention', 'legende'].forEach(function (k) { var i = $('cm_' + k); if (i) i.value = st[k] || ''; });
@@ -344,7 +337,7 @@
     $('cm_pdf').textContent = 'Télécharger en PDF';
   }
   function build() {
-    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="planning">Planning</button><button class="chip" data-tab="pages">Nos pages</button><button class="chip" data-tab="chiffres">Chiffres clés</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
+    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="planning">Planning</button><button class="chip" data-tab="pages">Nos pages</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
       '<div class="newc"><b>1 · Format</b><div class="filters" id="cmfm" style="margin:10px 0 4px">' + Object.keys(FM).map(function (k) { return '<button class="chip" data-f="' + k + '">' + FM[k].lb + '</button>'; }).join('') + '</div><small id="cmsub" style="color:var(--muted)"></small></div>' +
       '<div class="newc" style="margin-top:14px"><b>2 · Modèle</b><label class="f" style="margin-top:8px">Point de départ<select id="cm_pre">' + Object.keys(PRE).map(function (k) { return '<option value="' + k + '">' + PRE[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<small style="color:var(--muted);display:block;margin-top:6px">Changer de modèle remplace les textes ci-dessous.</small>' +
@@ -365,9 +358,11 @@
       '<div class="cmp"><div class="cmc"><canvas id="cmcv" aria-label="Aperçu du visuel"></canvas></div><div id="cmmsg" class="cmmsg"></div>' +
       '<div class="row" style="flex-wrap:wrap;margin-top:12px"><button class="btn" id="cm_png">Télécharger en PNG</button><button class="btn l" id="cm_pdf">Télécharger en PDF</button><button class="btn l" id="cm_ppt">Télécharger en PowerPoint</button></div><small style="color:var(--muted);display:block;margin-top:8px">Le PowerPoint se modifie élément par élément (textes, formes, images). Pour un rendu identique à l’aperçu, installez la police Poppins (gratuite, sur Google Fonts).</small>' +
       '<div class="newc" style="margin-top:16px"><b>Légende pour le post</b><p class="sub" style="margin:4px 0 8px">À coller sous l’image sur Instagram, LinkedIn…</p><textarea id="cm_legende" rows="6" style="width:100%"></textarea>' +
-      '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div><div class="row" style="margin-top:12px"><button class="btn" id="cm_plan">Enregistrer dans le planning</button></div></div>' +
-      '<div class="newc" style="margin-top:16px"><b>Brouillons</b><p class="sub" style="margin:4px 0 8px">Enregistrés sur cet appareil, dans ce navigateur.</p><div class="row"><input id="cm_dn" placeholder="Nom du brouillon" maxlength="40" style="flex:1"><button class="btn l s" id="cm_ds">Enregistrer</button></div><div id="cmdl" style="margin-top:10px"></div></div>' +
-      '</div></div></div><div id="cmplan" class="hide"></div><div id="cmpages" class="hide"></div><div id="cmchiffres" class="hide"></div>';
+      '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div></div>' +
+      '<div class="newc" style="margin-top:16px"><b>Enregistrer pour publier plus tard</b><p class="sub" style="margin:4px 0 8px">Le visuel et la légende sont gardés dans le planning de l’équipe. Avec une date, l’appli vous rappelle de publier (rappel sur l’accueil et dans le menu).</p>' +
+      '<div class="g2"><label class="f">Réseau<select id="cm_pr">' + Object.keys(RS).filter(function (k) { return k !== 'mail'; }).map(function (k) { return '<option value="' + k + '">' + RS[k].lb + '</option>'; }).join('') + '</select></label><label class="f">Date de publication<input type="date" id="cm_pd"></label></div>' +
+      '<div class="row" style="margin-top:10px;align-items:flex-end"><label class="f" style="flex:0 0 130px">Heure (facultatif)<input type="time" id="cm_ph"></label><button class="btn" id="cm_plan">Enregistrer dans le planning</button></div></div>' +
+      '</div></div></div><div id="cmplan" class="hide"></div><div id="cmpages" class="hide"></div>';
     $('v12').insertAdjacentHTML('beforeend', h);
     canvas = $('cmcv');
     var root = $('v12');
@@ -393,13 +388,9 @@
       else if (b.id === 'cm_ppt') toPptx();
       else if (b.id === 'cm_leg') { st.legende = legende(); $('cm_legende').value = st.legende; }
       else if (b.id === 'cm_cp') { var t = $('cm_legende'); if (!t.value) { st.legende = legende(); t.value = st.legende; } t.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (x) { } if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(function () { note('Légende copiée.'); }, function () { note(ok ? 'Légende copiée.' : 'Copie impossible : sélectionnez le texte à la main.'); }); else note(ok ? 'Légende copiée.' : 'Copie impossible : sélectionnez le texte à la main.'); }
-      else if (b.id === 'cm_plan') toPlan();
-      else if (b.id === 'cm_ds') { var n = ($('cm_dn').value || '').trim(); if (!n) return note('Donnez un nom au brouillon.'); var d = drafts(); d[n] = Object.assign({}, st); if (putDrafts(d)) { $('cm_dn').value = ''; drawDrafts(); note('Brouillon enregistré.'); } }
-      else if (b.dataset.o) { var d2 = drafts(); if (d2[b.dataset.o]) { st = Object.assign(newState('libre'), d2[b.dataset.o]); fields(); later(); } }
-      else if (b.dataset.x) { var d3 = drafts(); delete d3[b.dataset.x]; putDrafts(d3); drawDrafts(); }
+      else if (b.id === 'cm_plan') savePlan();
     });
     bindLiens();
-    bindChiffres();
     bindPubs();
     built = true;
   }
@@ -415,8 +406,8 @@
   function api2(b) { return window.CAPSULE ? window.CAPSULE.api(b) : Promise.resolve({ error: 'Indisponible' }); }
   function tab(t) {
     Array.prototype.forEach.call(document.querySelectorAll('#cmtabs .chip'), function (x) { x.classList.toggle('on', x.dataset.tab === t); });
-    $('cmcreer').classList.toggle('hide', t !== 'creer'); $('cmpages').classList.toggle('hide', t !== 'pages'); $('cmplan').classList.toggle('hide', t !== 'planning'); $('cmchiffres').classList.toggle('hide', t !== 'chiffres');
-    if (t === 'pages') loadLiens(); else if (t === 'planning') loadPubs(); else if (t === 'chiffres') drawChiffres(); else later();
+    $('cmcreer').classList.toggle('hide', t !== 'creer'); $('cmpages').classList.toggle('hide', t !== 'pages'); $('cmplan').classList.toggle('hide', t !== 'planning');
+    if (t === 'pages') loadLiens(); else if (t === 'planning') loadPubs(); else later();
   }
   function loadLiens() {
     if (liens === null) $('cmpages').innerHTML = '<p class="sub">Chargement…</p>';
@@ -478,66 +469,13 @@
   }
 
 
-  /* ---------- onglet « Chiffres clés » : le fonctionnement du service en nombres ---------- */
+  /* ---------- chiffres du suivi d'activité → visuel (appelé depuis « Suivi d'activité ») ---------- */
   var MS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-  var STL = [['nouvelle', 'Nouvelles'], ['a_recontacter', 'À recontacter'], ['contactee', 'Contactées'], ['rdv_fixe', 'RDV fixé'], ['en_cours', 'En cours'], ['terminee', 'Terminées'], ['sans_suite', 'Sans suite']];
-  var chK = null;
-  function f1(v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); }
-  function stats() {
-    var d = window.CAPSULE ? window.CAPSULE.data() : { items: [] }, items = d.items || [], real = [], abs = 0, upcoming = 0, today = new Date().toISOString().slice(0, 10);
-    items.forEach(function (i) { (i.seances || []).forEach(function (s) { if (s.issue === 'realisee') real.push(s); else abs++; }); (i.rdvs || []).forEach(function (r) { if (r.date >= today) upcoming++; }); });
-    var suivis = items.filter(function (i) { return (i.seances || []).some(function (s) { return s.issue === 'realisee'; }); });
-    var delais = suivis.map(function (i) { var f = (i.seances || []).filter(function (s) { return s.issue === 'realisee'; }).sort(function (a, z) { return a.date < z.date ? -1 : 1; })[0]; return i.creeLe && f ? Math.round((new Date(f.date) - new Date(i.creeLe.slice(0, 10))) / 864e5) : null; }).filter(function (x) { return x != null && x >= 0; }).sort(function (a, z) { return a - z; });
-    var sats = real.filter(function (s) { return s.satisfaction != null; }).map(function (s) { return s.satisfaction; });
-    var now = new Date(), mo = [];
-    for (var k = 5; k >= 0; k--) { var x = new Date(now.getFullYear(), now.getMonth() - k, 1); mo.push({ k: x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2), lb: MS[x.getMonth()], dem: 0, sea: 0 }); }
-    items.forEach(function (i) { var m = mo.filter(function (z) { return z.k === (i.creeLe || '').slice(0, 7); })[0]; if (m) m.dem++; });
-    real.forEach(function (s) { var m = mo.filter(function (z) { return z.k === (s.date || '').slice(0, 7); })[0]; if (m) m.sea++; });
-    var byS = STL.map(function (z) { return { l: z[1], v: items.filter(function (i) { return i.statut === z[0]; }).length }; });
-    return { dem: items.length, suivis: suivis.length, real: real.length, abs: abs, taux: real.length + abs ? Math.round(100 * real.length / (real.length + abs)) : null, delai: delais.length ? delais[Math.floor(delais.length / 2)] : null, sat: sats.length ? sats.reduce(function (a, b) { return a + b; }, 0) / sats.length : null, upcoming: upcoming, mo: mo, byS: byS, parP: suivis.length ? real.length / suivis.length : null };
-  }
-  function svgMonths(mo) {
-    var W = 620, H = 230, L = 34, B = 34, T = 18, mx = Math.max.apply(null, mo.map(function (m) { return Math.max(m.dem, m.sea); }).concat([1])), bw = 22, gw = (W - L - 10) / mo.length, o = '';
-    var step = mx <= 5 ? 1 : Math.ceil(mx / 5);
-    for (var v = 0; v <= mx; v += step) { var y = H - B - (H - B - T) * v / mx; o += '<line x1="' + L + '" x2="' + (W - 6) + '" y1="' + y + '" y2="' + y + '" stroke="#EBDDD6"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#6B5861">' + v + '</text>'; }
-    mo.forEach(function (m, i) {
-      var x = L + gw * i + gw / 2, hd = (H - B - T) * m.dem / mx, hs = (H - B - T) * m.sea / mx;
-      o += '<rect x="' + (x - bw - 2) + '" y="' + (H - B - hd) + '" width="' + bw + '" height="' + hd + '" rx="4" fill="#AE164E"/><rect x="' + (x + 2) + '" y="' + (H - B - hs) + '" width="' + bw + '" height="' + hs + '" rx="4" fill="#7B206B"/>' +
-        (m.dem ? '<text x="' + (x - bw / 2 - 2) + '" y="' + (H - B - hd - 5) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#AE164E">' + m.dem + '</text>' : '') + (m.sea ? '<text x="' + (x + bw / 2 + 2) + '" y="' + (H - B - hs - 5) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#7B206B">' + m.sea + '</text>' : '') +
-        '<text x="' + x + '" y="' + (H - 12) + '" text-anchor="middle" font-size="12" fill="#6B5861">' + m.lb + '</text>';
-    });
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Demandes reçues et séances réalisées par mois" style="width:100%;height:auto">' + o + '</svg><div class="cap" style="display:flex;gap:16px;margin-top:6px"><span><b style="color:#AE164E">■</b> Demandes reçues</span><span><b style="color:#7B206B">■</b> Séances réalisées</span></div>';
-  }
-  function svgStatus(rows) {
-    rows = rows.filter(function (r) { return r.v > 0; }); if (!rows.length) return '<p class="sub">Aucune demande pour le moment.</p>';
-    var mx = Math.max.apply(null, rows.map(function (r) { return r.v; })), o = '';
-    rows.forEach(function (r, i) { var y = 8 + i * 34, w = 360 * r.v / mx; o += '<text x="0" y="' + (y + 17) + '" font-size="13" fill="#1F1217">' + e(r.l) + '</text><rect x="120" y="' + y + '" width="' + Math.max(w, 4) + '" height="24" rx="6" fill="' + (['#AE164E', '#7B206B', '#E30F1B', '#75151F'][i % 4]) + '"/><text x="' + (126 + Math.max(w, 4)) + '" y="' + (y + 17) + '" font-size="13" font-weight="600" fill="#1F1217">' + r.v + '</text>'; });
-    return '<svg viewBox="0 0 560 ' + (rows.length * 34 + 12) + '" role="img" aria-label="Répartition des demandes par statut" style="width:100%;height:auto">' + o + '</svg>';
-  }
-  function drawChiffres() {
-    var k = chK = stats(), kp = function (b, l, sm) { return '<div class="kpi pastel"><b>' + b + '</b><span>' + l + '</span>' + (sm ? '<small>' + sm + '</small>' : '') + '</div>'; };
-    var h = '<div class="ekp">' + kp(k.dem, 'demandes reçues', 'depuis le début') + kp(k.suivis, 'personnes accompagnées', 'au moins 1 séance') + kp(k.real, 'séances réalisées', k.taux != null ? k.taux + ' % de présence' : '') + kp(k.upcoming, 'rendez-vous à venir', 'dans le calendrier') +
-      kp(k.delai != null ? k.delai + ' j' : '—', 'délai avant la 1ʳᵉ séance', 'médiane, demande → séance') + kp(k.sat != null ? f1(k.sat) + '/10' : '—', 'satisfaction moyenne', 'notée après les séances') + '</div>' +
-      '<div class="egrid"><article class="ec"><h3>Demandes et séances, mois par mois</h3><p class="cap">Les six derniers mois.</p>' + svgMonths(k.mo) + '</article>' +
-      '<article class="ec"><h3>Où en sont les demandes</h3><p class="cap">Nombre de demandes selon leur statut.</p>' + svgStatus(k.byS) + '</article></div>' +
-      '<div class="newc" style="margin-top:16px"><b>Utiliser ces chiffres</b><p class="sub" style="margin:4px 0 10px">Crée un visuel « CAPSULE en chiffres » prêt à retoucher. Ce sont des totaux sans aucun nom : vérifiez qu’ils sont assez grands avant de les publier (avec très peu de personnes, un chiffre peut permettre de les reconnaître).</p><div class="row"><button class="btn" id="ch_post">Créer un visuel avec ces chiffres</button><button class="btn l" id="ch_cp">Copier les chiffres</button></div></div>';
-    $('cmchiffres').innerHTML = h;
-  }
-  function chPoints() {
-    var k = chK || stats(), p = [];
-    if (k.suivis) p.push(k.suivis + ' étudiant·es accompagné·es'); if (k.real) p.push(k.real + ' séances réalisées'); if (k.taux != null && k.real + k.abs >= 10) p.push(k.taux + ' % de présence aux séances'); if (k.sat != null) p.push('Satisfaction moyenne : ' + f1(k.sat) + '/10');
-    return p;
-  }
-  function bindChiffres() {
-    $('cmchiffres').addEventListener('click', function (ev) {
-      var b = ev.target.closest('button'); if (!b) return;
-      if (b.id === 'ch_cp') copyText(chPoints().join('\n') || 'Pas encore de chiffres.', 'Chiffres copiés.');
-      else if (b.id === 'ch_post') {
-        var f = st.fmt, lg = st.logos; st = newState('libre'); st.fmt = f; st.logos = lg; st.theme = 'framboise'; st.kicker = 'Bilan'; st.titre = 'CAPSULE en chiffres'; st.texte = 'Des consultations psychologiques gratuites, par des étudiant·es de Master de psychologie, pour les étudiant·es de Paris 8.'; st.points = chPoints().join('\n'); st.cta = 'Prendre rendez-vous : capsule-paris8.fr'; st.illu = 'ruban';
-        tab('creer'); fields(); later();
-      }
-    });
-  }
+  window.comChiffres = function (points) {
+    window.drawCom();
+    var f = st.fmt, lg = st.logos; st = newState('libre'); st.fmt = f; st.logos = lg; st.theme = 'framboise'; st.kicker = 'Bilan'; st.titre = 'CAPSULE en chiffres'; st.texte = 'Des consultations psychologiques gratuites, par des étudiant·es de Master de psychologie, pour les étudiant·es de Paris 8.'; st.points = (points || []).join('\n'); st.cta = 'Prendre rendez-vous : capsule-paris8.fr'; st.illu = 'ruban';
+    tab('creer'); fields(); later();
+  };
 
 
   /* ---------- onglet « Planning » : publications par réseau, en attente, programmées ---------- */
@@ -550,11 +488,14 @@
     if (pubs === null) $('cmplan').innerHTML = '<p class="sub">Chargement…</p>';
     api2({ action: 'pub_list' }).then(function (d) { if (d && d.ok) { pubs = d.publis || []; drawPubs(); } else $('cmplan').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger le planning.') + '</p>'; });
   }
-  function toPlan() {
+  function savePlan() {
     if (!st.legende) st.legende = legende();
     var vis = Object.assign({}, st); delete vis.legende;
-    draftP = { reseau: 'linkedin', titre: st.titre || '', texte: st.legende, statut: 'idee', date: '', heure: '', lien: '', visuel: vis };
-    tab('planning');
+    var d = ($('cm_pd') || {}).value || '', o = { reseau: $('cm_pr').value, titre: st.titre || 'Sans titre', texte: st.legende, statut: d ? 'programmee' : 'idee', date: d, heure: ($('cm_ph') || {}).value || '', lien: '', visuel: vis };
+    api2(Object.assign({ action: 'pub_save' }, o)).then(function (r) {
+      if (r && r.ok) { pubs = r.publis; note(d ? 'Enregistré dans le planning : ' + frDate(d, o.heure) + '. Rappel sur l’accueil ce jour-là.' : 'Enregistré dans le planning (sans date : ajoutez-en une pour avoir un rappel).'); rappels(); tab('planning'); }
+      else note((r && r.error) || 'Échec de l’enregistrement.');
+    });
   }
   function pForm(p) {
     p = p || { reseau: 'linkedin', statut: 'idee', titre: '', texte: '', date: '', heure: '', lien: '' };
@@ -570,7 +511,7 @@
       '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l hide" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
   }
   function pCard(x, me, adm) {
-    var mine = adm || x.par === me, r = RS[x.reseau] || RS.autre, late = x.statut === 'programmee' && x.date && x.date < tdy(), now = x.statut === 'programmee' && x.date === tdy();
+    var mine = adm || x.par === me, r = RS[x.reseau] || RS.autre, late = x.statut !== 'publiee' && x.date && x.date < tdy(), now = x.statut !== 'publiee' && x.date === tdy();
     var sc = (SS.filter(function (z) { return z[0] === x.statut; })[0] || SS[0])[2];
     return '<div class="lkc' + (late ? ' late' : '') + '"><span class="lkb" style="background:' + r.c + '">' + e(r.b) + '</span><div class="lkt"><b>' + e(x.titre) + '</b>' +
       '<span class="pst"><i style="background:' + sc + '"></i>' + e(sLb(x.statut)) + (x.date ? ' · ' + e(frDate(x.date, x.heure)) : '') + (late ? ' · <b style="color:var(--poppy)">à publier (en retard)</b>' : now ? ' · <b style="color:var(--rasp)">à publier aujourd’hui</b>' : '') + '</span>' +
@@ -588,16 +529,18 @@
     h += '<div class="row" style="margin:18px 0 8px;flex-wrap:wrap;justify-content:space-between"><div class="filters" style="margin:0" id="pf_st"><button class="chip' + (pSt === 'tous' ? ' on' : '') + '" data-ps="tous">Tout<i>' + pubs.length + '</i></button>' + SS.map(function (x) { return '<button class="chip' + (pSt === x[0] ? ' on' : '') + '" data-ps="' + x[0] + '">' + x[1].replace(' de validation', '') + (cnt(x[0]) ? '<i>' + cnt(x[0]) + '</i>' : '') + '</button>'; }).join('') + '</div>' +
       '<button class="btn l s" id="pf_ics">Exporter les publications programmées (agenda)</button></div>';
     if (nets.length > 1) h += '<div class="filters" id="pf_net"><button class="chip' + (pFilt === 'tous' ? ' on' : '') + '" data-pn2="tous">Tous les réseaux</button>' + nets.map(function (k) { return '<button class="chip' + (pFilt === k ? ' on' : '') + '" data-pn2="' + k + '">' + RS[k].lb + '</button>'; }).join('') + '</div>';
-    var groups = [['À publier', function (x) { return x.statut === 'programmee' && x.date && x.date <= tdy(); }], ['Programmées', function (x) { return x.statut === 'programmee' && !(x.date && x.date <= tdy()); }], ['En attente de validation', function (x) { return x.statut === 'attente'; }], ['Idées', function (x) { return x.statut === 'idee'; }], ['Publiées', function (x) { return x.statut === 'publiee'; }]];
-    var any = false;
-    groups.forEach(function (g) {
-      var l = keep.filter(g[1]).sort(function (a, z) { return g[0] === 'Publiées' ? (z.date || '').localeCompare(a.date || '') : ((a.date || '9') + (a.heure || '')).localeCompare((z.date || '9') + (z.heure || '')); });
+    var due = function (x) { return x.statut !== 'publiee' && x.date && x.date <= tdy(); }, any = false, rk = { programmee: 0, attente: 1, idee: 2, publiee: 3 };
+    var byDate = function (a, z) { return ((a.date || '9') + (a.heure || '')).localeCompare((z.date || '9') + (z.heure || '')); };
+    var dueL = keep.filter(due).sort(byDate);
+    if (dueL.length) { any = true; h += '<h3 style="margin:18px 0 8px;font-size:15px;color:var(--poppy)">À publier maintenant <span style="color:var(--muted);font-weight:500">· ' + dueL.length + '</span></h3><div class="lkg">' + dueL.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>'; }
+    Object.keys(RS).forEach(function (k) {
+      var l = keep.filter(function (x) { return x.reseau === k && !due(x); }).sort(function (a, z) { var ra = rk[a.statut], rz = rk[z.statut]; if ((ra === 3) !== (rz === 3)) return ra === 3 ? 1 : -1; return ra === 3 ? (z.date || '').localeCompare(a.date || '') : byDate(a, z); });
       if (!l.length) return; any = true;
-      h += '<h3 style="margin:18px 0 8px;font-size:15px">' + g[0] + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3><div class="lkg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>';
+      h += '<h3 style="margin:22px 0 8px;font-size:15px;display:flex;align-items:center;gap:8px"><span class="lkb" style="background:' + RS[k].c + ';width:26px;height:26px;font-size:12px">' + e(RS[k].b) + '</span>' + RS[k].lb + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3><div class="lkg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>';
     });
     if (!any) h += '<div class="empty" style="margin-top:16px"><b>' + (pubs.length ? 'Rien dans cette sélection' : 'Aucune publication pour le moment') + '</b>' + (pubs.length ? 'Changez de réseau ou de statut.' : 'Ajoutez une idée ci-dessus, ou créez un visuel puis « Enregistrer dans le planning ». Pour chaque publication : idée, en attente de validation, programmée (avec date et heure), puis publiée avec son lien.') + '</div>';
     h += '<p class="cap" style="margin-top:16px">Le planning garde les publications et rappelle ce qui est à publier : il ne publie pas tout seul sur les réseaux. Utilisez « Copier le texte » puis publiez, ou ajoutez la date à votre agenda.</p>';
-    $('cmplan').innerHTML = h; var d = $('pf_d'); if (pEdit === '' && d) { /* rien */ }
+    $('cmplan').innerHTML = h; lastF = Date.now(); drawRappels();
   }
   function pMsg(t) { var m = $('pf_m'); if (m) m.textContent = t || ''; }
   function pRead() {
@@ -641,10 +584,36 @@
     });
   }
 
+  /* ---------- rappels : publications à faire (menu + accueil), classées par réseau ---------- */
+  var lastF = 0, fetching = false;
+  function dueList() { return (pubs || []).filter(function (x) { return x.statut !== 'publiee' && x.date && x.date <= tdy(); }); }
+  function drawRappels() {
+    var l = dueList(), nb = document.querySelector('.nv[data-v="12"]');
+    if (nb) { var bd = nb.querySelector('b'); if (bd) bd.remove(); if (l.length) nb.insertAdjacentHTML('beforeend', '<b title="Publications à faire">' + l.length + '</b>'); }
+    var host = $('hstats'), card = $('hpub'); if (!host) return;
+    if (!l.length) { if (card) card.remove(); return; }
+    if (!card) { host.insertAdjacentHTML('afterend', '<div class="newc" id="hpub" style="margin-bottom:18px"></div>'); card = $('hpub'); }
+    var h = '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap"><b>Publications à faire <span style="color:var(--poppy)">· ' + l.length + '</span></b><button class="btn l s" id="hpub_go">Ouvrir le planning</button></div>';
+    Object.keys(RS).forEach(function (k) {
+      var g = l.filter(function (x) { return x.reseau === k; }).sort(function (a, z) { return ((a.date || '') + (a.heure || '')).localeCompare((z.date || '') + (z.heure || '')); }); if (!g.length) return;
+      h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><span class="lkb" style="background:' + RS[k].c + ';width:28px;height:28px;font-size:12px">' + e(RS[k].b) + '</span><div style="flex:1"><b style="font-size:13.5px">' + RS[k].lb + '</b>' +
+        g.map(function (x) { var late = x.date < tdy(); return '<div class="sub" style="margin:2px 0 0">' + e(x.titre) + ' · <span style="color:' + (late ? 'var(--poppy)' : 'var(--rasp)') + ';font-weight:600">' + (late ? 'en retard depuis le ' + e(frDate(x.date)) : 'aujourd’hui' + (x.heure ? ' à ' + e(x.heure.replace(':', ' h ')) : '')) + '</span></div>'; }).join('') + '</div></div>';
+    });
+    card.innerHTML = h;
+    $('hpub_go').onclick = function () { window.CAPSULE.nav(12); window.comPlanning(); };
+  }
+  function rappels() {
+    if (fetching) return; if (pubs !== null && Date.now() - lastF < 60000) return drawRappels();
+    fetching = true;
+    api2({ action: 'pub_list' }).then(function (d) { fetching = false; if (d && d.ok) { pubs = d.publis || []; lastF = Date.now(); drawRappels(); } }, function () { fetching = false; });
+  }
+  window.comRappels = rappels;
+  window.comPlanning = function () { window.drawCom(); tab('planning'); };
+
   window.drawCom = function () {
     draftKey = 'capsule-com-' + who();
     if (!built) { st = newState('presentation'); build(); }
-    fields(); drawDrafts();
+    fields();
     var go = function () { loadImgs(function () { render(); }); };
     if (document.fonts && document.fonts.load) {
       Promise.all(['400', '500', '600', '700'].map(function (w) { return document.fonts.load(w + ' 30px Poppins'); })).then(go, go);
