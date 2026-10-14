@@ -75,6 +75,10 @@
       '<div class="chx"><b class="k">Plateforme interne</b>Tutoiement.<q>Voici tes accès à la plateforme CAPSULE.</q></div>' +
       '<div class="chx"><b class="k">Mots</b>À privilégier : consultation, étudiant·e, gratuit, confidentiel, équipe. À éviter sur les supports publics : « patient », « prise en charge », « cas ».</div></div>' +
       '<div class="chq"><small>Accroche de référence</small>Consultations psychologiques gratuites pour les étudiant·es de Paris 8</div></section>';
+    // modèles PowerPoint
+    h += '<section class="chs"><h2>Modèles PowerPoint</h2><p class="sub">Deux modèles prêts à remplir, aux couleurs de CAPSULE (police Poppins à installer si besoin). Dupliquez une diapositive pour garder la mise en page.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">' +
+      '<div class="chx pastel t1"><b class="k">Étudiant·es</b>10 diapositives : le dispositif, prendre rendez-vous, questions, infos pratiques, urgences.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-etudiants.pptx" download>Télécharger</a></div></div>' +
+      '<div class="chx pastel t2"><b class="k">Directions et partenaires</b>13 diapositives : en bref, organisation, chiffres, graphique, besoins, calendrier, partenaires.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-directions.pptx" download>Télécharger</a></div></div></div></section>';
     // applications
     h += '<section class="chs"><h2>Réseaux</h2><p class="sub">Bannière LinkedIn (1584 × 396 px) : texte décalé à droite du logo rond de la page. Photo de profil en 400 × 400 px, avec le nom.</p><div class="chban"><img src="' + D + 'banniere-linkedin-capsule.png" alt="Bannière LinkedIn"></div>' +
       '<div class="chb"><a class="btn l" href="' + D + 'banniere-linkedin-capsule.png" download>Bannière (PNG)</a><a class="btn l" href="' + D + 'capsule-profil-nom-1000px.png" download>Photo de profil (PNG)</a></div></section>';
