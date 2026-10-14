@@ -395,7 +395,7 @@ function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');cl
 function pad(n){return(n<10?'0':'')+n}
 var RL={admin:'Administrateur·rice',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy',desactive:'Désactivé'};
 function titre(n){return titres[n]||(n==='geoffrey'?'Grand chef':RL[roles[n]||'etudiant'])}
-function whoLine(){var ms=mesStats(moi);return titre(moi)+(isSup||isAdmin?'':' · '+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':''))}
+function whoLine(){var ms=mesStats(moi);return titre(moi)+(isSup||isAdmin||isTech?'':' · '+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':''))}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function parse(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2],12)}
 function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
@@ -755,7 +755,7 @@ function teamRow(n,role,meta,prin){
  var sel=isAdmin&&n!==moi&&role!=='desactive'&&techs.indexOf(n)<0?'<select class="mv" data-t="role" data-n="'+esc(n)+'" aria-label="Statut du compte"><option value="etudiant"'+(role==='etudiant'?' selected':'')+'>Étudiant·e psy</option><option value="admin"'+(role==='admin'?' selected':'')+'>Admin</option></select>':'<span class="mchip">'+esc(techs.indexOf(n)>-1?'Service technique':role==='desactive'?'Désactivé (ancien statut superviseur)':RL[role]||'')+'</span>';
  var act='';if(isAdmin){var it=function(t,l,c){return '<button type="button" data-t="'+t+'" data-n="'+esc(n)+'"'+(c?' class="'+c+'"':'')+'>'+l+'</button>'};
   act='<div class="tact">'+(role==='desactive'?'':'<button class="btn s" data-t="mail" data-n="'+esc(n)+'">Envoyer l’accès</button>')+'<details class="mn"><summary aria-label="Autres actions">Actions ▾</summary><div class="mnl">'+(role==='desactive'?'':it('show','Voir le code')+it('fiche','Fiche PDF')+it('reset','Changer le code'))+(prin?'':it('del','Supprimer le compte','dg'))+'</div></details></div>'}
- return '<div class="tr tt">'+av(n)+'<div class="tmid">'+nm(n)+'<div class="tsub">'+sel+'<span>'+(role==='desactive'?'':mesStats(n).total+' h · ')+meta+'</span></div></div>'+act+'</div>'}
+ return '<div class="tr tt">'+av(n)+'<div class="tmid">'+nm(n)+'<div class="tsub">'+sel+'<span>'+(role==='desactive'||techs.indexOf(n)>-1?'':mesStats(n).total+' h · ')+meta+'</span></div></div>'+act+'</div>'}
 function team(d){lastT=d;var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){var rn=(d.prin&&d.prin[n])||roles[n]||'admin';return teamRow(n,rn,'compte principal',true)}).join('')+m.map(function(x){return teamRow(x.nom,x.role,'créé par '+esc(cap(x.creePar||'')),false)}).join('')}
 function loadTeam(){api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})}
 

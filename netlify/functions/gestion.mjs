@@ -144,11 +144,12 @@ export default async (req) => {
     if (acc.role === "superviseur") return J({ error: "Ce compte a été désactivé." }, 401);
     role = ROLES.includes(acc.role) ? acc.role : "etudiant";
   }
+  if (TECH.includes(user)) role = "admin"; // Service technique : admin quel que soit le type de compte (principal ou créé dans l'onglet Comptes)
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of TECH) if (t in m) m[t] = "admin"; return m; };
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code", "acces_list", "acces_apercu", "acces_mail"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
@@ -184,7 +185,7 @@ export default async (req) => {
       if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
       await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), enc: encCode(code), le: new Date().toISOString(), par: user });
       const { blobs } = await ac.list();
-      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
+      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action === "compte_role" && n in c) {
       if (TECH.includes(n)) return J({ error: cap(n) + " a le statut Service technique : il ne se change pas ici." }, 400);
@@ -192,7 +193,7 @@ export default async (req) => {
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
       await rls.setJSON(n, { role: b.role });
       const { blobs } = await ac.list();
-      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
+      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
@@ -211,11 +212,11 @@ export default async (req) => {
         const old = await ac.get(n, { type: "json" });
         await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant") });
         const { blobs } = await ac.list();
-        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) }; })), principaux: Object.keys(c) });
+        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }; })), principaux: Object.keys(c) });
       }
     }
     const { blobs } = await ac.list();
-    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) }));
+    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }));
     return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
   }
 

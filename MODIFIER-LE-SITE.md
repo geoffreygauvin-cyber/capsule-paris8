@@ -100,7 +100,7 @@ Section « Logo animé » : aperçu en boucle (muet) et téléchargement de `cap
 
 ## Statut « Service technique » et interrupteur de mode
 Compte avec le statut spécial **Service technique** (aujourd'hui : `violette`, liste `TECH` dans `netlify/functions/gestion.mjs`) :
-- droits admin permanents (le statut ne se change pas dans l'onglet Comptes : l'action `compte_role` est refusée, la ligne affiche « Service technique ») ;
+- droits admin permanents, quel que soit le type de compte (compte principal ou compte créé dans l'onglet Comptes : le serveur force le rôle admin et l'annuaire des rôles) ; le statut ne se change pas dans l'onglet Comptes : l'action `compte_role` est refusée, la ligne affiche « Service technique ») ;
 - titre fixe « Service technique » (renvoyé dans `titres` par `list` ; `profil_titre` est refusé pour ce compte, le champ est grisé dans le profil) ;
 - dans l'organigramme, bloc « Service technique · transversal » sous les étudiant·es ;
 - un interrupteur **Mode : Étudiant psy | Admin** en haut du menu (visible seulement pour ce compte : `list` renvoie `technique: true`). « Étudiant psy » affiche la plateforme comme la voit un·e étudiant·e psychologue (menu et pages réduits, « Mon activité »…), « Admin » la montre en entier. C'est un changement d'affichage côté navigateur (choix mémorisé dans le navigateur) : les droits réels restent ceux d'un admin. Sur téléphone, le bouton « Passer en mode… » est dans la barre du haut.
