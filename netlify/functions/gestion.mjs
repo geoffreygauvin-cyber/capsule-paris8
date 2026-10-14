@@ -223,9 +223,11 @@ export default async (req) => {
     const rs = getStore("ressources"); const { blobs: rb } = await rs.list({ prefix: "m/" });
     const ressources = (await Promise.all(rb.map((x) => rs.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => z.le.localeCompare(a.le));
     const ps = getStore("profils"); const { blobs: pb } = await ps.list();
-    const photos = Object.fromEntries((await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" }))?.photo || ""]))).filter((x) => x[1]));
+    const profs = await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" })) || {}]));
+    const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
+    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre]));
     const roles = await rolesMap();
-    return J({ ok: true, items, compte: user, admin, role, roles, photos, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, compte: user, admin, role, roles, photos, titres, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -284,9 +286,17 @@ export default async (req) => {
 
   if (b.action === "profil_photo") {
     const ps = getStore("profils"), ph = String(b.photo || "");
-    if (!ph) { await ps.delete(user); return J({ ok: true, photo: "" }); }
+    const prev = (await ps.get(user, { type: "json" })) || {};
+    if (!ph) { if (prev.titre) await ps.setJSON(user, { titre: prev.titre }); else await ps.delete(user); return J({ ok: true, photo: "" }); }
     if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ph) || ph.length > 70000) return J({ error: "Image invalide ou trop lourde." }, 400);
-    await ps.setJSON(user, { photo: ph }); return J({ ok: true, photo: ph });
+    await ps.setJSON(user, { ...prev, photo: ph }); return J({ ok: true, photo: ph });
+  }
+  if (b.action === "profil_titre") {
+    const ps = getStore("profils"), t = clean(b.titre, 40).replace(/\s+/g, " ").trim();
+    const prev = (await ps.get(user, { type: "json" })) || {};
+    const next = { ...prev }; if (t) next.titre = t; else delete next.titre;
+    if (Object.keys(next).length) await ps.setJSON(user, next); else await ps.delete(user);
+    return J({ ok: true, titre: t });
   }
   if (b.action === "creer") {
     const prenom = clean(b.prenom, 60).trim(), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).trim();
