@@ -252,9 +252,10 @@ export default async (req) => {
     if (!HEURES_SUP.includes(heure) || !DUREES.includes(duree)) return J({ error: "Horaire ou durée invalide." }, 400);
     const superviseur = String(b.superviseur || "").toLowerCase();
     if (!["superviseur", "admin"].includes(roles[superviseur])) return J({ error: "Choisissez un·e superviseur·e." }, 400);
-    const participants = [...new Set((Array.isArray(b.participants) ? b.participants : []).map((n) => String(n).toLowerCase()))].filter((n) => roles[n] && roles[n] !== "superviseur");
-    if (!participants.length) return J({ error: "Choisissez au moins une personne en supervision." }, 400);
-    const type = b.type === "individuelle" ? "individuelle" : "groupe", titre = clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
+    const type = ["individuelle", "reunion"].includes(b.type) ? b.type : "groupe";
+    const participants = [...new Set((Array.isArray(b.participants) ? b.participants : []).map((n) => String(n).toLowerCase()))].filter((n) => roles[n] && (type === "reunion" || roles[n] !== "superviseur"));
+    if (!participants.length) return J({ error: "Choisissez au moins une personne." }, 400);
+    const titre = clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
     const existantes = await toutes();
     const ex = b.id ? existantes.find((y) => y.id === String(b.id)) : null; if (b.id && !ex) return J({ error: "Séance introuvable." }, 404);
     if (!ex && parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);

@@ -280,7 +280,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <section id="v11" class="hide"><header class="ph0 pastel t1 hhd"><span id="hav"></span><div><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></div></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
-<div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une supervision</button></div>
+<div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une séance ou une réunion</button></div>
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
@@ -334,6 +334,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-logo]'),function(e
 function nS(i,issue){return(i.seances||[]).filter(function(s){return s.issue===(issue||'realisee')}).length}
 function stat(name,mois){var t=0,a=0,pat={};items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name||(mois&&s.date.slice(0,7)!==mois))return;if(s.issue==='realisee'){t++;pat[i.id]=1}else a++})});return{seances:t,heures:t,abs:a,patients:Object.keys(pat).length}}
 function fhh(n){return n+' h'}
+function typeLb(x){return x.type==='reunion'?'Réunion':'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe')}
 function etuL(){return equipe.filter(function(n){return roles[n]==='etudiant'})}
 function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),avenir=0;
  items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});});occs().forEach(function(o){if(o.therapeute===name&&!past(o.rdvDate,o.rdvHeure))avenir++});
@@ -463,7 +464,7 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=role==='admin'&&(n===5||n===10);w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervision</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
+function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=role==='admin'&&(n===5||n===10);w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervisions & réunions</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
 document.addEventListener('click',function(e){var b=e.target.closest('.ssw .chip');if(b)nav(+b.dataset.g)});
 function nav(n){[1,2,3,4,5,6,7,8,10,11].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff();if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
@@ -672,7 +673,7 @@ function buildNav(){
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
  var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Espace gestion',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
- var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',11:'Accueil',10:role==='etudiant'?'Mes supervisions':role==='admin'?'Supervision & activité':'Supervision'};
+ var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',11:'Accueil',10:role==='etudiant'?'Supervisions & réunions':role==='admin'?'Supervision & activité':'Supervisions & réunions'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
    as.insertBefore(b,anchor)})});
@@ -692,7 +693,7 @@ function drawHome(){
  var oc=occs(),conf=oc.filter(function(o){return aConfirmer(o)&&(adm||o.therapeute===moi)}),
   upS=supItems.filter(function(x){return !past(x.date,x.heure)&&(adm||mine(x))}),pres=supItems.filter(function(x){return past(x.date,x.heure)&&!x.fait&&(adm||isSup)}).length,nx=upS[0];
  var tile=function(cls,k,num,lab){return '<button class="stat pastel '+cls+'" data-h="'+k+'"><b>'+num+'</b><span>'+lab+'</span></button>'};
- var nxT=nx?tile('t3','sup','<span style="font-size:20px;color:inherit;display:block;font-weight:600">'+esc(fday(nx.date))+'</span>','prochaine supervision<small>'+fh(nx.heure)+' – '+fh(supEnd(nx))+'</small>'):tile('t3','sup','—','aucune supervision prévue');
+ var nxT=nx?tile('t3','sup','<span style="font-size:20px;color:inherit;display:block;font-weight:600">'+esc(fday(nx.date))+'</span>','prochaine '+(nx.type==='reunion'?'réunion':'supervision')+'<small>'+fh(nx.heure)+' – '+fh(supEnd(nx))+'</small>'):tile('t3','sup','—','aucune supervision prévue');
  var T='';
  if(isAdmin)T=tile('t1','dem',items.filter(function(i){return i.statut==='nouvelle'}).length,'demandes à traiter')+tile('t2','',oc.filter(function(o){return o.rdvDate===t}).length,'rendez-vous aujourd’hui (équipe)')+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
  else if(!isSup)T=tile('t1','',ms.total+' h','heures de consultation<small>dont '+ms.mois+' h ce mois-ci</small>')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
@@ -701,7 +702,7 @@ function drawHome(){
  $('htt').textContent=(emp.who&&emp.who!==moi&&adm)?'Emploi du temps · '+cap(emp.who):'Mon emploi du temps';
  var h='';
  if(conf.length)h+='<h3 class="hh">À confirmer</h3><p class="sub" style="margin:-4px 0 8px">Ces rendez-vous ont eu lieu : indiquez s’ils ont été réalisés.</p><div class="hl">'+conf.map(function(o){return '<button class="hrow r todo" data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'"><b>'+esc(fday(o.rdvDate))+'</b><span>'+esc(o.prenom)+' · '+fh(o.rdvHeure)+'</span><small>'+esc(cap(o.therapeute))+'</small></button>'}).join('')+'</div>';
- var nl=upS.slice(0,4);if(nl.length)h+='<h3 class="hh">Prochaines supervisions</h3><div class="hl">'+nl.map(function(x){return '<div class="hrow s"><b>'+esc(fday(x.date))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+(x.titre?' · '+esc(x.titre):'')+'</span><small>'+esc(x.lieu||'')+' · '+esc(cap(x.superviseur))+'</small></div>'}).join('')+'</div>';
+ var nl=upS.slice(0,4);if(nl.length)h+='<h3 class="hh">Prochaines supervisions et réunions</h3><div class="hl">'+nl.map(function(x){return '<div class="hrow s"><b>'+esc(fday(x.date))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+' · '+typeLb(x)+(x.titre?' · '+esc(x.titre):'')+'</span><small>'+esc(x.lieu||'')+' · '+esc(cap(x.superviseur))+'</small></div>'}).join('')+'</div>';
  $('hbody').innerHTML=h;drawEmp()}
 $('hstats').onclick=function(e){var b=e.target.closest('.stat');if(!b)return;var k=b.dataset.h;if(!k)return;if(k==='dem'){filtre='nouvelle';nav(1);draw()}else if(k==='conf'){filtre='rdv_fixe';nav(1);draw()}else if(k==='sup')nav(10)};
 $('hbody').onclick=function(e){var b=e.target.closest('.hrow[data-id]');if(b)detail(b.dataset.id,b.dataset.r)};
@@ -714,8 +715,8 @@ function drawEmp(){
  var who=pick?(emp.who||moi):moi,rdv=0,sc=0,mins=0,h='';
  for(var k=0;k<5;k++){var d=addDays(wk,k),ev=[];
   occs().filter(function(o){return o.rdvDate===d&&o.therapeute===who}).forEach(function(o){ev.push({h:o.rdvHeure,dur:60,kind:'r',t:esc(o.prenom)+' <span class="mchip">RDV '+o.no+'</span>',s:o.salle})});
-  supItems.filter(function(x){return x.date===d&&((x.participants||[]).indexOf(who)>-1||x.superviseur===who)}).forEach(function(x){ev.push({h:x.heure,dur:x.duree,kind:'s',t:'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe')+(x.titre?' · '+esc(x.titre):''),s:(x.lieu||'Lieu à préciser')+' · avec '+cap(x.superviseur)})});
-  ev.sort(function(a,z){return a.h.localeCompare(z.h)});ev.forEach(function(e){if(e.kind==='r')rdv++;else{sc++;mins+=e.dur}});
+  supItems.filter(function(x){return x.date===d&&((x.participants||[]).indexOf(who)>-1||x.superviseur===who)}).forEach(function(x){ev.push({h:x.heure,dur:x.duree,kind:'s',t:typeLb(x)+(x.titre?' · '+esc(x.titre):''),reu:x.type==='reunion',s:(x.lieu||'Lieu à préciser')+(x.type==='reunion'?' · organisé par ':' · avec ')+cap(x.superviseur)})});
+  ev.sort(function(a,z){return a.h.localeCompare(z.h)});ev.forEach(function(e){if(e.kind==='r')rdv++;else if(!e.reu){sc++;mins+=e.dur}});
   h+='<div class="eday'+(d===iso(new Date())?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(ev.length?ev.length+' créneau'+(ev.length>1?'x':''):'')+'</em></h4>'+(ev.length?ev.map(function(e){return '<div class="ev '+e.kind+'"><b>'+fh(e.h)+' – '+fh(addMin(e.h,e.dur))+'</b><span>'+e.t+'</span><small>'+esc(e.s)+'</small></div>'}).join(''):'<p class="none">Rien de prévu.</p>')+'</div>'}
  $('ekp').innerHTML='<span><b>'+rdv+'</b> rendez-vous</span><span><b>'+sc+'</b> supervision'+(sc>1?'s':'')+(sc?' · '+(mins/60).toString().replace('.',',')+' h':'')+'</span>';
  $('ebody').innerHTML=h}
@@ -738,27 +739,28 @@ function drawSup(){
  var l=stab==='avenir'?up:pa;
  $('slist').innerHTML=l.length?'<div class="sgrid">'+l.map(function(x){
   var pres=x.presents||[];
-  return '<article class="sc2 pastel '+(x.type==='individuelle'?'t1':'t2')+'"><div class="sh"><b>'+esc(cap(fday(x.date)))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+'</span></div><h3>'+(x.titre?esc(x.titre):'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe'))+'</h3><p>'+esc(x.lieu||'Lieu à préciser')+' · avec <b>'+esc(cap(x.superviseur))+'</b></p><div class="pp">'+(x.participants||[]).map(function(n){var ok=pres.indexOf(n)>-1;return '<span class="'+(x.fait?(ok?'ok':'ko'):'')+'">'+esc(cap(n))+(x.fait?(ok?' ✓':' ✗'):'')+'</span>'}).join('')+'</div>'+(x.notes?'<p class="sub" style="margin:8px 0 0">'+esc(x.notes)+'</p>':'')+
+  return '<article class="sc2 pastel '+(x.type==='reunion'?'t3':x.type==='individuelle'?'t1':'t2')+'"><div class="sh"><b>'+esc(cap(fday(x.date)))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+'</span></div><h3>'+(x.titre?esc(x.titre):typeLb(x))+'</h3><p>'+esc(x.lieu||'Lieu à préciser')+(x.type==='reunion'?' · organisé par ':' · avec ')+'<b>'+esc(cap(x.superviseur))+'</b></p><div class="pp">'+(x.participants||[]).map(function(n){var ok=pres.indexOf(n)>-1;return '<span class="'+(x.fait?(ok?'ok':'ko'):'')+'">'+esc(cap(n))+(x.fait?(ok?' ✓':' ✗'):'')+'</span>'}).join('')+'</div>'+(x.notes?'<p class="sub" style="margin:8px 0 0">'+esc(x.notes)+'</p>':'')+
   (adm?'<div class="row" style="margin-top:12px">'+(supPast(x)?'<button class="btn s" data-s="pres" data-id="'+esc(x.id)+'">'+(x.fait?'Modifier les présences':'Noter les présences')+'</button>':'')+'<button class="btn l s" data-s="edit" data-id="'+esc(x.id)+'">Modifier</button><button class="link" data-s="del" data-id="'+esc(x.id)+'" style="margin-left:0">Supprimer</button></div>':'')+'</article>'}).join('')+'</div>':'<div class="empty"><b>'+(stab==='avenir'?'Aucune supervision à venir':'Aucune supervision passée')+'</b>'+(adm&&stab==='avenir'?'Utilisez « Programmer une supervision » pour en ajouter.':'')+'</div>';
- if(adm){var rows=etuL().map(function(n){var hh=0,c=0;supItems.forEach(function(x){if((x.presents||[]).indexOf(n)>-1){hh+=x.duree;c++}});return{n:n,h:hh,c:c}}).sort(function(a,z){return z.h-a.h||a.n.localeCompare(z.n,'fr')});
+ if(adm){var rows=etuL().map(function(n){var hh=0,c=0;supItems.forEach(function(x){if(x.type!=='reunion'&&(x.presents||[]).indexOf(n)>-1){hh+=x.duree;c++}});return{n:n,h:hh,c:c}}).sort(function(a,z){return z.h-a.h||a.n.localeCompare(z.n,'fr')});
   $('shrs').innerHTML='<h3 style="margin:26px 0 10px">Heures de supervision par étudiant·e</h3><div class="tm">'+rows.map(function(r){return '<div class="tr">'+av(r.n)+'<b>'+esc(cap(r.n))+'</b><span><b style="color:var(--rasp);font-size:18px">'+(r.h/60).toString().replace('.',',')+' h</b> · '+r.c+' séance'+(r.c>1?'s':'')+' suivie'+(r.c>1?'s':'')+'</span></div>'}).join('')+'</div>'}
  else $('shrs').innerHTML=''}
 $('stabs').onclick=function(e){var b=e.target.closest('.chip');if(b){stab=b.dataset.k;drawSup()}};
 function supForm(id){
  var x=id?supItems.filter(function(y){return y.id===id})[0]:null,today=iso(new Date()),hs=cfg.heuresSup||[],du=cfg.durees||[60,90,120];
  var sv=superv.length?superv:[moi],pr=x?x.participants:[];
- openM('<h3>'+(x?'Modifier la supervision':'Programmer une supervision')+'</h3><div class="g2"><label class="f w">Intitulé (facultatif)<input id="sti" maxlength="80" value="'+esc(x?x.titre:'')+'" placeholder="ex. Supervision de groupe du mardi"></label>'+
- '<label class="f">Type<select id="sty"><option value="groupe"'+(x&&x.type==='groupe'?' selected':'')+'>De groupe</option><option value="individuelle"'+(x&&x.type==='individuelle'?' selected':'')+'>Individuelle</option></select></label>'+
- '<label class="f">Superviseur·e<select id="ssv">'+sv.map(function(n){return '<option value="'+esc(n)+'"'+((x?x.superviseur:moi)===n?' selected':'')+'>'+esc(cap(n))+'</option>'}).join('')+'</select></label>'+
+ openM('<h3>'+(x?'Modifier':'Programmer une supervision ou une réunion')+'</h3><div class="g2"><label class="f w">Intitulé (facultatif)<input id="sti" maxlength="80" value="'+esc(x?x.titre:'')+'" placeholder="ex. Supervision de groupe du mardi"></label>'+
+ '<label class="f">Type<select id="sty"><option value="groupe"'+(x&&x.type==='groupe'?' selected':'')+'>De groupe</option><option value="individuelle"'+(x&&x.type==='individuelle'?' selected':'')+'>Individuelle</option><option value="reunion"'+(x&&x.type==='reunion'?' selected':'')+'>Réunion d’équipe</option></select></label>'+
+ '<label class="f">Superviseur·e / organisateur·rice<select id="ssv">'+sv.map(function(n){return '<option value="'+esc(n)+'"'+((x?x.superviseur:moi)===n?' selected':'')+'>'+esc(cap(n))+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Date<input id="sda" type="date" value="'+esc(x?x.date:today)+'"'+(x?'':' min="'+today+'"')+'></label>'+
  '<label class="f">Heure de début<select id="sho">'+hs.map(function(t){return '<option value="'+t+'"'+((x?x.heure:'10:00')===t?' selected':'')+'>'+fh(t)+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Durée<select id="sdu">'+du.map(function(m){return '<option value="'+m+'"'+((x?x.duree:60)===m?' selected':'')+'>'+(m%60?Math.floor(m/60)+' h 30':(m/60)+' h')+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Lieu<input id="sli" maxlength="80" list="sli-l" value="'+esc(x?x.lieu:'')+'" placeholder="ex. Salle 1"><datalist id="sli-l">'+(cfg.salles||[]).map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></label>'+
  (x?'':'<label class="f">Répéter<select id="sre"><option value="1">Une seule fois</option>'+[2,3,4,6,8,10,12].map(function(n){return '<option value="'+n+'">Chaque semaine, '+n+' fois</option>'}).join('')+'</select></label>')+'</div>'+
- '<div class="mq" style="margin-top:10px"><b>Personnes en supervision</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+etuL().map(function(n){return '<button type="button" data-p="'+esc(n)+'" class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
+ '<div class="mq" style="margin-top:10px"><b>Personnes concernées</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+etuL().concat(Object.keys(roles).filter(function(n){return roles[n]==='superviseur'})).map(function(n){var sv2=roles[n]==='superviseur';return '<button type="button" data-p="'+esc(n)+'"'+(sv2?' data-sv="1"'+(x&&x.type==='reunion'?'':' style="display:none"'):'')+' class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
  '<div id="serr" style="margin:8px 0"></div><div class="row"><button class="btn" id="sgo">'+(x?'Enregistrer':'Programmer')+'</button><button class="btn l" data-m="x">Annuler</button></div>');
  $('spp').onclick=function(e){var b=e.target.closest('button[data-p]');if(b)b.classList.toggle('on')};
- $('sall').onclick=function(){Array.prototype.forEach.call($('spp').children,function(b){b.classList.add('on')})};
+ $('sall').onclick=function(){Array.prototype.forEach.call($('spp').children,function(b){if(b.style.display!=='none')b.classList.add('on')})};
+ $('sty').onchange=function(){var r=this.value==='reunion';Array.prototype.forEach.call($('spp').querySelectorAll('[data-sv]'),function(b){b.style.display=r?'':'none';if(!r)b.classList.remove('on')})};
  var go=function(force){
   var ps=Array.prototype.map.call($('spp').querySelectorAll('button.on'),function(b){return b.dataset.p});$('sgo').disabled=true;
   api({action:'sup_save',id:x?x.id:null,titre:$('sti').value,type:$('sty').value,superviseur:$('ssv').value,date:$('sda').value,heure:$('sho').value,duree:+$('sdu').value,lieu:$('sli').value,participants:ps,repeter:x?1:+($('sre')?$('sre').value:1),forcer:!!force}).then(function(r){
