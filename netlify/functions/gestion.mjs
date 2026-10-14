@@ -227,8 +227,9 @@ export default async (req) => {
     const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
     const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre]));
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
+    const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
-    return J({ ok: true, items, compte: user, admin, role, roles, photos, titres, bios, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, compte: user, admin, role, roles, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -305,6 +306,15 @@ export default async (req) => {
     const next = { ...prev }; if (t) next.bio = t; else delete next.bio;
     if (Object.keys(next).length) await ps.setJSON(user, next); else await ps.delete(user);
     return J({ ok: true, bio: t });
+  }
+  if (b.action === "profil_contact") {
+    const ps = getStore("profils"), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).replace(/[^0-9+().\s-]/g, "").replace(/\s+/g, " ").trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse mail invalide." }, 400);
+    if (tel && tel.replace(/\D/g, "").length < 6) return J({ error: "Numéro de téléphone invalide." }, 400);
+    const prev = (await ps.get(user, { type: "json" })) || {};
+    const next = { ...prev }; if (email) next.email = email; else delete next.email; if (tel) next.tel = tel; else delete next.tel;
+    if (Object.keys(next).length) await ps.setJSON(user, next); else await ps.delete(user);
+    return J({ ok: true, email, tel });
   }
   if (b.action === "creer") {
     const prenom = clean(b.prenom, 60).trim(), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).trim();
