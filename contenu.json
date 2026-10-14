@@ -35,7 +35,7 @@
     }
   ],
   "accueil": {
-    "surtitre": "UFR de psychologie · Université Paris 8",
+    "surtitre": "Université Paris 8",
     "titre": "Un temps pour vous, [[entre deux cours.]]",
     "intro": "**Des étudiant·es de M2 de psychologie** proposent des consultations psychologiques gratuites aux étudiant·es.",
     "boutonPrincipal": "Prendre rendez-vous",
@@ -215,9 +215,9 @@
     ]
   },
   "porteur": {
-    "entite": "UFR de\npsychologie",
-    "titre": "Porté par l'UFR [[de psychologie]]",
-    "texte": "CAPSULE est un dispositif de l'**UFR de psychologie de l'Université Paris 8 Vincennes-Saint-Denis**. Les consultations sont proposées par des étudiant·es de Master 2 de psychologie, à destination des étudiant·es."
+    "entite": "Trois laboratoires\nde recherche",
+    "titre": "Porté par trois [[laboratoires de recherche]]",
+    "texte": "CAPSULE est porté par trois laboratoires de recherche de l'**Université Paris 8 Vincennes-Saint-Denis** : **DysCo**, **LAPPS** et **LPPC**. Les consultations sont proposées par des étudiant·es de Master 2 de psychologie, à destination des étudiant·es."
   },
   "urgence": {
     "titre": "CAPSULE n'est pas un service d'urgence",
@@ -241,5 +241,5 @@
     "titre": "Le premier rendez-vous est le plus long à décider.",
     "texte": "Ensuite, ça va plutôt vite."
   },
-  "basDePage": "Un dispositif de l'UFR de psychologie · Université Paris 8 Vincennes-Saint-Denis"
+  "basDePage": "Un dispositif porté par les laboratoires DysCo, LAPPS et LPPC · Université Paris 8 Vincennes-Saint-Denis"
 }
