@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import * as REG from "../lib/reglement.mjs";
 import * as FI from "../lib/fiches.mjs";
 import * as CP from "../lib/capacite.mjs";
+import * as CO from "../lib/compteur.mjs";
 
 export const config = { path: "/api/gestion" };
 
@@ -303,6 +304,10 @@ export default async (req) => {
     return J({ ok: true, item: r, mail });
   }
 
+  if (b.action === "demandes_mois") { // historique des demandes par mois (admins) : voir netlify/lib/compteur.mjs
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    return J({ ok: true, ...(await CO.parMois()) });
+  }
   if (b.action === "capacite_save") {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const etu = await CP.etudiants(), nb = (v) => { const n = Number(v); return Number.isInteger(n) && n >= 1 && n <= 20 ? n : null; };

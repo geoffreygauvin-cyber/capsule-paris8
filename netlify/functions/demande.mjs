@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
 import { resumePublic } from "../lib/capacite.mjs";
+import { noter } from "../lib/compteur.mjs";
 
 export const config = { path: "/api/demande" };
 
@@ -36,5 +37,6 @@ export default async (req) => {
   const attente = (await resumePublic().catch(() => ({}))).complet === true;
   const rec = { id, creeLe: iso, prenom, email, tel, creneaux, message, statut: attente ? "attente" : "nouvelle", ...(attente ? { attenteLe: iso, attenteAuto: true } : {}), assigne: "", rdv: "", notes: "", maj: iso };
   await store.setJSON("d/" + iso + "_" + id, rec);
+  await noter(iso);
   return J({ ok: true, attente });
 };
