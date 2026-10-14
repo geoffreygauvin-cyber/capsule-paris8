@@ -689,7 +689,7 @@ function drawHome(){
  if(!isSup)T=tile('t1','',ms.total+' h','heures de consultation<small>dont '+ms.mois+' h ce mois-ci</small>')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
  else T=nxT+tile('t1','sup',upS.length,'supervisions à venir')+tile('t2','sup',pres,'présence'+(pres>1?'s':'')+' à saisir');
  $('hstats').innerHTML=T;
- $('htt').textContent=(emp.who&&emp.who!==moi&&(adm||isSup))?'Emploi du temps · '+cap(emp.who):'Mon emploi du temps';
+ $('htt').textContent=(emp.who&&emp.who!==moi&&adm)?'Emploi du temps · '+cap(emp.who):'Mon emploi du temps';
  var h='';
  if(conf.length)h+='<h3 class="hh">À confirmer</h3><p class="sub" style="margin:-4px 0 8px">Ces rendez-vous ont eu lieu : indiquez s’ils ont été réalisés.</p><div class="hl">'+conf.map(function(o){return '<button class="hrow r todo" data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'"><b>'+esc(fday(o.rdvDate))+'</b><span>'+esc(o.prenom)+' · '+fh(o.rdvHeure)+'</span><small>'+esc(cap(o.therapeute))+'</small></button>'}).join('')+'</div>';
  var nl=upS.slice(0,4);if(nl.length)h+='<h3 class="hh">Prochaines supervisions</h3><div class="hl">'+nl.map(function(x){return '<div class="hrow s"><b>'+esc(fday(x.date))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+(x.titre?' · '+esc(x.titre):'')+'</span><small>'+esc(x.lieu||'')+' · '+esc(cap(x.superviseur))+'</small></div>'}).join('')+'</div>';
@@ -700,7 +700,7 @@ $('hbody').onclick=function(e){var b=e.target.closest('.hrow[data-id]');if(b)det
 function addMin(h,m){var t=+h.slice(0,2)*60+ +h.slice(3)+m;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}
 function drawEmp(){
  var wk=emp.wk||(emp.wk=monday(iso(new Date())));$('ewt').textContent='Semaine du '+fday(wk);
- var pick=isAdmin||isSup,sel=$('ewho');sel.classList.toggle('hide',!pick);
+ var pick=isAdmin,sel=$('ewho');sel.classList.toggle('hide',!pick);
  if(pick){var names=Object.keys(roles).sort(function(a,z){return a.localeCompare(z,'fr')});if(!emp.who)emp.who=moi;sel.innerHTML=names.map(function(n){return '<option value="'+esc(n)+'"'+(n===emp.who?' selected':'')+'>'+esc(cap(n))+(n===moi?' (moi)':'')+' · '+esc(RL[roles[n]])+'</option>'}).join('')}
  var who=pick?(emp.who||moi):moi,rdv=0,sc=0,mins=0,h='';
  for(var k=0;k<5;k++){var d=addDays(wk,k),ev=[];
