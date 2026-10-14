@@ -13,7 +13,8 @@ const h = (x) => createHash("sha256").update(String(x)).digest();
 const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"];
 const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
 const MAX_FICHIER = 4 * 1024 * 1024;
-const ROLES = ["etudiant", "superviseur", "admin"];
+const ROLES = ["etudiant", "admin"];
+const rlv = (v) => (v?.role === "superviseur" ? "desactive" : ROLES.includes(v?.role) ? v.role : "etudiant");
 const HEURES_SUP = Array.from({ length: 23 }, (_, k) => { const m = 8 * 60 + k * 30; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + (m % 60 ? "30" : "00"); });
 const DUREES = [60, 90, 120, 180];
 const fin = (h, d) => { const m = mn(h) + d; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
@@ -70,6 +71,7 @@ export default async (req) => {
     }
     const a = NAME.test(u) ? await ac.get(u, { type: "json" }) : null;
     if (!a || !timingSafeEqual(Buffer.from(hashCode(String(b.code ?? "").trim(), a.salt)), Buffer.from(a.hash))) return J({ error: "Compte ou code incorrect." }, 401);
+    if (a.role === "superviseur") return J({ error: "Ce compte a été désactivé." }, 401);
     return J({ ok: true, token: makeToken(u, "membre", a.hash.slice(0, 10)), compte: u });
   }
 
@@ -87,13 +89,14 @@ export default async (req) => {
   else {
     const acc = await ac.get(user, { type: "json" });
     if (!(acc?.hash || "").startsWith(tk.k || "!")) return J({ error: "Session expirée, reconnectez-vous." }, 401);
+    if (acc.role === "superviseur") return J({ error: "Ce compte a été désactivé." }, 401);
     role = ROLES.includes(acc.role) ? acc.role : "etudiant";
   }
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace thérapeute), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
@@ -103,17 +106,18 @@ export default async (req) => {
       const code = String(b.code || "").trim() || genCode(), salt = randomBytes(16).toString("hex");
       await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), le: new Date().toISOString(), par: user });
       const { blobs } = await ac.list();
-      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" })), principaux: Object.keys(c) });
+      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action === "compte_role" && n in c) {
       if (!["admin", "etudiant"].includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
       await rls.setJSON(n, { role: b.role });
       const { blobs } = await ac.list();
-      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" })), principaux: Object.keys(c) });
+      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
+      if (b.action === "compte_create" && b.role && !ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.action === "compte_create" && await ac.get(n, { type: "json" })) return J({ error: "Ce compte existe déjà." }, 400);
       if (b.action !== "compte_create" && !(await ac.get(n, { type: "json" }))) return J({ error: "Compte introuvable." }, 404);
       if (b.action === "compte_delete") { await ac.delete(n); await getStore("profils").delete(n); }
@@ -128,11 +132,11 @@ export default async (req) => {
         const old = await ac.get(n, { type: "json" });
         await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant") });
         const { blobs } = await ac.list();
-        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" }; })), principaux: Object.keys(c) });
+        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) }; })), principaux: Object.keys(c) });
       }
     }
     const { blobs } = await ac.list();
-    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" }));
+    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) }));
     return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
   }
 
@@ -256,16 +260,18 @@ export default async (req) => {
   if (b.action === "sup_list" || b.action === "sup_save" || b.action === "sup_delete" || b.action === "sup_presence") {
     const ss = getStore("supervisions");
     const toutes = async () => { const { blobs } = await ss.list(); return (await Promise.all(blobs.map((x) => ss.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => (a.date + a.heure).localeCompare(z.date + z.heure)); };
-    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user)); return J({ ok: true, items: l }); }
-    if (!admin && !sup) return J({ error: "Réservé aux superviseurs et aux administrateurs." }, 403);
+    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); return J({ ok: true, items: l }); }
+    const own = (x) => admin || x.creePar === user;
     if (b.action === "sup_delete") {
       const l = await toutes(), x = l.find((y) => y.id === String(b.id)); if (!x) return J({ error: "Séance introuvable." }, 404);
-      const cibles = b.serie && x.serie ? l.filter((y) => y.serie === x.serie && y.date >= x.date) : [x];
+      if (!own(x)) return J({ error: "Vous ne pouvez supprimer que vos propres séances." }, 403);
+      const cibles = (b.serie && x.serie ? l.filter((y) => y.serie === x.serie && y.date >= x.date) : [x]).filter(own);
       for (const y of cibles) await ss.delete(y.id);
       return J({ ok: true, supprimes: cibles.map((y) => y.id) });
     }
     if (b.action === "sup_presence") {
       const x = await ss.get(String(b.id), { type: "json" }); if (!x) return J({ error: "Séance introuvable." }, 404);
+      if (!own(x)) return J({ error: "Réservé à la personne qui a programmé la séance." }, 403);
       if (parisToUTC(x.date, x.heure) > Date.now()) return J({ error: "Cette séance n'a pas encore eu lieu." }, 400);
       x.presents = (Array.isArray(b.presents) ? b.presents : []).filter((n) => (x.participants || []).includes(n));
       if ("notes" in b) x.notes = clean(b.notes, 600); x.fait = true; x.maj = new Date().toISOString();
@@ -276,14 +282,19 @@ export default async (req) => {
     const date = String(b.date || ""), heure = String(b.heure || ""), duree = Number(b.duree);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || ![1, 2, 3, 4, 5].includes(weekday(date))) return J({ error: "La supervision a lieu du lundi au vendredi." }, 400);
     if (!HEURES_SUP.includes(heure) || !DUREES.includes(duree)) return J({ error: "Horaire ou durée invalide." }, 400);
-    const superviseur = String(b.superviseur || "").toLowerCase();
-    if (!["superviseur", "admin"].includes(roles[superviseur])) return J({ error: "Choisissez un·e superviseur·e." }, 400);
-    const type = ["individuelle", "reunion"].includes(b.type) ? b.type : "groupe";
+    const typeB = ["individuelle", "reunion"].includes(b.type) ? b.type : "groupe";
+    let superviseur = clean(b.superviseur, 60).trim();
+    if (superviseur.toLowerCase() in roles) superviseur = superviseur.toLowerCase();
+    if (typeB === "reunion" && !admin) superviseur = user;
+    if (!superviseur) return J({ error: "Indiquez le nom du ou de la superviseur·e." }, 400);
+    const type = typeB;
     const participants = [...new Set((Array.isArray(b.participants) ? b.participants : []).map((n) => String(n).toLowerCase()))].filter((n) => roles[n] && (type === "reunion" || roles[n] !== "superviseur"));
+    if (!admin && !participants.includes(user)) participants.push(user);
     if (!participants.length) return J({ error: "Choisissez au moins une personne." }, 400);
     const titre = clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
     const existantes = await toutes();
     const ex = b.id ? existantes.find((y) => y.id === String(b.id)) : null; if (b.id && !ex) return J({ error: "Séance introuvable." }, 404);
+    if (ex && !own(ex)) return J({ error: "Vous ne pouvez modifier que vos propres séances." }, 403);
     if (!ex && parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);
     const n = ex ? 1 : Math.min(26, Math.max(1, Math.floor(Number(b.repeter)) || 1)), serie = ex ? ex.serie : n > 1 ? randomUUID() : "";
     const dates = Array.from({ length: n }, (_, k) => { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 7 * k); return d.toISOString().slice(0, 10); });
