@@ -1,8 +1,12 @@
 /* Fiches de prévention pour les personnes reçues à CAPSULE.
    Une fiche = une page A4 : à lire dans la plateforme (Ressources > Fiches patients), à imprimer pour la séance, ou à envoyer par mail.
-   POUR MODIFIER LE TEXTE : changer les fiches ci-dessous (la plateforme et les mails se mettent à jour au prochain déploiement).
-   - Une fiche : { id, theme, titre, accroche, mots (pour la recherche), blocs: [{ t, p?: [paragraphes], l?: [puces] }], aide: "Quand en parler…", plus?: [numéros ou sites utiles propres à la fiche] }.
-   - Vouvoiement, ton simple et doux, sans jargon, comme sur le reste du site.
+   Il y a deux sources de fiches :
+   - les fiches DE BASE, écrites ci-dessous (modifiables ici, au prochain déploiement) ;
+   - les fiches CRÉÉES SUR LE SITE par les admins (Ressources > Fiches patients > « Nouvelle fiche », modèle à remplir avec aperçu), enregistrées dans la base (store « fiches »).
+   Format d'une fiche de base : { id, theme, titre, accroche, mots (recherche), icone, blocs: [{ t, p?: [paragraphes], l?: [puces], q?: "phrase de fin", k?: genre }], aide: "Quand en parler…", plus?: [numéros ou sites utiles propres à la fiche] }.
+   Genres d'une liste (k) : "liste" (coches, par défaut), "etapes" (numérotée), "eviter" (croix rouges, détecté aussi quand le titre commence par « À éviter » ou « Ce qui n'aide pas »), "questions" (« ? »).
+   Le rendu (écran, impression A4, mail) part toujours de « sections(f) » : une suite de { t: titre, k: genre ("texte", "liste", "etapes", "eviter", "questions"), lines: [lignes] }.
+   Vouvoiement, ton simple et doux, sans jargon, comme sur le reste du site.
    Ces textes donnent des repères généraux et ne remplacent pas un avis médical. Ils sont à faire relire par les superviseur·es avant usage. */
 
 export const VERSION = "2026-10";
@@ -109,7 +113,7 @@ export const FICHES = [
     mots: "relaxation respiration cohérence cardiaque détente ancrage calme méditation",
     blocs: [
       { t: "La respiration lente (5 minutes)", p: ["Asseyez-vous confortablement. Inspirez par le nez pendant 5 secondes, puis expirez doucement pendant 5 secondes. Continuez pendant 5 minutes, soit environ 6 respirations par minute. Mieux vaut peu mais souvent, par exemple matin, midi et soir, que seulement quand ça ne va pas."] },
-      { t: "La détente musculaire (10 minutes)", l: [
+      { t: "La détente musculaire (10 minutes)", k: "etapes", l: [
         "Assis·e ou allongé·e, serrez un groupe de muscles pendant 5 secondes : poings, bras, épaules, visage, ventre, jambes, pieds.",
         "Relâchez d'un coup et remarquez la différence pendant 10 secondes.",
         "Passez au groupe suivant, des pieds à la tête ou l'inverse."] },
@@ -144,7 +148,7 @@ export const FICHES = [
     mots: "panique crise angoisse attaque palpitations souffle vertige",
     blocs: [
       { t: "Ce qui se passe", p: ["Cœur qui s'emballe, souffle court, vertiges, tremblements, impression de mourir ou de perdre le contrôle… La crise atteint son maximum en une dizaine de minutes environ, puis elle retombe. Elle fait très peur, mais elle est sans danger en elle-même."] },
-      { t: "Pendant la crise", l: [
+      { t: "Pendant la crise", k: "etapes", l: [
         "Ne pas fuir si possible : s'asseoir, s'appuyer.",
         "Se dire : « C'est une crise de panique. Ça va passer. »",
         "Expirer lentement, plus longtemps que l'on inspire (4 secondes pour inspirer, 6 pour expirer).",
@@ -287,11 +291,93 @@ export const FICHES = [
     aide: "À tout moment. Si ce que vous avez vécu pèse sur votre sommeil, votre moral ou votre quotidien, parlez-en en séance : vous serez écouté·e sans jugement.",
     plus: ["3919 : violences faites aux femmes, anonyme et gratuit", "France Victimes : 116 006, aide aux victimes", "En danger immédiat : 17 (police) ou 112, ou 114 par SMS si vous ne pouvez pas parler"],
   },
+  {
+    id: "numerique", theme: "Numérique", titre: "Réseaux sociaux et écrans : trouver son équilibre",
+    accroche: "Garder ce qui fait du bien en ligne, et se protéger du reste.",
+    mots: "réseaux sociaux écrans téléphone digital numérique instagram tiktok snapchat scroller défiler notifications comparaison harcèlement cyberharcèlement temps d'écran jeux vidéo",
+    blocs: [
+      { t: "Un outil, ni bon ni mauvais", p: ["Les réseaux et le téléphone aident à garder le lien, à s'informer, à se détendre. Ce qui compte, c'est l'effet qu'ils ont sur vous : plutôt apaisé·e et relié·e, ou plutôt tendu·e et seul·e après ?"] },
+      { t: "Pour faire le point", k: "questions", l: [
+        "Ouvrez-vous les applications par envie, ou par réflexe, par ennui ?",
+        "Comment vous sentez-vous après dix minutes de défilement ?",
+        "Votre sommeil, vos études ou vos proches en pâtissent-ils ?"] },
+      { t: "Ce qui aide", l: [
+        "Couper les notifications non essentielles : c'est vous qui ouvrez l'application, pas elle qui vous appelle.",
+        "Laisser le téléphone hors du lit la nuit : un vrai réveil suffit.",
+        "Prévoir des temps sans écran : les repas, la dernière demi-heure avant de dormir.",
+        "Trier ses abonnements : quitter les comptes qui donnent envie de se comparer.",
+        "Remplacer plutôt que supprimer : appeler quelqu'un, marcher ou lire là où l'on défile d'habitude."] },
+      { t: "Le piège de la comparaison", p: ["Les réseaux montrent surtout des moments choisis et retouchés. Comparer sa vie ordinaire à la vitrine des autres fait mal et ne dit rien de votre valeur : faites une pause ou un tri dans votre fil."] },
+      { t: "Se protéger en ligne", l: [
+        "Régler la confidentialité de ses comptes ; réfléchir avant de partager photos, adresse ou emploi du temps.",
+        "Face à des messages insultants ou menaçants : ne pas répondre, garder des captures d'écran, bloquer, signaler.",
+        "Si des images intimes servent à faire pression : ne pas payer, garder les preuves, en parler, porter plainte.",
+        "Le harcèlement en ligne est un délit : vous n'y êtes pour rien, et vous n'avez pas à le subir seul·e."] },
+      { t: "À essayer cette semaine", k: "etapes", l: [
+        "Un soir : le téléphone dort hors de la chambre.",
+        "Un repas : sans écran.",
+        "Un tri : se désabonner de trois comptes qui pèsent."] },
+    ],
+    aide: "Si vous voudriez être moins en ligne sans y arriver, si les écrans prennent la place du sommeil, des études ou des proches, ou si vous subissez du harcèlement ou du chantage : parlez-en en séance, à un·e médecin ou à une personne de confiance.",
+    plus: [
+      "3018 : aide contre le cyberharcèlement et les violences numériques, gratuit, tous les jours de 9 h à 23 h",
+      "cybermalveillance.gouv.fr : conseils et assistance en cas de piratage, d'arnaque ou de chantage en ligne",
+      "internet-signalement.gouv.fr (Pharos) : signaler un contenu illégal public. Menaces ou harcèlement : porter plainte (17 si danger immédiat)",
+    ],
+  },
 ];
+
+/* Icône de chaque fiche de base (les fiches créées sur le site choisissent la leur dans la liste ICONES). */
+export const ICONES = ["moon", "wind", "heart", "book", "users", "cloud", "bolt", "shield", "sun", "phone", "leaf", "star", "chat"];
+const ICONE_DE = { sommeil: "moon", anxiete: "wind", moral: "sun", examens: "book", respiration: "wind", ruminations: "cloud", panique: "bolt", procrastination: "book", solitude: "users", hygiene: "leaf", substances: "leaf", estime: "star", vss: "shield", numerique: "phone" };
+for (const f of FICHES) f.icone = f.icone || ICONE_DE[f.id] || "heart";
+
+export const GENRES = ["texte", "liste", "etapes", "eviter", "questions"];
+const genre = (b) => (b.k && GENRES.includes(b.k) ? b.k : b.l ? (/^\s*(à éviter|ce qui n.aide pas|les pièges)/i.test(b.t || "") ? "eviter" : "liste") : "texte");
+/* Suite de sections à afficher : { t, k, lines }. Un bloc « paragraphe + liste + phrase de fin » devient trois sections (le titre reste sur la première). */
+export function sections(f) {
+  if (Array.isArray(f.sections)) return f.sections;
+  const out = [];
+  for (const b of f.blocs || []) {
+    let t = b.t || "";
+    if (b.p?.length) { out.push({ t, k: "texte", lines: b.p }); t = ""; }
+    if (b.l?.length) { const k = genre(b); out.push({ t, k: k === "texte" ? "liste" : k, lines: b.l }); t = ""; }
+    if (b.q) out.push({ t, k: "texte", lines: [b.q] });
+  }
+  return out;
+}
+
+/* Valide et nettoie une fiche envoyée par l'éditeur du site. Retourne { fiche } ou { error }. */
+const net1 = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+export const AIDE_DEFAUT = "Si cela dure ou pèse sur votre quotidien, parlez-en en séance, à un·e médecin ou à une personne de confiance : vous serez écouté·e sans jugement.";
+export function nettoyerFiche(d) {
+  if (!d || typeof d !== "object") return { error: "Fiche invalide." };
+  const titre = net1(d.titre, 90), accroche = net1(d.accroche, 200);
+  if (!titre) return { error: "Donnez un titre à la fiche." };
+  if (!accroche) return { error: "Écrivez une phrase d'accroche (sous le titre)." };
+  const src = Array.isArray(d.sections) ? d.sections : [];
+  if (src.length > 12) return { error: "12 parties au maximum." };
+  const secs = []; let total = 0;
+  for (const x of src) {
+    const lines = (Array.isArray(x?.lines) ? x.lines : []).map((l) => net1(l, 500)).filter(Boolean);
+    const t = net1(x?.t, 90);
+    if (!lines.length) continue;
+    if (lines.length > 20) return { error: "20 lignes au maximum par partie." };
+    total += lines.reduce((a, l) => a + l.length, 0);
+    secs.push({ t, k: GENRES.includes(x?.k) ? x.k : "texte", lines });
+  }
+  if (!secs.length) return { error: "Ajoutez au moins une partie avec du texte." };
+  if (total > 7000) return { error: "La fiche est trop longue pour tenir sur une page. Raccourcissez-la." };
+  const plus = (Array.isArray(d.plus) ? d.plus : []).map((l) => net1(l, 240)).filter(Boolean).slice(0, 6);
+  return { fiche: { titre, accroche, theme: net1(d.theme, 30) || "Divers", mots: net1(d.mots, 200), icone: ICONES.includes(d.icone) ? d.icone : "heart", sections: secs, aide: net1(d.aide, 700) || AIDE_DEFAUT, plus } };
+}
 
 /* ---------- mail ---------- */
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const COUL = { liste: ["#AE164E", "#FDF5EB"], etapes: ["#7B206B", "#F4EBF8"], questions: ["#7B206B", "#F4EBF8"], eviter: ["#E30F1B", "#FDE9E4"] };
+const FONT = "Poppins,'Helvetica Neue',Helvetica,Arial,sans-serif";
 const para = (t) => `<p style="margin:0 0 10px;font-size:15px;line-height:1.6">${esc(t)}</p>`;
+const marque = (k, i) => (k === "etapes" ? String(i + 1) : k === "eviter" ? "✕" : k === "questions" ? "?" : "✓");
 
 export function courrier(f, { prenom = "", note = "" } = {}) {
   const objet = `CAPSULE · ${f.titre}`;
@@ -300,16 +386,16 @@ export function courrier(f, { prenom = "", note = "" } = {}) {
   const mot = String(note || "").trim();
   const FIN = "L'équipe CAPSULE, Université Paris 8";
   const pied = "CAPSULE propose des consultations psychologiques gratuites aux étudiant·es de l'Université Paris 8. Pour nous écrire, répondez simplement à ce mail.";
+  const S = sections(f);
 
   // texte brut
   const T = [salut, "", intro];
   if (mot) T.push("", mot);
   T.push("", "—", "", f.titre.toUpperCase(), f.accroche);
-  for (const b of f.blocs) {
-    T.push("", b.t.toUpperCase());
-    for (const p of b.p || []) T.push(p);
-    for (const l of b.l || []) T.push("- " + l);
-    if (b.q) T.push(b.q);
+  for (const s of S) {
+    T.push("");
+    if (s.t) T.push(s.t.toUpperCase());
+    s.lines.forEach((l, i) => T.push(s.k === "texte" ? l : (s.k === "etapes" ? `${i + 1}. ` : s.k === "questions" ? "? " : s.k === "eviter" ? "✕ " : "- ") + l));
   }
   T.push("", "QUAND EN PARLER", f.aide);
   if (f.plus?.length) { T.push("", "POUR ALLER PLUS LOIN"); for (const x of f.plus) T.push("- " + x); }
@@ -318,24 +404,35 @@ export function courrier(f, { prenom = "", note = "" } = {}) {
   for (const [n, c, d] of SOUTIENS) T.push(`- ${n} : ${c} (${d})`);
   T.push("", AVERTISSEMENT, "", FIN, "", pied);
 
-  // html
-  const liste = (l) => `<ul style="margin:0 0 10px;padding-left:20px">${l.map((x) => `<li style="margin:0 0 6px;font-size:15px;line-height:1.55">${esc(x)}</li>`).join("")}</ul>`;
-  const h = (t) => `<h3 style="margin:22px 0 8px;font-size:16px;color:#AE164E">${esc(t)}</h3>`;
+  // html (mise en page en tableaux : seule façon fiable dans les messageries)
+  const titre = (t, c) => (t ? `<div style="margin:0 0 8px;font-size:16px;font-weight:700;color:${c}">${esc(t)}</div>` : "");
+  const bloc = (s, i) => {
+    if (s.k === "texte") {
+      const corps = s.lines.map(para).join("");
+      if (!s.t) return `<div style="margin:0 0 4px">${corps}</div>`;
+      if (i === 0) return `<div style="margin:18px 0 4px;padding:2px 0 2px 14px;border-left:4px solid #AE164E">${titre(s.t, "#AE164E")}${corps}</div>`;
+      return `<div style="margin:18px 0 4px;padding:12px 16px;border-radius:14px;background:#EADCF0">${titre(s.t, "#7B206B")}<div style="margin:0 0 -10px">${corps}</div></div>`;
+    }
+    const [c, fond] = COUL[s.k] || COUL.liste;
+    return `<div style="margin:20px 0 0">${titre(s.t, c)}` + s.lines.map((l, j) =>
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px"><tr><td style="background:${fond};border-radius:10px;padding:9px 12px"><table role="presentation" cellpadding="0" cellspacing="0"><tr>` +
+      `<td width="30" valign="top" style="padding:1px 10px 0 0"><div style="width:22px;height:22px;line-height:22px;border-radius:11px;background:${c};color:#ffffff;text-align:center;font-size:12px;font-weight:700">${marque(s.k, j)}</div></td>` +
+      `<td valign="top" style="font-size:15px;line-height:1.5;font-family:${FONT}">${esc(l)}</td></tr></table></td></tr></table>`).join("") + `</div>`;
+  };
   const H =
-    `<div style="background:#FDF5EB;padding:20px 0"><div style="max-width:620px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;font-family:Poppins,Helvetica,Arial,sans-serif;color:#1F1217">` +
-    `<div style="background:#75151F;color:#FDF5EB;padding:16px 26px;font-size:13px;letter-spacing:.18em;font-weight:600">CAPSULE · PARIS 8</div>` +
+    `<div style="background:#FDF5EB;padding:20px 8px"><div style="max-width:620px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;font-family:${FONT};color:#1F1217">` +
+    `<div style="background:#75151F;color:#FDF5EB;padding:14px 26px;font-size:13px;letter-spacing:.18em;font-weight:600"><img src="https://www.capsule-paris8.fr/favicon.png" width="22" height="22" alt="" style="vertical-align:middle;margin:0 10px 0 0;border:0">CAPSULE · PARIS 8</div>` +
     `<div style="padding:24px 26px 26px">` +
     para(salut) + para(intro) + (mot ? `<div style="margin:0 0 14px;padding:12px 14px;border-left:3px solid #AE164E;background:#FDF5EB;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(mot)}</div>` : "") +
-    `<hr style="border:0;border-top:1px solid #EBDDD6;margin:18px 0">` +
-    `<h2 style="margin:0 0 4px;font-size:22px;color:#75151F">${esc(f.titre)}</h2><p style="margin:0 0 6px;color:#6B5861;font-size:15px">${esc(f.accroche)}</p>` +
-    f.blocs.map((b) => h(b.t) + (b.p || []).map(para).join("") + (b.l ? liste(b.l) : "") + (b.q ? para(b.q) : "")).join("") +
+    `<div style="margin:22px -26px 0;padding:22px 26px;background:#F9DEE5"><span style="display:inline-block;padding:3px 12px;border-radius:99px;background:#ffffff;color:#AE164E;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase">${esc(f.theme)}</span>` +
+    `<h2 style="margin:10px 0 6px;font-size:25px;line-height:1.2;color:#75151F">${esc(f.titre)}</h2><p style="margin:0;color:#5E4B55;font-size:15px;line-height:1.5">${esc(f.accroche)}</p></div>` +
+    S.map(bloc).join("") +
     `<div style="margin:22px 0 0;padding:14px 16px;border-radius:14px;background:#F9DEE5"><b style="display:block;margin:0 0 4px;font-size:15px;color:#75151F">Quand en parler</b><span style="font-size:15px;line-height:1.55">${esc(f.aide)}</span></div>` +
-    (f.plus?.length ? h("Pour aller plus loin") + liste(f.plus) : "") +
-    h("En cas de besoin") +
-    `<ul style="margin:0 0 10px;padding-left:20px">` +
-    URGENCES.map(([n, d]) => `<li style="margin:0 0 6px;font-size:15px"><b>${esc(n)}</b> : ${esc(d)}</li>`).join("") +
-    SOUTIENS.map(([n, c, d]) => `<li style="margin:0 0 6px;font-size:15px"><b>${esc(n)}</b> : ${esc(c)} <span style="color:#6B5861">(${esc(d)})</span></li>`).join("") +
-    `</ul>` +
+    (f.plus?.length ? `<div style="margin:20px 0 0">${titre("Pour aller plus loin", "#AE164E")}<ul style="margin:0;padding-left:20px">${f.plus.map((x) => `<li style="margin:0 0 6px;font-size:15px;line-height:1.5">${esc(x)}</li>`).join("")}</ul></div>` : "") +
+    `<div style="margin:22px 0 0;padding:16px 18px;border-radius:14px;background:#75151F;color:#FDF5EB"><div style="margin:0 0 10px;font-size:16px;font-weight:700;color:#ffffff">En cas de besoin</div>` +
+    URGENCES.map(([n, d]) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px"><tr><td style="background:#E30F1B;border-radius:10px;padding:8px 12px;color:#ffffff"><b style="font-size:20px;margin:0 10px 0 0">${esc(n)}</b><span style="font-size:13px">${esc(d)}</span></td></tr></table>`).join("") +
+    SOUTIENS.map(([n, c, d]) => `<div style="margin:0 0 6px;font-size:14px;line-height:1.45"><b style="color:#ffffff">${esc(n)}</b> : ${esc(c)} <span style="opacity:.8">(${esc(d)})</span></div>`).join("") +
+    `</div>` +
     `<p style="margin:18px 0 0;font-size:13px;color:#6B5861;line-height:1.5">${esc(AVERTISSEMENT)}</p>` +
     `<p style="margin:16px 0 0;font-size:15px">${esc(FIN)}</p>` +
     `</div><div style="background:#FDF5EB;padding:14px 26px;font-size:12px;color:#6B5861;line-height:1.5">${esc(pied)}</div></div></div>`;

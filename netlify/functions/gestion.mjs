@@ -687,10 +687,32 @@ export default async (req) => {
     return J({ ok: mail === "envoye", mail, item: base, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
-  /* Fiches de prévention pour les patients (texte : netlify/lib/fiches.mjs) : lecture / impression côté page, envoi par mail ici. */
-  if (b.action === "fiches_list") return J({ ok: true, fiches: FI.FICHES, urgences: FI.URGENCES, soutiens: FI.SOUTIENS, avertissement: FI.AVERTISSEMENT, contact: FI.CONTACT, version: FI.VERSION, mail: mailReady() });
+  /* Fiches de prévention pour les patients : fiches de base (texte : netlify/lib/fiches.mjs) + fiches créées sur le site par les admins (store « fiches », une clé f/<id> par fiche).
+     Lecture / impression côté page, envoi par mail ici. */
+  const fis = getStore({ name: "fiches", consistency: "strong" });
+  const fichesTout = async () => {
+    const { blobs } = await fis.list({ prefix: "f/" });
+    const perso = (await Promise.all(blobs.map((x) => fis.get(x.key, { type: "json" })))).filter(Boolean).sort((p, q) => String(q.maj).localeCompare(String(p.maj))).map((f) => ({ ...f, perso: true }));
+    return [...perso, ...FI.FICHES].map((f) => ({ ...f, sections: FI.sections(f) }));
+  };
+  if (b.action === "fiches_list") return J({ ok: true, fiches: await fichesTout(), urgences: FI.URGENCES, soutiens: FI.SOUTIENS, avertissement: FI.AVERTISSEMENT, contact: FI.CONTACT, version: FI.VERSION, icones: FI.ICONES, aideDefaut: FI.AIDE_DEFAUT, mail: mailReady() });
+  if (b.action === "fiche_save" || b.action === "fiche_delete") {
+    if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
+    if (b.action === "fiche_delete") {
+      const id = String(b.id || ""); if (!/^u-[a-z0-9]{6,12}$/.test(id) || !(await fis.get("f/" + id, { type: "json" }))) return J({ error: "Fiche introuvable." }, 404);
+      await fis.delete("f/" + id); return J({ ok: true });
+    }
+    const r = FI.nettoyerFiche(b.fiche); if (r.error) return J({ error: r.error }, 400);
+    let id = String(b.fiche?.id || "");
+    if (id) { if (!/^u-[a-z0-9]{6,12}$/.test(id) || !(await fis.get("f/" + id, { type: "json" }))) return J({ error: "Fiche introuvable." }, 404); }
+    else id = "u-" + Math.random().toString(36).slice(2, 9).padEnd(7, "0");
+    const prev = await fis.get("f/" + id, { type: "json" }), now = new Date().toISOString();
+    const rec = { id, ...r.fiche, creeLe: prev?.creeLe || now, creePar: prev?.creePar || user, maj: now, par: user };
+    await fis.setJSON("f/" + id, rec);
+    return J({ ok: true, fiche: { ...rec, perso: true } });
+  }
   if (b.action === "fiche_envoyer") {
-    const f = FI.FICHES.find((x) => x.id === String(b.fiche)); if (!f) return J({ error: "Fiche introuvable." }, 404);
+    const f = (await fichesTout()).find((x) => x.id === String(b.fiche)); if (!f) return J({ error: "Fiche introuvable." }, 404);
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
     const r = vue(cur.rec, cur.rec.rdvs[0]), c = FI.courrier(f, { prenom: r.prenom, note: clean(b.note, 600) });
     const mail = await mailMsg(async () => envoyer(r, { subject: c.objet, text: c.text, html: c.html }, null, { modele: "Fiche · " + f.titre, par: user, type: "manuel" }));
