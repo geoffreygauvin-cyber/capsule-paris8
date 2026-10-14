@@ -304,7 +304,7 @@ function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');cl
 function pad(n){return(n<10?'0':'')+n}
 var RL={admin:'Administrateur·rice',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy'};
 function titre(n){return n==='geoffrey'?'Grand chef':n==='violette'?'Dr. Assistante':RL[roles[n]||'etudiant']}
-function whoLine(){var ms=mesStats(moi);return titre(moi)+(isSup?'':' · '+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':''))}
+function whoLine(){var ms=mesStats(moi);return titre(moi)+(isSup||isAdmin?'':' · '+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':''))}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function parse(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2],12)}
 function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
@@ -333,6 +333,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-logo]'),function(e
 function nS(i,issue){return(i.seances||[]).filter(function(s){return s.issue===(issue||'realisee')}).length}
 function stat(name,mois){var t=0,a=0,pat={};items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name||(mois&&s.date.slice(0,7)!==mois))return;if(s.issue==='realisee'){t++;pat[i.id]=1}else a++})});return{seances:t,heures:t,abs:a,patients:Object.keys(pat).length}}
 function fhh(n){return n+' h'}
+function etuL(){return equipe.filter(function(n){return roles[n]==='etudiant'})}
 function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),avenir=0;
  items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});});occs().forEach(function(o){if(o.therapeute===name&&!past(o.rdvDate,o.rdvHeure))avenir++});
  return{total:t,mois:m,abs:a,patients:Object.keys(pat).length,avenir:avenir}}
@@ -512,6 +513,7 @@ function profil(){var ms=mesStats(moi);
  openM('<div class="prof">'+av(moi,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(cap(moi))+'</h3><p class="sub" style="margin:0 0 10px">'+(isAdmin?titre(moi):'Thérapeute')+'</p><button class="btn l s" data-m="photo">'+(photos[moi]?'Changer la photo':'Ajouter une photo')+'</button> '+(photos[moi]?'<button class="link" data-m="nophoto" style="margin-left:6px">retirer</button>':'')+'<input type="file" id="pf" accept="image/*" class="hide"></div></div>'+
  '<div class="kpis"><div class="kpi pastel"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi pastel"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi pastel"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
  '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
+ if(isAdmin||isSup){var kk=document.querySelector('.kpis'),rl=document.querySelector('[data-m="releve"]');if(kk)kk.remove();if(rl)rl.remove()}
  $('pf').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);savePhoto(c.toDataURL('image/jpeg',.82))};im.onerror=function(){toast('Image illisible.')};im.src=rd.result};rd.readAsDataURL(f)}}
 function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();drawHome();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
 $('meb').onclick=profil;$('whom').onclick=profil;
@@ -535,9 +537,9 @@ function drawAct(){
  $('atabs').classList.remove('hide');$('atbl').classList.remove('hide');$('amy').classList.add('hide');
  var mois=iso(new Date()).slice(0,7),mm=ap==='mois'?mois:null;
  $('atabs').innerHTML='<button class="chip'+(ap==='tout'?' on':'')+'" data-a2="tout">Depuis le début</button><button class="chip'+(ap==='mois'?' on':'')+'" data-a2="mois">Ce mois-ci</button>';
- var rows=equipe.map(function(n){var x=stat(n,mm);x.nom=n;x.avenir=mesStats(n).avenir;return x}).sort(function(a,z){return z.heures-a.heures||a.nom.localeCompare(z.nom,'fr')});
+ var rows=etuL().map(function(n){var x=stat(n,mm);x.nom=n;x.avenir=mesStats(n).avenir;return x}).sort(function(a,z){return z.heures-a.heures||a.nom.localeCompare(z.nom,'fr')});
  var T=rows.reduce(function(t,r){t.h+=r.heures;t.a+=r.abs;t.v+=r.avenir;return t},{h:0,a:0,v:0});
- var pats=Object.keys(items.reduce(function(o,i){(i.seances||[]).forEach(function(s){if(s.issue==='realisee'&&(!mm||s.date.slice(0,7)===mm))o[i.id]=1});return o},{})).length;
+ var pats=Object.keys(items.reduce(function(o,i){(i.seances||[]).forEach(function(s){if(s.issue==='realisee'&&roles[s.therapeute]==='etudiant'&&(!mm||s.date.slice(0,7)===mm))o[i.id]=1});return o},{})).length;
  $('atbl').innerHTML='<div class="pr ph act"><span>Étudiant·e</span><span class="c2">Heures</span><span class="c3">Patients</span><span>Absences · à venir</span></div>'+rows.map(function(r){
   return '<div class="pr act'+(r.nom===moi?' selfrow':'')+'"><span class="n">'+av(r.nom)+'<span class="tx"><b>'+esc(cap(r.nom))+(r.nom===moi?' <small style="display:inline">(vous)</small>':'')+'</b></span></span><span class="c2"><b style="font-size:20px;color:var(--rasp)">'+r.heures+'</b> h</span><span class="c3"><b>'+r.patients+'</b> patient'+(r.patients>1?'s':'')+'</span><span>'+r.abs+' abs. · '+r.avenir+' RDV</span></div>'}).join('')+
   '<div class="pr act tot"><span class="n"><b>Total équipe</b></span><span class="c2"><b>'+T.h+'</b> h</span><span class="c3"><b>'+pats+'</b> patient'+(pats>1?'s':'')+'</span><span>'+T.a+' abs. · '+T.v+' RDV</span></div>'}
@@ -654,7 +656,7 @@ $('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)
  if(k==='pat'){RR=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Changement perçu (1-7)','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',i.changement?i.changement.v:'',(i.creeLe||'').slice(0,10)]}));csv(RR,'patients-'+d+'.csv')}
  else if(k==='dem'){RR=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',R(i).map(function(x){return x.date+' '+x.heure+' '+x.salle}).join(' | '),nt(i)]}));csv(RR,'demandes-'+d+'.csv')}
  else if(k==='sea'){RR=[['Date','Heure','Salle','Thérapeute','Patient','Issue','Bien-être (0-10)','Satisfaction (0-10)']];items.forEach(function(i){(i.seances||[]).forEach(function(s){RR.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence',s.bienEtre==null?'':s.bienEtre,s.satisfaction==null?'':s.satisfaction])})});RR.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(RR,'seances-'+d+'.csv')}
- else if(k==='act'){RR=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(RR,'heures-equipe-'+d+'.csv')}
+ else if(k==='act'){RR=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(etuL().map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(RR,'heures-equipe-'+d+'.csv')}
  else if(k==='msg'){api({action:'messages_data'}).then(function(z){if(!z.ok)return toast(z.error||'Erreur');RR=[['Date','Destinataire','Adresse','Objet','Modèle','Envoyé par','Statut','Erreur']].concat((z.journal||[]).map(function(x){return[x.le,x.nom,x.a,x.objet,x.modele,x.type==='auto'?'automatique':x.par,x.statut,x.erreur||'']}));csv(RR,'messages-'+d+'.csv')})}
  else if(k==='all'){api({action:'messages_data'}).then(function(z){dl(JSON.stringify({exporteLe:new Date().toISOString(),par:moi,demandes:items,equipe:equipe,messages:z.journal||[]},null,1),'capsule-sauvegarde-'+d+'.json','application/json')})}
 };
@@ -685,11 +687,12 @@ function drawHome(){
  $('hdate').textContent=JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()];
  $('hav').innerHTML=av(moi,'big');$('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent=titre(moi);
  var oc=occs(),conf=oc.filter(function(o){return aConfirmer(o)&&(adm||o.therapeute===moi)}),
-  upS=supItems.filter(function(x){return !past(x.date,x.heure)&&mine(x)}),pres=supItems.filter(function(x){return past(x.date,x.heure)&&!x.fait&&(adm||isSup)}).length,nx=upS[0];
+  upS=supItems.filter(function(x){return !past(x.date,x.heure)&&(adm||mine(x))}),pres=supItems.filter(function(x){return past(x.date,x.heure)&&!x.fait&&(adm||isSup)}).length,nx=upS[0];
  var tile=function(cls,k,num,lab){return '<button class="stat pastel '+cls+'" data-h="'+k+'"><b>'+num+'</b><span>'+lab+'</span></button>'};
  var nxT=nx?tile('t3','sup','<span style="font-size:20px;color:inherit;display:block;font-weight:600">'+esc(fday(nx.date))+'</span>','prochaine supervision<small>'+fh(nx.heure)+' – '+fh(supEnd(nx))+'</small>'):tile('t3','sup','—','aucune supervision prévue');
  var T='';
- if(!isSup)T=tile('t1','',ms.total+' h','heures de consultation<small>dont '+ms.mois+' h ce mois-ci</small>')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
+ if(isAdmin)T=tile('t1','dem',items.filter(function(i){return i.statut==='nouvelle'}).length,'demandes à traiter')+tile('t2','',oc.filter(function(o){return o.rdvDate===t}).length,'rendez-vous aujourd’hui (équipe)')+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
+ else if(!isSup)T=tile('t1','',ms.total+' h','heures de consultation<small>dont '+ms.mois+' h ce mois-ci</small>')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
  else T=nxT+tile('t1','sup',upS.length,'supervisions à venir')+tile('t2','sup',pres,'présence'+(pres>1?'s':'')+' à saisir');
  $('hstats').innerHTML=T;
  $('htt').textContent=(emp.who&&emp.who!==moi&&adm)?'Emploi du temps · '+cap(emp.who):'Mon emploi du temps';
@@ -734,7 +737,7 @@ function drawSup(){
   var pres=x.presents||[];
   return '<article class="sc2 pastel '+(x.type==='individuelle'?'t1':'t2')+'"><div class="sh"><b>'+esc(cap(fday(x.date)))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+'</span></div><h3>'+(x.titre?esc(x.titre):'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe'))+'</h3><p>'+esc(x.lieu||'Lieu à préciser')+' · avec <b>'+esc(cap(x.superviseur))+'</b></p><div class="pp">'+(x.participants||[]).map(function(n){var ok=pres.indexOf(n)>-1;return '<span class="'+(x.fait?(ok?'ok':'ko'):'')+'">'+esc(cap(n))+(x.fait?(ok?' ✓':' ✗'):'')+'</span>'}).join('')+'</div>'+(x.notes?'<p class="sub" style="margin:8px 0 0">'+esc(x.notes)+'</p>':'')+
   (adm?'<div class="row" style="margin-top:12px">'+(supPast(x)?'<button class="btn s" data-s="pres" data-id="'+esc(x.id)+'">'+(x.fait?'Modifier les présences':'Noter les présences')+'</button>':'')+'<button class="btn l s" data-s="edit" data-id="'+esc(x.id)+'">Modifier</button><button class="link" data-s="del" data-id="'+esc(x.id)+'" style="margin-left:0">Supprimer</button></div>':'')+'</article>'}).join('')+'</div>':'<div class="empty"><b>'+(stab==='avenir'?'Aucune supervision à venir':'Aucune supervision passée')+'</b>'+(adm&&stab==='avenir'?'Utilisez « Programmer une supervision » pour en ajouter.':'')+'</div>';
- if(adm){var rows=equipe.map(function(n){var hh=0,c=0;supItems.forEach(function(x){if((x.presents||[]).indexOf(n)>-1){hh+=x.duree;c++}});return{n:n,h:hh,c:c}}).sort(function(a,z){return z.h-a.h||a.n.localeCompare(z.n,'fr')});
+ if(adm){var rows=etuL().map(function(n){var hh=0,c=0;supItems.forEach(function(x){if((x.presents||[]).indexOf(n)>-1){hh+=x.duree;c++}});return{n:n,h:hh,c:c}}).sort(function(a,z){return z.h-a.h||a.n.localeCompare(z.n,'fr')});
   $('shrs').innerHTML='<h3 style="margin:26px 0 10px">Heures de supervision par étudiant·e</h3><div class="tm">'+rows.map(function(r){return '<div class="tr">'+av(r.n)+'<b>'+esc(cap(r.n))+'</b><span><b style="color:var(--rasp);font-size:18px">'+(r.h/60).toString().replace('.',',')+' h</b> · '+r.c+' séance'+(r.c>1?'s':'')+' suivie'+(r.c>1?'s':'')+'</span></div>'}).join('')+'</div>'}
  else $('shrs').innerHTML=''}
 $('stabs').onclick=function(e){var b=e.target.closest('.chip');if(b){stab=b.dataset.k;drawSup()}};
@@ -749,7 +752,7 @@ function supForm(id){
  '<label class="f">Durée<select id="sdu">'+du.map(function(m){return '<option value="'+m+'"'+((x?x.duree:60)===m?' selected':'')+'>'+(m%60?Math.floor(m/60)+' h 30':(m/60)+' h')+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Lieu<input id="sli" maxlength="80" list="sli-l" value="'+esc(x?x.lieu:'')+'" placeholder="ex. Salle 1"><datalist id="sli-l">'+(cfg.salles||[]).map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></label>'+
  (x?'':'<label class="f">Répéter<select id="sre"><option value="1">Une seule fois</option>'+[2,3,4,6,8,10,12].map(function(n){return '<option value="'+n+'">Chaque semaine, '+n+' fois</option>'}).join('')+'</select></label>')+'</div>'+
- '<div class="mq" style="margin-top:10px"><b>Personnes en supervision</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+equipe.map(function(n){return '<button type="button" data-p="'+esc(n)+'" class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
+ '<div class="mq" style="margin-top:10px"><b>Personnes en supervision</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+etuL().map(function(n){return '<button type="button" data-p="'+esc(n)+'" class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
  '<div id="serr" style="margin:8px 0"></div><div class="row"><button class="btn" id="sgo">'+(x?'Enregistrer':'Programmer')+'</button><button class="btn l" data-m="x">Annuler</button></div>');
  $('spp').onclick=function(e){var b=e.target.closest('button[data-p]');if(b)b.classList.toggle('on')};
  $('sall').onclick=function(){Array.prototype.forEach.call($('spp').children,function(b){b.classList.add('on')})};
