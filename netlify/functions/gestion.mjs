@@ -381,7 +381,7 @@ export default async (req) => {
     await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
   }
 
-  if (["annonce_list", "annonce_save", "annonce_del", "annonce_lu"].includes(b.action)) {
+  if (["annonce_list", "annonce_save", "annonce_del", "annonce_lu", "annonce_arch"].includes(b.action)) {
     const as = getStore("annonces"), cle = "liste";
     const liste = (await as.get(cle, { type: "json" })) || [];
     const vue = (l) => l.map((x) => (admin ? x : { ...x, lus: undefined, lu: (x.lus || []).includes(user) }));
@@ -392,6 +392,11 @@ export default async (req) => {
       return J({ ok: true, annonces: vue(liste) });
     }
     if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
+    if (b.action === "annonce_arch") {
+      const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
+      if (b.archivee) cur.archivee = true; else { cur.archivee = false; cur.jusqua = ""; cur.maj = new Date().toISOString(); }
+      await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
+    }
     if (b.action === "annonce_del") { const reste = liste.filter((x) => x.id !== String(b.id)); await as.setJSON(cle, reste); return J({ ok: true, annonces: reste }); }
     const titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 2000).trim(), important = !!b.important, jusqua = String(b.jusqua || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
     if (!titre) return J({ error: "Donnez un titre à l'annonce." }, 400);
@@ -401,9 +406,9 @@ export default async (req) => {
     if (b.id) {
       const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
       const change = cur.titre !== titre || cur.texte !== texte;
-      Object.assign(cur, { titre, texte, important, jusqua, lien, maj: now }); if (change) cur.lus = [];
+      Object.assign(cur, { titre, texte, important, jusqua, lien, maj: now, archivee: false }); if (change) cur.lus = [];
     } else {
-      if (liste.length >= 60) return J({ error: "Trop d'annonces (60 maximum) : supprimez les anciennes." }, 400);
+      while (liste.length >= 60) liste.pop();
       liste.unshift({ id: randomUUID(), titre, texte, important, jusqua, lien, par: user, le: now, lus: [] });
     }
     await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
