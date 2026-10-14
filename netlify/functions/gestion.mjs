@@ -8,6 +8,37 @@ import { randomUUID } from "node:crypto";
 
 export const config = { path: "/api/gestion" };
 
+const MAIL_ET = [
+  ["Accueil", "ton emploi du temps de la semaine (rendez-vous patients et supervisions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."],
+  ["Demandes", "les demandes du site arrivent ici. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d'un conflit."],
+  ["Après chaque séance", "dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l'utilité de la séance (0 à 10)."],
+  ["Calendrier, Patients, Messages, Ressources", "tous les rendez-vous par thérapeute ; la base des patients avec le décompte des séances (sur 8) ; les mails types et l'historique ; les documents utiles de l'équipe."],
+  ["Gestion de ton planning", "tu programmes toi-même tes supervisions et réunions d'équipe (« Supervisions & réunions ») : elles s'ajoutent à ton agenda et à celui des invités."],
+  ["Annonces", "les annonces de l'équipe s'affichent en haut de ton Accueil : pense à les lire et à cliquer sur « C'est lu »."],
+];
+const MAIL_AD = [
+  ["Équipe", "créer et gérer les comptes, voir ou changer les codes, envoyer leurs accès à chaque personne."],
+  ["Gestion", "programmer des réunions et des supervisions, écrire des annonces (programmables, avec une durée d'affichage) et organiser des entretiens privés avec les étudiant·es."],
+  ["Suivi d'activité", "chiffres généraux, bien-être, satisfaction, détail par étudiant·e. Ce sont des données descriptives : une tendance, pas une preuve d'efficacité."],
+  ["Exports et sauvegarde", "dans Équipe, exports CSV et sauvegarde complète : ce sont des données personnelles, à conserver avec précaution."],
+];
+function mailAcces(nom, role, code, origin) {
+  const adm = role === "admin", pr = cap(nom), liste = (adm ? MAIL_AD.concat([["Espace thérapeute", "tu as aussi accès à tout l'espace thérapeute (demandes, calendrier, patients, messages, ressources), comme les étudiant·es."]]) : MAIL_ET);
+  const texte = [
+    `Bonjour ${pr},`, "",
+    adm ? "Voici tes accès à la plateforme CAPSULE, en tant qu'administrateur·rice." : "Voici tes accès à la plateforme CAPSULE, l'espace de l'équipe.", "",
+    `Adresse : ${origin}/gestion`, `Identifiant : ${nom}`, `Code : ${code}`, "",
+    "Garde ce message pour toi et ne partage jamais ton code. La session dure 8 h, puis il faut se reconnecter. Les données de patients sont confidentielles : déconnecte-toi sur un poste partagé.", "",
+    "Comment ça marche", "",
+    ...liste.map((x, i) => `${i + 1}. ${x[0]} : ${x[1]}`), "",
+    adm ? "Les admins ne sont pas comptés comme des étudiant·es : leurs séances n'entrent ni dans les heures de consultation ni dans celles de supervision. Quand quelqu'un quitte l'équipe, supprime son compte dans Équipe." : "Une séance réalisée = 1 h comptée.", "",
+    "Si quelque chose ne marche pas, réponds simplement à ce mail.", "",
+    "À très vite,", "L'équipe CAPSULE",
+  ].join("\n");
+  return { sujet: "Tes accès à la plateforme CAPSULE", texte };
+}
+
+
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 const h = (x) => createHash("sha256").update(String(x)).digest();
 const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"];
@@ -102,10 +133,29 @@ export default async (req) => {
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
 
-  if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code"].includes(b.action)) {
+  if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code", "acces_list", "acces_apercu", "acces_mail"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = nrm(b.nom);
     const prin = async () => Object.fromEntries(await Promise.all(Object.keys(c).map(async (k) => [k, await prinRole(k)])));
+
+    const codeDe = async (nom) => {
+      if (nom in c) { const ov = await getStore("codes").get(nom, { type: "json" }); return ov ? (ov.enc ? decCode(ov.enc) : null) : c[nom]; }
+      const a = NAME.test(nom) ? await ac.get(nom, { type: "json" }) : null; return a && a.enc ? decCode(a.enc) : null;
+    };
+    if (b.action === "acces_list") { const es = getStore("emails"), { blobs } = await es.list(), out = {}; for (const x of blobs) { const v = await es.get(x.key, { type: "json" }); if (v?.email) out[x.key] = v.email; } return J({ ok: true, emails: out, mail: mailReady() }); }
+    if (b.action === "acces_apercu" || b.action === "acces_mail") {
+      const rm = await rolesMap(); if (!(n in rm)) return J({ error: "Compte introuvable." }, 404);
+      const code = await codeDe(n); if (!code) return J({ error: "Code non récupérable pour " + cap(n) + " : utilisez d'abord « Changer le code »." }, 404);
+      const mailTxt = mailAcces(n, rm[n] === "admin" ? "admin" : "etudiant", code, new URL(req.url).origin);
+      if (b.action === "acces_apercu") return J({ ok: true, ...mailTxt });
+      const email = String(b.email || "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse e-mail invalide." }, 400);
+      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré sur ce site : utilisez « Ouvrir dans ma messagerie »." }, 400);
+      await getStore("emails").setJSON(n, { email });
+      try { await envoyer({ email, prenom: cap(n), id: "" }, { subject: mailTxt.sujet, text: mailTxt.texte }, null, { modele: "Accès à la plateforme", par: user, type: "manuel" }); }
+      catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
+      return J({ ok: true });
+    }
     if (b.action === "compte_code") {
       let code = null;
       if (n in c) { const ov = await getStore("codes").get(n, { type: "json" }); code = ov ? (ov.enc ? decCode(ov.enc) : null) : c[n]; }
