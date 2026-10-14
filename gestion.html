@@ -696,7 +696,7 @@ function ficheHTML(list){
    '<div class="row2"><div class="box b1"><span>SE CONNECTER</span>'+esc(host)+'/gestion<br>avec ton identifiant et ton code.</div><div class="box b2"><span>À SAVOIR</span>'+(a?'Les admins ne sont pas comptés comme des étudiant·es : leurs séances n’entrent ni dans les heures de consultation ni dans celles de supervision. La session dure 8 h.':'Une séance réalisée = 1 h comptée. La session dure 8 h, puis il faut se reconnecter.')+'</div></div>'};
   var lab=function(t){return '<div style="font-size:11px;font-weight:600;letter-spacing:.12em;color:#7B206B">'+t+'</div>'};
   if(!a)return '<section class="pg">'+head(false)+idb(false,'Voici tes accès à la plateforme CAPSULE.')+lab('ESPACE THÉRAPEUTE')+steps(ET)+foot(1,1)+'</section>';
-  var p1='<section class="pg">'+head(true)+idb(true,'Voici tes accès à la plateforme CAPSULE, en tant qu’administrateur·rice : tu gères l’équipe, les comptes et le suivi.')+lab('ESPACE GESTION')+steps(AD)+foot(1,2)+'</section>';
+  var p1='<section class="pg">'+head(true)+idb(true,'Voici tes accès à la plateforme CAPSULE, en tant qu’administrateur·rice : tu gères l’équipe, les comptes et le suivi.')+lab('ESPACE ADMIN')+steps(AD)+foot(1,2)+'</section>';
   var p2='<section class="pg">'+head(true)+'<div class="id g"><h1>Espace thérapeute</h1><p>En tant qu’admin, tu as aussi accès à tout l’espace thérapeute : voici comment il fonctionne.</p></div>'+steps(ET)+
   '<div class="row2"><div class="box b2"><span>PRÉCAUTIONS</span>Tout admin peut lire les codes de tous les comptes. Quand un·e étudiant·e part, supprime son compte dans Équipe.</div></div>'+foot(2,2)+'</section>';
   return p1+p2}).join('');
@@ -753,7 +753,7 @@ function buildNav(){
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
- var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]],['Communication',[12]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Communication',[12]],['Espace gestion',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
+ var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]],['Communication',[12]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Communication',[12]],['Espace admin',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
  var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Suivi d’activité',11:'Accueil',12:'Publications',10:role==='admin'?'Gestion':'Supervisions & réunions'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
