@@ -57,6 +57,12 @@ Onglet « Messages » de `/gestion` : envoi d'un mail à la main (aperçu avec l
 
 ## Étude d'efficacité (comptes principaux)
 Onglet « Efficacité » : indicateurs et graphiques calculés à partir des mesures saisies par les thérapeutes. Après chaque séance réalisée, la plateforme propose deux notes (0 à 10) : bien-être de la semaine écoulée (début de séance) et utilité de la séance (fin de séance). Elles se corrigent ensuite depuis la fiche patient (« modifier » / « + mesures »). En fin de suivi, la fiche patient permet de noter le changement perçu (1 à 7). Les mesures sont aussi dans les exports (séances, patients). Données descriptives, sans groupe de comparaison : à présenter comme telles.
+**Parcours des personnes accompagnées** (Suivi d'activité, en haut, `drawEff` dans `gestion.html` ; calcul dans le navigateur à partir des fiches, rien n'est stocké) :
+- **Attente avant la 1ʳᵉ séance** : jours entre la création de la demande et la première séance *réalisée* ; moyenne, médiane et répartition (0–7, 8–14, 15–30, 31–60, 60+ jours). Les personnes pas encore reçues (liste d'attente comprise) n'y figurent pas.
+- **Séances par personne** : séances réalisées par personne ayant eu au moins une séance ; moyenne, médiane et moyenne des seuls suivis « Terminés ». L'histogramme existant plus bas montre où s'arrêtent les suivis.
+- **Durée du suivi** : de la première à la dernière séance réalisée, pour les personnes ayant eu au moins 2 séances ; moyenne en semaines, médiane et moyenne des suivis « Terminés ». Les suivis en cours sont inclus (donc encore incomplets).
+- **Rythme** : écart entre deux séances réalisées consécutives d'une même personne. Moyenne en jours, et répartition en **semaines calendaires** (lundi → dimanche) : même semaine, semaine suivante, 2, 3, 4 et plus. « À une semaine d'écart ou moins » = même semaine ou semaine suivante, donc un rendez-vous par semaine tenu (un lundi puis le mercredi d'après compte comme hebdomadaire). Les absences ne sont pas des séances : une absence allonge l'écart.
+
 En bas de **Suivi d'activité** (admins) : la carte **« Exporter les données »** (CSV des patients, demandes, séances, heures par étudiant·e, journal des messages ; fiches de tous les comptes ; envoi des accès par mail ; sauvegarde complète JSON). Elle se trouvait avant dans Comptes.
 
 ## Plusieurs rendez-vous par personne, déplacement entre onglets
