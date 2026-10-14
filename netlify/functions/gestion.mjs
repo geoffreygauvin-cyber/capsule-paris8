@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes } from "node:crypto";
 
-import { SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout } from "../lib/rdv.mjs";
+import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout } from "../lib/rdv.mjs";
 import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
@@ -95,7 +95,7 @@ export default async (req) => {
 
   if (b.action === "list") {
     const { blobs } = await store.list({ prefix: "d/" });
-    const items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean);
+    const items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
     items.sort((a, z) => z.creeLe.localeCompare(a.creeLe));
     const { blobs: cb } = await ac.list();
     const rs = getStore("ressources"); const { blobs: rb } = await rs.list({ prefix: "m/" });
@@ -114,31 +114,44 @@ export default async (req) => {
   if (b.action === "planifier") {
     const all = await chargerTout(store);
     const cur = all.find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
+    const r = cur.rec;
     const date = String(b.date || ""), heure = String(b.heure || ""), salle = String(b.salle || ""), th = String(b.therapeute || "").toLowerCase();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !JOURS.includes(weekday(date))) return J({ error: "Les rendez-vous ont lieu du lundi au mercredi." }, 400);
     if (!HEURES.includes(heure) || !SALLES.includes(salle)) return J({ error: "Créneau ou salle invalide." }, 400);
     if (!(await noms()).includes(th)) return J({ error: "Thérapeute inconnu·e." }, 400);
     if (parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);
-    const autre = all.filter((x) => x.rec.id !== cur.rec.id && x.rec.rdvDate === date && x.rec.rdvHeure === heure && x.rec.statut === "rdv_fixe");
-    if (autre.some((x) => x.rec.salle === salle)) return J({ error: salle + " est déjà occupée à cette heure." }, 409);
-    if (autre.some((x) => x.rec.therapeute === th)) return J({ error: cap(th) + " a déjà un rendez-vous à cette heure." }, 409);
-    const r = cur.rec, modif = !!(r.uid && r.rdvDate && r.statut === "rdv_fixe");
-    const had = !!r.uid; r.uid = r.uid || randomUUID(); r.seq = had ? (r.seq || 0) + 1 : 0;
-    Object.assign(r, { rdvDate: date, rdvHeure: heure, salle, therapeute: th, assigne: th, statut: "rdv_fixe", rappelEnvoye: false, maj: new Date().toISOString(), majPar: user });
+    const ex = b.rdvId ? r.rdvs.find((y) => y.id === String(b.rdvId)) : null;
+    if (b.rdvId && !ex) return J({ error: "Rendez-vous introuvable." }, 404);
+    const meme = (y) => y.date === date && y.heure === heure;
+    if (r.rdvs.some((y) => y !== ex && meme(y))) return J({ error: r.prenom + " a déjà un rendez-vous à cette heure." }, 409);
+    const autres = all.filter((x) => x.rec.id !== r.id).flatMap((x) => x.rec.rdvs.filter(meme));
+    if (autres.some((y) => y.salle === salle)) return J({ error: salle + " est déjà occupée à cette heure." }, 409);
+    if (autres.some((y) => y.therapeute === th)) return J({ error: cap(th) + " a déjà un rendez-vous à cette heure." }, 409);
+    const sem = lundi(date);
+    const dejaSem = [...r.rdvs.filter((y) => y !== ex), ...(r.seances || [])].filter((y) => lundi(y.date) === sem);
+    if (dejaSem.length && !b.confirmerSemaine) return J({ error: r.prenom + " a déjà " + dejaSem.length + " rendez-vous cette semaine-là (" + dejaSem.map((y) => jourLong(y.date)).join(", ") + "). Est-ce voulu ?", alerteSemaine: true }, 409);
+    const x = ex || { id: randomUUID(), uid: randomUUID(), seq: -1 };
+    const modif = !!ex; x.seq = (x.seq || 0) + 1; if (!ex) x.seq = 0;
+    Object.assign(x, { date, heure, salle, therapeute: th, rappelEnvoye: false });
+    if (!ex) r.rdvs.push(x);
+    r.rdvs.sort((p1, p2) => (p1.date + p1.heure).localeCompare(p2.date + p2.heure));
+    Object.assign(r, { assigne: th, statut: "rdv_fixe", maj: new Date().toISOString(), majPar: user });
     let mail = "non_envoye";
-    if (b.envoyer) mail = await mailMsg(async () => envoyer(r, await texte(modif ? "modification" : "invitation", r), "REQUEST", { modele: modif ? "modification" : "invitation", par: user, type: "auto" }));
-    r.invitEnvoyee = mail === "envoye";
+    if (b.envoyer) mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte(modif ? "modification" : "invitation", v), "REQUEST", { modele: modif ? "modification" : "invitation", par: user, type: "auto" }); });
+    x.invitEnvoyee = mail === "envoye";
     await store.setJSON(cur.key, r);
     return J({ ok: true, item: r, mail });
   }
   if (b.action === "annuler_rdv" || b.action === "renvoyer") {
-    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur || !cur.rec.rdvDate) return J({ error: "Rendez-vous introuvable." }, 404);
-    const r = cur.rec; let mail = "non_envoye";
-    if (b.action === "renvoyer") { mail = await mailMsg(async () => envoyer(r, await texte("invitation", r), "REQUEST", { modele: "invitation", par: user, type: "auto" })); if (mail === "envoye") r.invitEnvoyee = true; }
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Rendez-vous introuvable." }, 404);
+    const r = cur.rec, x = r.rdvs.find((y) => y.id === String(b.rdvId)); if (!x) return J({ error: "Rendez-vous introuvable." }, 404);
+    let mail = "non_envoye";
+    if (b.action === "renvoyer") { mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte("invitation", v), "REQUEST", { modele: "invitation", par: user, type: "auto" }); }); if (mail === "envoye") x.invitEnvoyee = true; }
     else {
-      r.seq = (r.seq || 0) + 1;
-      if (b.envoyer && r.invitEnvoyee) mail = await mailMsg(async () => envoyer(r, await texte("annulation", r), "CANCEL", { modele: "annulation", par: user, type: "auto" }));
-      Object.assign(r, { rdvDate: "", rdvHeure: "", salle: "", therapeute: "", statut: "a_recontacter", invitEnvoyee: false, rappelEnvoye: false });
+      x.seq = (x.seq || 0) + 1;
+      if (b.envoyer && x.invitEnvoyee) mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte("annulation", v), "CANCEL", { modele: "annulation", par: user, type: "auto" }); });
+      r.rdvs = r.rdvs.filter((y) => y !== x);
+      if (!r.rdvs.length && r.statut === "rdv_fixe") r.statut = "a_recontacter";
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
     return J({ ok: true, item: r, mail });
@@ -162,13 +175,13 @@ export default async (req) => {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
     const r = cur.rec; r.seances = r.seances || [];
     if (b.action === "seance_issue") {
-      if (!r.rdvDate || r.statut !== "rdv_fixe") return J({ error: "Pas de rendez-vous en cours." }, 400);
+      const x = r.rdvs.find((y) => y.id === String(b.rdvId)); if (!x) return J({ error: "Pas de rendez-vous en cours." }, 400);
       if (!["realisee", "absence"].includes(b.issue)) return J({ error: "Issue invalide." }, 400);
-      if (parisToUTC(r.rdvDate, r.rdvHeure) > Date.now()) return J({ error: "Ce rendez-vous n'a pas encore eu lieu." }, 400);
-      const sc = { date: r.rdvDate, heure: r.rdvHeure, salle: r.salle, therapeute: r.therapeute, issue: b.issue, par: user, le: new Date().toISOString() };
+      if (parisToUTC(x.date, x.heure) > Date.now()) return J({ error: "Ce rendez-vous n'a pas encore eu lieu." }, 400);
+      const sc = { date: x.date, heure: x.heure, salle: x.salle, therapeute: x.therapeute, issue: b.issue, par: user, le: new Date().toISOString() };
       if (b.issue === "realisee") Object.assign(sc, mesures(b)); r.seances.push(sc);
-      r.seq = (r.seq || 0) + 1;
-      Object.assign(r, { rdvDate: "", rdvHeure: "", salle: "", invitEnvoyee: false, rappelEnvoye: false, statut: b.issue === "realisee" ? "en_cours" : "a_recontacter" });
+      r.rdvs = r.rdvs.filter((y) => y !== x);
+      r.statut = r.rdvs.length ? "rdv_fixe" : b.issue === "realisee" ? "en_cours" : "a_recontacter";
     } else {
       const i = Number(b.index); if (!Number.isInteger(i) || !r.seances[i]) return J({ error: "Séance introuvable." }, 404);
       r.seances.splice(i, 1);
@@ -240,19 +253,19 @@ export default async (req) => {
   }
   if (b.action === "message_apercu" || b.action === "message_envoyer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
-    const r = cur.rec, m = (await chargerModeles())[String(b.modele)]; if (!m) return J({ error: "Modèle inconnu." }, 404);
+    const base = cur.rec, r = vue(base, base.rdvs[0]), m = (await chargerModeles())[String(b.modele)]; if (!m) return J({ error: "Modèle inconnu." }, 404);
     const v = variables(r);
     if (b.action === "message_apercu") return J({ ok: true, objet: rendre(m.objet, v), corps: rendre(m.corps, v), manquants: [...new Set([...manquants(m.objet, v), ...manquants(m.corps, v)])], email: r.email });
     const objet = clean(b.objet, 200).trim(), corps = clean(b.corps, 4000).trim();
     if (!objet || !corps) return J({ error: "L'objet et le message sont obligatoires." }, 400);
     const mail = await mailMsg(async () => envoyer(r, { subject: objet, text: corps }, null, { modele: m.id, par: user, type: "manuel" }));
-    if (mail === "envoye") { r.maj = new Date().toISOString(); r.majPar = user; if (r.statut === "nouvelle") r.statut = "contactee"; await store.setJSON(cur.key, r); }
-    return J({ ok: mail === "envoye", mail, item: r, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
+    if (mail === "envoye") { base.maj = new Date().toISOString(); base.majPar = user; if (base.statut === "nouvelle") base.statut = "contactee"; await store.setJSON(cur.key, base); }
+    return J({ ok: mail === "envoye", mail, item: base, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
   if (b.action === "update") {
     const k = await key(String(b.id)); if (!k) return J({ error: "Demande introuvable." }, 404);
-    const r = await store.get(k, { type: "json" }); const p = b.patch || {};
+    const r = norm(await store.get(k, { type: "json" })); const p = b.patch || {};
     if ("statut" in p && STATUTS.includes(p.statut)) r.statut = p.statut;
     if ("assigne" in p) r.assigne = clean(p.assigne, 40);
     if ("notes" in p) r.notes = clean(p.notes, 1000);

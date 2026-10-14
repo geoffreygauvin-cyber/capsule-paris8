@@ -35,3 +35,6 @@ Onglet « Messages » de `/gestion` : envoi d'un mail à la main (aperçu avec l
 
 ## Étude d'efficacité (comptes principaux)
 Onglet « Efficacité » : indicateurs et graphiques calculés à partir des mesures saisies par les thérapeutes. Après chaque séance réalisée, la plateforme propose deux notes (0 à 10) : bien-être de la semaine écoulée (début de séance) et utilité de la séance (fin de séance). Elles se corrigent ensuite depuis la fiche patient (« modifier » / « + mesures »). En fin de suivi, la fiche patient permet de noter le changement perçu (1 à 7). Les mesures sont aussi dans les exports (séances, patients). Données descriptives, sans groupe de comparaison : à présenter comme telles.
+
+## Plusieurs rendez-vous par personne, déplacement entre onglets
+Une personne peut avoir plusieurs rendez-vous à venir (« Planifier un autre rendez-vous » depuis sa fiche, ou « + » dans le calendrier). Chaque rendez-vous est numéroté (RDV 1, 2, 3…, séances passées comprises). Si la personne a déjà un rendez-vous la même semaine (du lundi au dimanche), la plateforme demande confirmation (« Oui, c'est voulu ») et affiche un ⚠ dans la liste, le calendrier et la fiche. Le menu « Déplacer ⇄ » sur chaque ligne de la liste Demandes change l'onglet (statut) en un clic, sans toucher aux rendez-vous. Les anciennes fiches (un seul rendez-vous) sont converties automatiquement.

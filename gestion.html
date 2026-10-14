@@ -199,6 +199,10 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 .ekp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}.ekp .kpi{padding:16px}.ekp .kpi b{font-size:30px}.ekp .kpi small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
 .mchip{font-size:12px;color:var(--muted);background:var(--rose);border-radius:999px;padding:2px 9px}
 @media (max-width:860px){.egrid{grid-template-columns:1fr}}
+.warn{background:#FFF1D6;border:1px solid #F2C879;color:#6b4a00;border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.45;margin:10px 0}
+.mv{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 10px;font:500 13px Poppins,sans-serif;color:var(--muted);max-width:132px;cursor:pointer}
+.rtop{flex-wrap:wrap}.qa{align-items:center}
+@media (max-width:860px){.mv{max-width:104px;padding:7px 6px;font-size:12px}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
@@ -277,7 +281,12 @@ function fday(s){var d=parse(s);return JN[d.getDay()]+' '+d.getDate()+' '+MN[d.g
 function fh(h){var p=h.split(':');return(+p[0])+' h'+(p[1]!=='00'?' '+p[1]:'')}
 function past(s,h){return new Date(s+'T'+h+':00')<new Date()}
 function ago(d){var m=Math.round((Date.now()-new Date(d))/6e4);if(m<2)return 'à l’instant';if(m<60)return 'il y a '+m+' min';var h=Math.round(m/60);if(h<24)return 'il y a '+h+' h';var j=Math.round(h/24);return j===1?'hier':j<8?'il y a '+j+' j':'le '+new Date(d).getDate()+' '+MN[new Date(d).getMonth()]}
-function occ(d,h,s){return items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate===d&&i.rdvHeure===h&&i.salle===s})[0]}
+function R(i){return i.rdvs||[]}
+function V(i,x){return Object.assign({},i,{rdvId:x.id,rdvDate:x.date,rdvHeure:x.heure,salle:x.salle,therapeute:x.therapeute,invitEnvoyee:x.invitEnvoyee,rappelEnvoye:x.rappelEnvoye,no:(i.seances||[]).length+R(i).indexOf(x)+1})}
+function occs(){var o=[];items.forEach(function(i){R(i).forEach(function(x){o.push(V(i,x))})});return o}
+function occ(d,h,s){return occs().filter(function(o){return o.rdvDate===d&&o.rdvHeure===h&&o.salle===s})[0]}
+function dupSem(i){var g={};(i.seances||[]).forEach(function(x){(g[monday(x.date)]=g[monday(x.date)]||[]).push(x.date)});var up={};R(i).forEach(function(x){var k=monday(x.date);(g[k]=g[k]||[]).push(x.date);up[k]=1});return Object.keys(g).filter(function(k){return up[k]&&g[k].length>1}).map(function(k){return {sem:k,n:g[k].length}})}
+function warnSem(i){var d=dupSem(i);return d.length?'<div class="warn">⚠ '+esc(i.prenom)+' a '+d.map(function(x){return x.n+' rendez-vous la semaine du '+esc(fday(x.sem))}).join(' ; ')+' — à vérifier : est-ce voulu ?</div>':''}
 var PAL=['#F9DEE5','#EADCF0','#FFDAD6','#DDEBDD','#DCE6F2','#F6EBCB','#E6E0D4','#D9ECEC'];
 function col(n){var h=0;String(n).split('').forEach(function(c){h=(h*31+c.charCodeAt(0))>>>0});return PAL[h%PAL.length]}
 function av(n,cls,id){var p=photos[n];return '<span '+(id?'id="'+id+'" ':'')+'class="av '+(cls||'')+'" style="background-color:'+col(n)+(p?';background-image:url('+esc(p)+')':'')+'">'+(p?'':esc(String(n).charAt(0).toUpperCase()))+'</span>'}
@@ -292,9 +301,9 @@ function nS(i,issue){return(i.seances||[]).filter(function(s){return s.issue===(
 function stat(name,mois){var t=0,a=0,pat={};items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name||(mois&&s.date.slice(0,7)!==mois))return;if(s.issue==='realisee'){t++;pat[i.id]=1}else a++})});return{seances:t,heures:t,abs:a,patients:Object.keys(pat).length}}
 function fhh(n){return n+' h'}
 function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),avenir=0;
- items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});if(i.statut==='rdv_fixe'&&i.therapeute===name&&i.rdvDate&&!past(i.rdvDate,i.rdvHeure))avenir++});
+ items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});});occs().forEach(function(o){if(o.therapeute===name&&!past(o.rdvDate,o.rdvHeure))avenir++});
  return{total:t,mois:m,abs:a,patients:Object.keys(pat).length,avenir:avenir}}
-function aConfirmer(i){return i.statut==='rdv_fixe'&&i.rdvDate&&past(i.rdvDate,i.rdvHeure)}
+function aConfirmer(i){return !!i.rdvDate&&past(i.rdvDate,i.rdvHeure)}
 function byId(id){return items.filter(function(x){return x.id===id})[0]}
 function logout(){token='';try{sessionStorage.clear()}catch(e){}$('app').classList.add('hide');$('login').classList.remove('hide')}
 function load(cb){api({action:'list'}).then(function(d){
@@ -308,26 +317,30 @@ function load(cb){api({action:'list'}).then(function(d){
  draw();drawCal();if(cb)cb()})}
 /* ---- demandes ---- */
 function drawToday(){
- var t=iso(new Date()),l=items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate===t}).sort(function(a,z){return a.rdvHeure.localeCompare(z.rdvHeure)}),d=new Date();
- $('today').innerHTML='<div class="today"><div class="hi"><b>Bonjour '+esc(cap(moi))+'</b><span>'+JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()]+'</span></div><div class="tl">'+(l.length?l.map(function(i){return '<button class="tchip'+(aConfirmer(i)?' todo':'')+'" data-id="'+esc(i.id)+'"><b>'+fh(i.rdvHeure)+'</b>'+esc(i.prenom)+' · '+esc(i.salle)+' · '+esc(cap(i.therapeute))+'</button>'}).join(''):'<span class="none">Pas de rendez-vous aujourd’hui.</span>')+'</div></div>'}
-$('today').onclick=function(e){var b=e.target.closest('.tchip');if(b)detail(b.dataset.id)};
+ var t=iso(new Date()),l=occs().filter(function(i){return i.rdvDate===t}).sort(function(a,z){return a.rdvHeure.localeCompare(z.rdvHeure)}),d=new Date();
+ $('today').innerHTML='<div class="today"><div class="hi"><b>Bonjour '+esc(cap(moi))+'</b><span>'+JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()]+'</span></div><div class="tl">'+(l.length?l.map(function(i){return '<button class="tchip'+(aConfirmer(i)?' todo':'')+'" data-id="'+esc(i.id)+'" data-r="'+esc(i.rdvId)+'"><b>'+fh(i.rdvHeure)+'</b>'+esc(i.prenom)+' · RDV '+i.no+' · '+esc(i.salle)+' · '+esc(cap(i.therapeute))+'</button>'}).join(''):'<span class="none">Pas de rendez-vous aujourd’hui.</span>')+'</div></div>'}
+$('today').onclick=function(e){var b=e.target.closest('.tchip');if(b)detail(b.dataset.id,b.dataset.r)};
 function stats(){drawToday();
  var n=items.filter(function(i){return i.statut==='nouvelle'}).length;
  var lim=iso(new Date(Date.now()+7*864e5)),today=iso(new Date());
- var r=items.filter(function(i){return i.statut==='rdv_fixe'&&i.rdvDate>=today&&i.rdvDate<=lim}).length;
- var a=items.filter(function(i){return i.statut==='a_recontacter'}).length,cf=items.filter(aConfirmer).length;
+ var r=occs().filter(function(i){return i.rdvDate>=today&&i.rdvDate<=lim}).length;
+ var a=items.filter(function(i){return i.statut==='a_recontacter'}).length,cf=occs().filter(aConfirmer).length;
  var IC={inbox:'<path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',tel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
  function tile(cls,ic,k,num,lab){return '<button class="stat pastel '+cls+'" data-s="'+k+'"><span class="bd"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg></span><b>'+num+'</b><span>'+lab+'</span></button>'}
  $('stats').innerHTML=tile('t1','inbox','nouvelle',n,'à traiter')+tile('t2','cal','rdv_fixe',r,'rendez-vous cette semaine')+tile('t3','tel','a_recontacter',a,'à recontacter')+(cf?tile('t1','ok','rdv_fixe',cf,'séance'+(cf>1?'s':'')+' à confirmer'):'');
  var nb=$('nbn');nb.textContent=n;nb.classList.toggle('hide',!n)}
-function rdvBox(i){
- if(i.statut==='rdv_fixe'&&i.rdvDate)return '<div class="rdvbox"><div><div class="big">📅 '+esc(cap(fday(i.rdvDate)))+', '+fh(i.rdvHeure)+'</div><small>'+esc(i.salle)+' · avec '+esc(cap(i.therapeute))+' · '+(i.invitEnvoyee?'invitation envoyée':'invitation non envoyée')+'</small></div><button class="btn l s" data-a="det" style="margin-left:auto">Gérer</button>'+(aConfirmer(i)?'<div class="row" style="width:100%;margin:2px 0 0"><b>Cette séance a eu lieu ?</b><button class="btn s" data-a="ok">Séance réalisée</button><button class="btn l s" data-a="abs">Absent·e</button></div>':'')+'</div>';
- return '<div class="cta"><button class="btn" data-a="plan">Planifier un rendez-vous</button></div>'}
+function rdvBox(i,modal){
+ var at=function(act,x,extra){return modal?'data-m="'+(act==='det'?'det2':act)+'" data-id="'+esc(i.id)+'" data-r="'+esc(x.rdvId)+'"':'data-a="'+act+'" data-r="'+esc(x.rdvId)+'"'},h='';
+ occs().filter(function(o){return o.id===i.id}).forEach(function(x){
+  h+='<div class="rdvbox"><div><div class="big">📅 '+esc(cap(fday(x.rdvDate)))+', '+fh(x.rdvHeure)+' <span class="mchip">RDV '+x.no+'</span></div><small>'+esc(x.salle)+' · avec '+esc(cap(x.therapeute))+' · '+(x.invitEnvoyee?'invitation envoyée':'invitation non envoyée')+'</small></div><button class="btn l s" '+at('det',x)+' style="margin-left:auto">Gérer</button>'+(aConfirmer(x)?'<div class="row" style="width:100%;margin:2px 0 0"><b>Cette séance a eu lieu ?</b><button class="btn s" '+at('ok',x)+'>Séance réalisée</button><button class="btn l s" '+at('abs',x)+'>Absent·e</button></div>':'')+'</div>'});
+ var nxt=(i.seances||[]).length+R(i).length+1;
+ return warnSem(i)+h+'<div class="cta"><button class="btn'+(h?' l':'')+'" '+(modal?'data-m="plan2" data-id="'+esc(i.id)+'"':'data-a="plan"')+'>'+(h?'Planifier un autre rendez-vous (RDV '+nxt+')':'Planifier un rendez-vous')+'</button></div>'}
 function card(i){
  var o=openId===i.id,quick=(i.statut==='nouvelle'||i.statut==='a_recontacter')&&!o;
- var qa=(i.statut==='nouvelle'||i.statut==='a_recontacter')?'<div class="qa"><button class="btn s" data-a="plan" title="Planifier un rendez-vous">📅<span class="lbl"> Planifier</span></button><button class="btn l s" data-a="mail" title="Écrire un message">✉<span class="lbl"> Écrire</span></button></div>':'';
+ var mv='<select class="mv" data-a="mv" aria-label="Déplacer vers un autre onglet"><option value="">Déplacer ⇄</option>'+ST.filter(function(x){return x[0]!==i.statut}).map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'</select>';
+ var qa='<div class="qa">'+((i.statut==='nouvelle'||i.statut==='a_recontacter')?'<button class="btn s" data-a="plan" title="Planifier un rendez-vous">📅<span class="lbl"> Planifier</span></button><button class="btn l s" data-a="mail" title="Écrire un message">✉<span class="lbl"> Écrire</span></button>':'')+mv+'</div>';
  return '<article class="req '+i.statut+(o?' open':'')+'" data-id="'+esc(i.id)+'"><div class="rtop"><button class="rh" data-a="tog" aria-expanded="'+o+'">'+av(i.prenom)+
- '<span class="who"><b>'+esc(i.prenom)+'</b><span>'+esc(i.email)+'</span></span><span class="rt"><span class="pill s-'+i.statut+'">'+esc(SL[i.statut]||i.statut)+'</span><span>'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+', '+fh(i.rdvHeure):ago(i.creeLe))+'</span></span></button>'+qa+'</div>'+
+ '<span class="who"><b>'+esc(i.prenom)+'</b><span>'+esc(i.email)+'</span></span><span class="rt"><span class="pill s-'+i.statut+'">'+esc(SL[i.statut]||i.statut)+'</span><span>'+(R(i).length?esc(fday(R(i)[0].date))+', '+fh(R(i)[0].heure)+(R(i).length>1?' <small style="display:inline">+'+(R(i).length-1)+'</small>':'')+(dupSem(i).length?' <span title="Plusieurs rendez-vous la même semaine">⚠</span>':''):ago(i.creeLe))+'</span></span></button>'+qa+'</div>'+
  '<div class="rb"><div class="meta"><a href="mailto:'+esc(i.email)+'">✉ '+esc(i.email)+'</a>'+(i.tel?'<a href="tel:'+esc(i.tel)+'">☎ '+esc(i.tel)+'</a>':'')+'<span style="color:var(--muted)">reçue '+ago(i.creeLe)+(i.majPar?' · modifiée par '+esc(cap(i.majPar)):'')+'</span></div>'+
  (i.creneaux&&i.creneaux.length?'<div class="dispo" title="Jours qui conviennent">'+i.creneaux.map(function(c){return '<span>'+esc(c)+'</span>'}).join('')+'</div>':'')+
  (i.message?'<div class="quote">'+esc(i.message)+'</div>':'')+rdvBox(i)+
@@ -344,10 +357,10 @@ function draw(){
 /* ---- calendrier ---- */
 function gridHtml(wk,picking){
  var today=iso(new Date()),h='';
- cfg.jours.forEach(function(j){var d=addDays(wk,j-1),n=cfg.heures.filter(function(hh){return cfg.salles.some(function(s){return occ(d,hh,s)})}).length;
+ cfg.jours.forEach(function(j){var d=addDays(wk,j-1),n=occs().filter(function(o){return o.rdvDate===d}).length;
   h+='<div class="day'+(d===today?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(d===today?'Aujourd’hui':n?n+' RDV':'')+'</em></h4><table><tr><th></th>'+cfg.salles.map(function(s){return '<th>'+esc(s.replace('Salle ','S'))+'</th>'}).join('')+'</tr>';
   cfg.heures.forEach(function(hh){h+='<tr><td class="h'+(d===today&&parseInt(hh,10)===new Date().getHours()?' now':'')+'">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
-   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" data-id="'+esc(o.id)+'" style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'">'+esc(o.prenom)+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
+   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'" style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'" title="RDV '+o.no+'">'+esc(o.prenom)+' <span style="font-weight:500;opacity:.7">#'+o.no+'</span>'+(dupSem(o).some(function(x){return x.sem===monday(o.rdvDate)})?' ⚠':'')+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
    return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':' aria-label="Planifier le '+esc(fday(d))+' à '+fh(hh)+', '+esc(s)+'"')+'>'+(past(d,hh)?'':'+')+'</button></td>'}).join('')+'</tr>'});
   h+='</table></div>'});return h}
 function drawCal(){
@@ -359,25 +372,26 @@ function drawCal(){
 /* ---- fenêtre ---- */
 function openM(h,small){$('md').className=small?'sm':'';$('md').innerHTML='<button class="mx" data-m="x" aria-label="Fermer">×</button>'+h;$('ov').classList.remove('hide')}
 function closeM(){$('ov').classList.add('hide');$('md').innerHTML=''}
-var plan={id:null,week:''};
-function planner(id){plan={id:id,week:week};var i=byId(id);
- openM('<h3>Quel créneau pour '+esc(i.prenom)+' ?</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Elle ou il est disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un <b>+</b>.</p><div class="wk"><button class="ib" data-m="wp" aria-label="Semaine précédente">‹</button><div class="t">Semaine du '+esc(fday(plan.week))+'</div><button class="ib" data-m="wn" aria-label="Semaine suivante">›</button><button class="btn l s" data-m="x">Fermer</button></div><div class="dtabs">'+cfg.jours.map(function(j,k){return '<button data-m="dk" data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(plan.week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('')+'</div><div class="days d'+dayIdx+'">'+gridHtml(plan.week,true)+'</div>')}
-function confirmPick(d,hh,s,id){
- var libres=items.filter(function(x){return['rdv_fixe','terminee','sans_suite'].indexOf(x.statut)<0});
+var plan={id:null,rdvId:null,week:''};
+function planner(id,rdvId){plan={id:id,rdvId:rdvId||null,week:week};var i=byId(id);
+ openM('<h3>Quel créneau pour '+esc(i.prenom)+' ?'+(rdvId?' <small style="font-weight:500">(déplacer le RDV)</small>':'')+'</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Elle ou il est disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un <b>+</b>.</p><div class="wk"><button class="ib" data-m="wp" aria-label="Semaine précédente">‹</button><div class="t">Semaine du '+esc(fday(plan.week))+'</div><button class="ib" data-m="wn" aria-label="Semaine suivante">›</button><button class="btn l s" data-m="x">Fermer</button></div><div class="dtabs">'+cfg.jours.map(function(j,k){return '<button data-m="dk" data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(plan.week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('')+'</div><div class="days d'+dayIdx+'">'+gridHtml(plan.week,true)+'</div>')}
+function confirmPick(d,hh,s,id,rid){
+ var libres=items.filter(function(x){return x.statut!=='sans_suite'}).sort(function(a,z){return a.prenom.localeCompare(z.prenom,'fr')});
  var cur=id?byId(id):null;
  openM('<h3>'+esc(cap(fday(d)))+', '+fh(hh)+'</h3><p class="sub">'+esc(s)+' · durée 1 h</p><div class="g2">'+
- (cur?'<label class="f">Personne<input readonly value="'+esc(cur.prenom)+'"></label>':'<label class="f">Personne<select id="pp">'+(libres.length?libres.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.prenom+' · '+x.email)+'</option>'}).join(''):'<option value="">Aucune demande à planifier</option>')+'</select></label>')+
+ (cur?'<label class="f">Personne<input readonly value="'+esc(cur.prenom)+'"></label>':'<label class="f">Personne<select id="pp">'+(libres.length?libres.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.prenom+' · '+x.email+(R(x).length?' · '+R(x).length+' RDV à venir':''))+'</option>'}).join(''):'<option value="">Aucune demande à planifier</option>')+'</select></label>')+
  '<label class="f">Thérapeute<select id="pt">'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===((cur&&cur.assigne)||moi)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label></div>'+
  '<label class="ck"><input type="checkbox" id="pm"'+(cfg.mail?' checked':' disabled')+'><span>Envoyer l’invitation par mail<br><small style="color:var(--muted)">Elle s’ajoute à l’agenda de la personne, avec un rappel la veille.</small>'+(cfg.mail?'':'<br><small style="color:var(--rasp)">Envoi de mails non configuré : le rendez-vous sera seulement enregistré.</small>')+'</span></label>'+
  '<div class="row"><button class="btn" id="pgo"'+(cur||libres.length?'':' disabled')+'>Confirmer le rendez-vous</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="perr" style="margin-top:10px"></div>',true);
- $('pgo').onclick=function(){var pid=cur?cur.id:$('pp').value;this.disabled=true;
-  api({action:'planifier',id:pid,date:d,heure:hh,salle:s,therapeute:$('pt').value,envoyer:$('pm').checked}).then(function(r){
-   if(!r.ok){$('perr').textContent=r.error||'Erreur';$('pgo').disabled=false;return}
+ var go=function(force){var pid=cur?cur.id:$('pp').value;$('pgo').disabled=true;
+  api({action:'planifier',id:pid,rdvId:rid||null,date:d,heure:hh,salle:s,therapeute:$('pt').value,envoyer:$('pm').checked,confirmerSemaine:!!force}).then(function(r){
+   if(!r.ok){if(r.alerteSemaine){$('perr').innerHTML='<div class="warn">⚠ '+esc(r.error)+'</div><button class="btn s" id="pforce">Oui, c’est voulu</button>';$('pforce').onclick=function(){go(true)}}else $('perr').textContent=r.error||'Erreur';$('pgo').disabled=false;return}
    items=items.map(function(x){return x.id===r.item.id?r.item:x});closeM();draw();drawCal();
-   toast(r.mail==='envoye'?'Rendez-vous enregistré, invitation envoyée.':r.mail==='echec'?'Rendez-vous enregistré, mais le mail n’a pas pu partir.':'Rendez-vous enregistré.')})}}
-function detail(id){var i=byId(id);if(!i)return;
- openM('<div style="display:flex;gap:14px;align-items:center;margin-bottom:12px">'+av(i.prenom)+'<div><h3>'+esc(i.prenom)+'</h3><p class="sub" style="margin:0">'+esc(i.email)+(i.tel?' · '+esc(i.tel):'')+'</p></div></div><div class="rdvbox"><div><div class="big">📅 '+esc(cap(fday(i.rdvDate)))+', '+fh(i.rdvHeure)+'</div><small>'+esc(i.salle)+' · avec '+esc(cap(i.therapeute))+'</small></div></div><p class="sub">'+(i.invitEnvoyee?'Invitation envoyée par mail.':'Aucune invitation envoyée.')+(i.rappelEnvoye?' Rappel de la veille envoyé.':'')+'</p>'+
- (aConfirmer(i)?'<div class="rdvbox"><b>Cette séance a eu lieu ?</b><button class="btn s" data-m="ok" data-id="'+esc(id)+'">Séance réalisée</button><button class="btn l s" data-m="abs" data-id="'+esc(id)+'">Absent·e</button></div>':'')+'<div class="row">'+(cfg.mail?'<button class="btn l s" data-m="resend" data-id="'+esc(id)+'">'+(i.invitEnvoyee?'Renvoyer':'Envoyer')+' l’invitation</button>':'')+'<button class="btn l s" data-m="move" data-id="'+esc(id)+'">Changer de créneau</button><button class="btn s" data-m="cancel" data-id="'+esc(id)+'">Annuler le rendez-vous</button></div><div class="row"><button class="link" data-m="x" style="margin:0">Fermer</button></div>',true)}
+   toast(r.mail==='envoye'?'Rendez-vous enregistré, invitation envoyée.':r.mail==='echec'?'Rendez-vous enregistré, mais le mail n’a pas pu partir.':'Rendez-vous enregistré.')})};
+ $('pgo').onclick=function(){go(false)}}
+function detail(id,rid){var i=byId(id);if(!i)return;var o=occs().filter(function(x){return x.id===id&&(!rid||x.rdvId===rid)})[0];if(!o){fiche(id);return}
+ openM('<div style="display:flex;gap:14px;align-items:center;margin-bottom:12px">'+av(i.prenom)+'<div><h3>'+esc(i.prenom)+'</h3><p class="sub" style="margin:0">'+esc(i.email)+(i.tel?' · '+esc(i.tel):'')+'</p></div></div>'+warnSem(i)+'<div class="rdvbox"><div><div class="big">📅 '+esc(cap(fday(o.rdvDate)))+', '+fh(o.rdvHeure)+' <span class="mchip">RDV '+o.no+'</span></div><small>'+esc(o.salle)+' · avec '+esc(cap(o.therapeute))+'</small></div></div><p class="sub">'+(o.invitEnvoyee?'Invitation envoyée par mail.':'Aucune invitation envoyée.')+(o.rappelEnvoye?' Rappel de la veille envoyé.':'')+'</p>'+
+ (aConfirmer(o)?'<div class="rdvbox"><b>Cette séance a eu lieu ?</b><button class="btn s" data-m="ok" data-id="'+esc(id)+'" data-r="'+esc(o.rdvId)+'">Séance réalisée</button><button class="btn l s" data-m="abs" data-id="'+esc(id)+'" data-r="'+esc(o.rdvId)+'">Absent·e</button></div>':'')+'<div class="row">'+(cfg.mail?'<button class="btn l s" data-m="resend" data-id="'+esc(id)+'" data-r="'+esc(o.rdvId)+'">'+(o.invitEnvoyee?'Renvoyer':'Envoyer')+' l’invitation</button>':'')+'<button class="btn l s" data-m="move" data-id="'+esc(id)+'" data-r="'+esc(o.rdvId)+'">Changer de créneau</button><button class="btn s" data-m="cancel" data-id="'+esc(id)+'" data-r="'+esc(o.rdvId)+'">Annuler ce rendez-vous</button></div><div class="row"><button class="btn l s" data-m="plan2" data-id="'+esc(id)+'">Planifier un autre rendez-vous</button><button class="link" data-m="x" style="margin:0">Fermer</button></div>',true)}
 $('ov').onclick=function(e){
  if(e.target===$('ov')){closeM();return}
  var b=e.target.closest('button');if(!b)return;
@@ -388,11 +402,11 @@ $('ov').onclick=function(e){
  else if(m==='mesplan')mesSave(true);
  else if(m==='mes')mesureForm(id,+b.dataset.k,false);
  else if(m==='chg'){var cv=+b.dataset.v,it=byId(id),cur=it.changement?it.changement.v:null;api({action:'changement',id:id,valeur:cur===cv?null:cv}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});fiche(id)}else toast(r.error||'Erreur')})}
- else if(m==='ok'||m==='abs')issue(id,m==='ok'?'realisee':'absence');
+ else if(m==='ok'||m==='abs')issue(id,m==='ok'?'realisee':'absence',b.dataset.r);
  else if(m==='fiche')fiche(id);
  else if(m==='msg'){closeM();mto=id;mk='envoyer';nav(7)}
  else if(m==='plan2'){closeM();planner(id)}
- else if(m==='det2'){detail(id)}
+ else if(m==='det2'){detail(id,b.dataset.r)}
  else if(m==='photo')$('pf').click();
  else if(m==='nophoto')savePhoto('');
  else if(m==='releve')releve();
@@ -402,16 +416,16 @@ $('ov').onclick=function(e){
  else if(m==='fsave'){api({action:'update',id:id,patch:{prenom:$('fp').value,email:$('fm').value,tel:$('ft').value,assigne:$('fa').value,statut:$('fs').value,notes:$('fn').value}}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});draw();drawCal();$('fok').textContent='Enregistré ✓'}else $('fok').textContent=r.error||'Erreur'})}
  else if(m==='dk'){dayIdx=+b.dataset.k;planner(plan.id)}
  else if(m==='wp'||m==='wn'){plan.week=addDays(plan.week,m==='wp'?-7:7);week=plan.week;planner(plan.id);drawCal()}
- else if(b.classList.contains('slot')){confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,plan.id)}
- else if(m==='move'){closeM();planner(id)}
- else if(m==='resend'){b.disabled=true;api({action:'renvoyer',id:id}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();toast(r.mail==='envoye'?'Invitation envoyée.':'Le mail n’a pas pu partir.')}else toast(r.error)})}
- else if(m==='cancel'){var i=byId(id);
-  if(!confirm('Annuler ce rendez-vous'+(i.invitEnvoyee?' et prévenir '+i.prenom+' par mail':'')+' ?'))return;
-  api({action:'annuler_rdv',id:id,envoyer:true}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();toast('Rendez-vous annulé.'+(r.mail==='envoye'?' La personne a été prévenue.':''))}else toast(r.error)})}};
+ else if(b.classList.contains('slot')){confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,plan.id,plan.rdvId)}
+ else if(m==='move'){closeM();planner(id,b.dataset.r)}
+ else if(m==='resend'){b.disabled=true;api({action:'renvoyer',id:id,rdvId:b.dataset.r}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();toast(r.mail==='envoye'?'Invitation envoyée.':'Le mail n’a pas pu partir.')}else toast(r.error)})}
+ else if(m==='cancel'){var i=byId(id),ox=occs().filter(function(x){return x.id===id&&x.rdvId===b.dataset.r})[0];
+  if(!confirm('Annuler ce rendez-vous'+(ox&&ox.invitEnvoyee?' et prévenir '+i.prenom+' par mail':'')+' ?'))return;
+  api({action:'annuler_rdv',id:id,rdvId:b.dataset.r,envoyer:true}).then(function(r){if(r.ok){items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();toast('Rendez-vous annulé.'+(r.mail==='envoye'?' La personne a été prévenue.':''))}else toast(r.error)})}};
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('ov').classList.contains('hide'))closeM()});
 $('cal').onclick=function(e){var b=e.target.closest('button');if(!b)return;
- if(b.classList.contains('slot'))confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,null);
- else if(b.dataset.id)detail(b.dataset.id)};
+ if(b.classList.contains('slot'))confirmPick(b.dataset.d,b.dataset.h,b.dataset.s,null,null);
+ else if(b.dataset.id)detail(b.dataset.id,b.dataset.r)};
 $('dtabs').onclick=function(e){var b=e.target.closest('button');if(b){dayIdx=+b.dataset.k;drawCal()}};
 $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=function(){week=addDays(week,7);drawCal()};
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
@@ -421,7 +435,7 @@ function nav(n){[1,2,3,4,5,6,7,8].forEach(function(k){$('v'+k).classList.toggle(
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
-function issue(id,iss){api({action:'seance_issue',id:id,issue:iss}).then(function(r){
+function issue(id,iss,rid){api({action:'seance_issue',id:id,rdvId:rid,issue:iss}).then(function(r){
  if(!r.ok){toast(r.error||'Erreur');return}
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
  if(iss==='realisee'){mesureForm(id,r.item.seances.length-1,true);return;var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
@@ -441,21 +455,21 @@ function drawPat(){
   return '<button class="pr" data-m="fiche" data-id="'+esc(i.id)+'"><span class="n">'+av(i.prenom)+'<span class="tx"><b>'+esc(i.prenom)+'</b><span>'+esc(i.email)+'</span></span></span>'+
   '<span class="c2">'+(i.assigne||i.therapeute?esc(cap(i.assigne||i.therapeute)):'<small>—</small>')+'</span>'+
   '<span class="c3"><b>'+n+'</b> / '+cfg.seancesMax+(a?' <small style="display:inline">· '+a+' abs.</small>':'')+'<div class="prog"><i style="width:'+pc+'%"></i></div></span>'+
-  '<span>'+(i.statut==='rdv_fixe'&&i.rdvDate?'<b style="font-weight:600">'+esc(fday(i.rdvDate))+', '+fh(i.rdvHeure)+'</b><small>'+esc(i.salle)+'</small>':'<span class="pill s-'+i.statut+'">'+esc(SL[i.statut])+'</span>'+(last?'<small>dernière : '+esc(fday(last.date))+'</small>':''))+'</span></button>'}).join(''):'<div class="empty" style="border:0"><b>Aucun patient ici</b>Les personnes apparaissent ici dès qu’elles ont été contactées. Vous pouvez aussi ajouter quelqu’un à la main.</div>'}
+  '<span>'+(R(i).length?'<b style="font-weight:600">'+esc(fday(R(i)[0].date))+', '+fh(R(i)[0].heure)+'</b><small>'+esc(R(i)[0].salle)+(R(i).length>1?' · +'+(R(i).length-1)+' autre'+(R(i).length>2?'s':''):'')+'</small>':'<span class="pill s-'+i.statut+'">'+esc(SL[i.statut])+'</span>'+(last?'<small>dernière : '+esc(fday(last.date))+'</small>':''))+'</span></button>'}).join(''):'<div class="empty" style="border:0"><b>Aucun patient ici</b>Les personnes apparaissent ici dès qu’elles ont été contactées. Vous pouvez aussi ajouter quelqu’un à la main.</div>'}
 $('ptabs').onclick=function(e){var b=e.target.closest('.chip');if(b){pf=b.dataset.p;drawPat()}};
 $('pq').oninput=drawPat;
 $('ptbl').onclick=function(e){var b=e.target.closest('button[data-id]');if(b)fiche(b.dataset.id)};
 function fiche(id){var i=byId(id);if(!i)return;var n=nS(i),a=nS(i,'absence'),pc=Math.min(100,Math.round(n/cfg.seancesMax*100)),mk=Math.round(6/cfg.seancesMax*100);
  var hist=(i.seances||[]).map(function(s,k){return {s:s,k:k}}).reverse();
  openM('<div class="prof">'+av(i.prenom,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(i.prenom)+'</h3><span class="pill s-'+i.statut+'">'+esc(SL[i.statut])+'</span><p class="sub" style="margin:6px 0 0">'+(i.source==='manuel'?'Ajouté à la main':'Demande reçue '+ago(i.creeLe))+'</p></div></div>'+
- '<div class="kpis"><div class="kpi pastel"><b>'+n+'</b><span>séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+a+'</b><span>absence'+(a>1?'s':'')+'</span></div><div class="kpi pastel"><b style="font-size:16px;line-height:1.5">'+(i.statut==='rdv_fixe'&&i.rdvDate?esc(fday(i.rdvDate))+'<br>'+fh(i.rdvHeure):'—')+'</b><span>prochain rendez-vous</span></div></div>'+
+ '<div class="kpis"><div class="kpi pastel"><b>'+n+'</b><span>séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+a+'</b><span>absence'+(a>1?'s':'')+'</span></div><div class="kpi pastel"><b style="font-size:16px;line-height:1.5">'+(R(i).length?esc(fday(R(i)[0].date))+'<br>'+fh(R(i)[0].heure):'—')+'</b><span>prochain rendez-vous</span></div></div>'+
  '<div class="prog"><i style="width:'+pc+'%"></i><u style="left:'+mk+'%"></u></div><p class="sub" style="font-size:12.5px">Suivi habituel : 6 à 8 séances (repère à 6).</p>'+
- (i.statut==='rdv_fixe'&&i.rdvDate?rdvBox(i).replace(/data-a=/g,'data-m=').replace(/data-m="det"/,'data-m="det2" data-id="'+esc(id)+'"').replace(/data-m="ok"/,'data-m="ok" data-id="'+esc(id)+'"').replace(/data-m="abs"/,'data-m="abs" data-id="'+esc(id)+'"'):'<div class="cta"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier une séance</button></div>')+
+ rdvBox(i,true)+
  '<div class="g2"><label class="f">Prénom<input id="fp" value="'+esc(i.prenom)+'" maxlength="60"></label><label class="f">Mail<input id="fm" value="'+esc(i.email)+'"></label><label class="f">Téléphone<input id="ft" value="'+esc(i.tel||'')+'"></label>'+
  '<label class="f">Thérapeute<select id="fa"><option value="">—</option>'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===(i.assigne||i.therapeute)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Statut<select id="fs">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===i.statut?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></label>'+
  '<label class="f w">Notes organisationnelles<textarea id="fn" rows="2" maxlength="1000">'+esc(i.notes)+'</textarea></label></div>'+
- '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span>'+(h.s.issue==='realisee'?(h.s.bienEtre!=null||h.s.satisfaction!=null?'<span class="mchip">'+(h.s.bienEtre!=null?'Bien-être '+h.s.bienEtre+'/10':'')+(h.s.bienEtre!=null&&h.s.satisfaction!=null?' · ':'')+(h.s.satisfaction!=null?'Satisf. '+h.s.satisfaction+'/10':'')+'</span><button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">modifier</button>':'<button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">+ mesures</button>'):'')+'<button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+ 
+ '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><span class="mchip">RDV '+(h.k+1)+'</span><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span>'+(h.s.issue==='realisee'?(h.s.bienEtre!=null||h.s.satisfaction!=null?'<span class="mchip">'+(h.s.bienEtre!=null?'Bien-être '+h.s.bienEtre+'/10':'')+(h.s.bienEtre!=null&&h.s.satisfaction!=null?' · ':'')+(h.s.satisfaction!=null?'Satisf. '+h.s.satisfaction+'/10':'')+'</span><button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">modifier</button>':'<button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">+ mesures</button>'):'')+'<button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+ 
  chgBlock(i)+'<div class="row"><button class="btn" data-m="fsave" data-id="'+esc(id)+'">Enregistrer</button><button class="btn l" data-m="msg" data-id="'+esc(id)+'">Envoyer un message</button><button class="btn l" data-m="x">Fermer</button><span class="ok" id="fok"></span><button class="link" data-m="fdel" data-id="'+esc(id)+'">Supprimer la fiche</button></div>')}
 function addPerson(){openM('<h3>Ajouter une personne</h3><p class="sub">Pour quelqu’un qui n’est pas passé par le formulaire du site.</p><div class="g2"><label class="f">Prénom<input id="np" maxlength="60"></label><label class="f">Mail<input id="nm" type="email"></label><label class="f">Téléphone (facultatif)<input id="nt"></label></div><div class="row"><button class="btn" id="ngo">Ajouter</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="nerr" style="margin-top:10px"></div>',true);
  $('ngo').onclick=function(){this.disabled=true;api({action:'creer',prenom:$('np').value,email:$('nm').value,tel:$('nt').value}).then(function(r){if(!r.ok){$('nerr').textContent=r.error;$('ngo').disabled=false;return}items.unshift(r.item);draw();fiche(r.item.id);toast('Personne ajoutée.')})}}
@@ -606,7 +620,7 @@ function dl(txt,name,mime){var a=document.createElement('a');a.href=URL.createOb
 function nt(i){return Array.isArray(i.notes)?i.notes.map(function(x){return typeof x==='string'?x:(x.texte||x.t||'')}).join(' | '):(i.notes||'')}
 $('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)return;var k=b.dataset.x,d=iso(new Date()),R;
  if(k==='pat'){R=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Changement perçu (1-7)','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',i.changement?i.changement.v:'',(i.creeLe||'').slice(0,10)]}));csv(R,'patients-'+d+'.csv')}
- else if(k==='dem'){R=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',i.rdvDate?i.rdvDate+' '+(i.rdvHeure||'')+' '+(i.salle||''):'',nt(i)]}));csv(R,'demandes-'+d+'.csv')}
+ else if(k==='dem'){R=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',R(i).map(function(x){return x.date+' '+x.heure+' '+x.salle}).join(' | '),nt(i)]}));csv(R,'demandes-'+d+'.csv')}
  else if(k==='sea'){R=[['Date','Heure','Salle','Thérapeute','Patient','Issue','Bien-être (0-10)','Satisfaction (0-10)']];items.forEach(function(i){(i.seances||[]).forEach(function(s){R.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence',s.bienEtre==null?'':s.bienEtre,s.satisfaction==null?'':s.satisfaction])})});R.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(R,'seances-'+d+'.csv')}
  else if(k==='act'){R=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(R,'heures-equipe-'+d+'.csv')}
  else if(k==='msg'){api({action:'messages_data'}).then(function(z){if(!z.ok)return toast(z.error||'Erreur');R=[['Date','Destinataire','Adresse','Objet','Modèle','Envoyé par','Statut','Erreur']].concat((z.journal||[]).map(function(x){return[x.le,x.nom,x.a,x.objet,x.modele,x.type==='auto'?'automatique':x.par,x.statut,x.erreur||'']}));csv(R,'messages-'+d+'.csv')})}
@@ -693,10 +707,13 @@ $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)retur
 /* ---- liste des demandes ---- */
 $('tabs').onclick=function(e){var s=e.target.closest('.chip');if(s){filtre=s.dataset.s;openId=null;draw()}};
 $('stats').onclick=function(e){var s=e.target.closest('.stat');if(s){filtre=s.dataset.s;openId=null;draw()}};
+$('list').onchange=function(e){var sel=e.target.closest('select[data-a="mv"]');if(!sel||!sel.value)return;var c=sel.closest('.req'),id=c.dataset.id,v=sel.value;
+ api({action:'update',id:id,patch:{statut:v}}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});openId=null;draw();drawCal();toast(d.item.prenom+' a été déplacé·e vers « '+SL[v]+' ».')}else toast(d.error||'Erreur')})};
 $('list').onclick=function(e){
- var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.req'),id=c.dataset.id,a=b.dataset.a;
+ if(e.target.closest('select'))return;
+ var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.req'),id=c.dataset.id,a=b.dataset.a,rid=b.dataset.r;
  if(a==='tog'){openId=openId===id?null:id;draw();if(openId){var el=document.querySelector('.req.open');el&&el.scrollIntoView({block:'nearest',behavior:'smooth'})}return}
- if(a==='plan'){planner(id);return}if(a==='mail'){mto=id;mk='envoyer';nav(7);return}if(a==='det'){detail(id);return}if(a==='ok'||a==='abs'){issue(id,a==='ok'?'realisee':'absence');return}
+ if(a==='plan'){planner(id);return}if(a==='mail'){mto=id;mk='envoyer';nav(7);return}if(a==='det'){detail(id,rid);return}if(a==='ok'||a==='abs'){issue(id,a==='ok'?'realisee':'absence',rid);return}
  if(a==='del'){if(!confirm('Supprimer cette demande définitivement ?'))return;api({action:'delete',id:id}).then(function(d){if(d.ok){items=items.filter(function(x){return x.id!==id});openId=null;draw();drawCal();toast('Demande supprimée.')}else toast(d.error)});return}
  var p={};Array.prototype.forEach.call(c.querySelectorAll('[data-f]'),function(f){p[f.dataset.f]=f.value});
  var ok=c.querySelector('.ok');ok.textContent='…';

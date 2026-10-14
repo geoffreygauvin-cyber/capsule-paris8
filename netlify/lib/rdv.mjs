@@ -51,7 +51,24 @@ export function icsFeed(rdvs) {
     .replace("CALSCALE:GREGORIAN", "CALSCALE:GREGORIAN\r\nX-WR-CALNAME:CAPSULE – rendez-vous");
 }
 
+// Une personne peut avoir plusieurs rendez-vous à venir : rec.rdvs = [{ id, uid, seq, date, heure, salle, therapeute, invitEnvoyee, rappelEnvoye }].
+// Les anciennes fiches (un seul rendez-vous dans rdvDate, rdvHeure...) sont converties à la lecture.
+export function norm(r) {
+  if (!r) return r;
+  if (!Array.isArray(r.rdvs)) {
+    r.rdvs = r.rdvDate && r.statut === "rdv_fixe"
+      ? [{ id: r.uid || "r0", uid: r.uid || "r0-" + r.id, seq: r.seq || 0, date: r.rdvDate, heure: r.rdvHeure, salle: r.salle, therapeute: r.therapeute, invitEnvoyee: !!r.invitEnvoyee, rappelEnvoye: !!r.rappelEnvoye }]
+      : [];
+  }
+  for (const k of ["rdvDate", "rdvHeure", "salle", "invitEnvoyee", "rappelEnvoye", "uid", "seq"]) delete r[k];
+  r.rdvs.sort((a, z) => (a.date + a.heure).localeCompare(z.date + z.heure));
+  return r;
+}
+// Fiche + un rendez-vous précis, pour les mails, les invitations .ics et les modèles de texte
+export const vue = (r, x) => (x ? { ...r, rdvDate: x.date, rdvHeure: x.heure, salle: x.salle, therapeute: x.therapeute, uid: x.uid, seq: x.seq || 0 } : r);
+export function lundi(date) { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); }
+
 export async function chargerTout(store) {
   const { blobs } = await store.list({ prefix: "d/" });
-  return (await Promise.all(blobs.map(async (x) => { const rec = await store.get(x.key, { type: "json" }); return rec && { key: x.key, rec }; }))).filter(Boolean);
+  return (await Promise.all(blobs.map(async (x) => { const rec = norm(await store.get(x.key, { type: "json" })); return rec && { key: x.key, rec }; }))).filter(Boolean);
 }
