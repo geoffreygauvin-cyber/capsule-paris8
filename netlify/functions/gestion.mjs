@@ -487,51 +487,98 @@ export default async (req) => {
     await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
   }
 
-  /* Règlement intérieur : texte versionné dans netlify/lib/reglement.mjs. Un·e admin le publie ; chacun·e le signe (nom saisi + case cochée).
-     Store « reglement » : « pub » (publication de la version en cours) et « s/<compte> » (dernière signature + historique). */
+  /* Règlement intérieur : texte modifiable par les admins (Gestion > Juridique), publié puis signé par chacun·e (nom saisi + case cochée).
+     Store « reglement » : « brouillon » (texte en cours de rédaction), « cur » (version publiée : numéro, empreinte, date, auteur), « meta » (dernier numéro de version, historique des publications),
+     « t/<empreinte> » (texte exact de chaque version publiée, conservé pour retrouver ce qui a été signé), « s/<compte> » (dernière signature + historique). Texte de départ : netlify/lib/reglement.mjs. */
   const rgs = getStore({ name: "reglement", consistency: "strong" });
-  const rgPub = async () => { const p = await rgs.get("pub", { type: "json" }); return p && p.version === REG.VERSION ? p : null; };
-  const rgVue = (s) => (s ? { version: s.version, le: s.le, nom: s.nom, aJour: s.version === REG.VERSION } : null);
-  if (["reglement_get", "reglement_sign", "reglement_pub"].includes(b.action)) {
-    const pub = await rgPub();
-    if (b.action === "reglement_pub") {
-      if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
-      if (b.publie) await rgs.setJSON("pub", { version: REG.VERSION, par: user, le: new Date().toISOString() }); else await rgs.delete("pub");
-      return J({ ok: true, publie: !!b.publie });
+  const rgCur = async () => (await rgs.get("cur", { type: "json" })) || null;
+  const rgTexte = async (h) => (/^[a-f0-9]{32}$/.test(String(h)) ? (await rgs.get("t/" + h, { type: "json" })) || null : null);
+  const rgSig = async (n) => (NAME.test(String(n)) ? (await rgs.get("s/" + n, { type: "json" })) || null : null);
+  /* texte de travail : brouillon en cours, sinon texte publié, sinon dernier texte publié (après un retrait), sinon texte de départ */
+  const rgBase = async (cur, meta) => (await rgs.get("brouillon", { type: "json" })) || (cur ? await rgTexte(cur.hash) : null) || (meta?.dernierHash ? await rgTexte(meta.dernierHash) : null) || REG.DEFAUT;
+  const rgVue = (s, cur) => (s ? { version: s.version, le: s.le, nom: s.nom, aJour: !!cur && s.version === cur.version } : null);
+  if (["reglement_get", "reglement_sign", "reglement_copie", "reglement_texte", "juridique_get", "reglement_brouillon", "reglement_brouillon_reset", "reglement_pub"].includes(b.action)) {
+    const cur = await rgCur();
+    if (b.action === "reglement_get") {
+      const out = { ok: true, publie: !!cur, moi: rgVue(await rgSig(user), cur) };
+      let doc = null;
+      if (cur) { doc = await rgTexte(cur.hash); Object.assign(out, { version: cur.version, date: cur.le, empreinte: cur.hash }); }
+      else if (admin) { doc = await rgBase(cur, (await rgs.get("meta", { type: "json" })) || {}); out.apercu = true; }
+      if (doc && b.texte !== false) { out.titre = doc.titre; out.intro = doc.intro; out.articles = doc.articles; }
+      return J(out);
     }
     if (b.action === "reglement_sign") {
-      if (!pub) return J({ error: "Le règlement n'est pas encore publié." }, 409);
-      if (String(b.version) !== REG.VERSION) return J({ error: "Le règlement a changé : recharge la page pour lire la dernière version." }, 409);
+      if (!cur) return J({ error: "Le règlement n'est pas encore publié." }, 409);
+      if (String(b.version) !== cur.version || String(b.hash) !== cur.hash) return J({ error: "Le règlement vient d'être mis à jour : recharge la page pour lire la dernière version." }, 409);
       const nom = clean(b.nom, 80).replace(/\s+/g, " ").trim();
       if (nom.length < 3) return J({ error: "Écris ton prénom et ton nom pour signer." }, 400);
       if (b.accepte !== true) return J({ error: "Coche la case pour confirmer que tu as lu le règlement et que tu l'acceptes." }, 400);
-      const prev = await rgs.get("s/" + user, { type: "json" });
-      if (prev && prev.version === REG.VERSION) return J({ ok: true, moi: rgVue(prev) });
-      const hist = [...(prev?.hist || []), ...(prev ? [{ version: prev.version, le: prev.le, nom: prev.nom }] : [])].slice(-10);
-      const rec = { version: REG.VERSION, hash: REG.EMPREINTE, nom, le: new Date().toISOString(), hist };
+      const prev = await rgSig(user);
+      if (prev && prev.version === cur.version) return J({ ok: true, moi: rgVue(prev, cur) });
+      const hist = [...(prev?.hist || []), ...(prev ? [{ version: prev.version, hash: prev.hash, le: prev.le, nom: prev.nom }] : [])].slice(-10);
+      const rec = { version: cur.version, hash: cur.hash, nom, le: new Date().toISOString(), hist };
       await rgs.setJSON("s/" + user, rec);
-      return J({ ok: true, moi: rgVue(rec) });
+      return J({ ok: true, moi: rgVue(rec, cur) });
     }
-    const out = { ok: true, version: REG.VERSION, date: REG.DATE, titre: REG.TITRE, empreinte: REG.EMPREINTE, publie: !!pub, moi: rgVue(await rgs.get("s/" + user, { type: "json" })) };
-    if (b.texte !== false && (pub || admin)) { out.intro = REG.INTRO; out.articles = REG.ARTICLES; }
-    if (admin) {
-      out.pub = pub ? { par: pub.par, le: pub.le } : null;
+    if (b.action === "reglement_copie") { // exemplaire signé : le texte exact signé + les mentions de signature (soi-même, ou n'importe qui pour un·e admin)
+      const cible = b.compte ? String(b.compte).toLowerCase() : user;
+      if (cible !== user && !admin) return J({ error: "Réservé aux comptes admin." }, 403);
+      const sg = await rgSig(cible); if (!sg) return J({ error: "Ce règlement n'a pas encore été signé." }, 404);
+      const doc = await rgTexte(sg.hash); if (!doc) return J({ error: "Le texte exact de cette version n'est plus disponible." }, 404);
+      return J({ ok: true, compte: cible, titre: doc.titre, intro: doc.intro, articles: doc.articles, sig: { version: sg.version, hash: sg.hash, nom: sg.nom, le: sg.le } });
+    }
+    if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
+    if (b.action === "reglement_texte") {
+      const doc = await rgTexte(b.hash); if (!doc) return J({ error: "Version introuvable." }, 404);
+      return J({ ok: true, ...doc, hash: String(b.hash) });
+    }
+    const meta = (await rgs.get("meta", { type: "json" })) || {};
+    if (b.action === "juridique_get") {
+      const brouillon = await rgs.get("brouillon", { type: "json" }), publie = cur ? await rgTexte(cur.hash) : null;
+      const base = await rgBase(cur, meta), nb = REG.nettoyer(base);
       const roles = await rolesMap();
-      out.signatures = await Promise.all(Object.keys(roles).sort().map(async (n) => {
-        const s = await rgs.get("s/" + n, { type: "json" });
-        return { nom: n, role: TECH.includes(n) ? "technique" : roles[n], ...(s ? { version: s.version, le: s.le, signeNom: s.nom, aJour: s.version === REG.VERSION } : {}) };
+      const signatures = await Promise.all(Object.keys(roles).sort().map(async (n) => {
+        const sg = await rgSig(n);
+        return { nom: n, role: TECH.includes(n) ? "technique" : roles[n], ...(sg ? { version: sg.version, le: sg.le, signeNom: sg.nom, aJour: !!cur && sg.version === cur.version } : {}) };
       }));
+      return J({ ok: true, cur, dernier: meta.dernier || 0, historique: (meta.hist || []).slice(-30).reverse(), source: brouillon ? "brouillon" : publie || meta.dernierHash ? "publie" : "defaut",
+        brouillon: brouillon ? { maj: brouillon.maj, par: brouillon.par } : null, modifie: !!cur && REG.empreinte(nb) !== cur.hash, memeQueDernier: !!meta.dernierHash && REG.empreinte(nb) === meta.dernierHash,
+        base: { titre: nb.titre, intro: nb.intro, articles: nb.articles }, signatures });
     }
-    return J(out);
+    if (b.action === "reglement_brouillon") {
+      const d = REG.nettoyer(b.doc); if (d.error) return J({ error: d.error }, 400);
+      const maj = new Date().toISOString(); await rgs.setJSON("brouillon", { ...d, maj, par: user });
+      return J({ ok: true, maj, empreinte: REG.empreinte(d) });
+    }
+    if (b.action === "reglement_brouillon_reset") { await rgs.delete("brouillon"); return J({ ok: true }); }
+    // reglement_pub
+    if (!b.publie) { await rgs.delete("cur"); return J({ ok: true, publie: false }); }
+    const doc = REG.nettoyer(await rgBase(cur, meta));
+    if (doc.error) return J({ error: doc.error }, 400);
+    if (!doc.articles.length) return J({ error: "Le règlement doit contenir au moins un article." }, 400);
+    const h = REG.empreinte(doc), dernier = meta.dernier || 0;
+    if (cur && cur.hash === h) return J({ error: "Aucune modification à publier." }, 409);
+    let version;
+    if (!dernier) version = "1";
+    else if (meta.dernierHash === h) version = String(dernier); // même texte qu'avant la dépublication
+    else if (b.important === true) version = String(dernier + 1);
+    else if (b.important === false) version = String(dernier);
+    else return J({ error: "Indique s'il s'agit d'un changement important (nouvelle signature) ou d'une correction mineure." }, 400);
+    const now = new Date().toISOString(), rec = { version, hash: h, le: now, par: user };
+    await rgs.setJSON("t/" + h, doc); await rgs.setJSON("cur", rec);
+    await rgs.setJSON("meta", { dernier: Math.max(dernier, +version), dernierHash: h, hist: [...(meta.hist || []), { version, hash: h, le: now, par: user, important: b.important === true }].slice(-60) });
+    await rgs.delete("brouillon");
+    return J({ ok: true, publie: true, cur: rec });
   }
 
   /* Parcours d'accueil des nouvelles recrues : 2 étapes constatées automatiquement (photo, présentation), 4 cochées par la personne.
      Chacun·e ne voit et ne modifie que son parcours ; les admins voient l'avancement de tous les étudiant·es psy. Store « accueil » : une clé par compte. */
   if (["accueil_get", "accueil_set"].includes(b.action)) {
     const as = getStore("accueil"), MANUELS = ["charte", "modeles", "ressources", "equipe"];
+    const rcur = await rgCur();
     const etat = async (n) => {
-      const pr = (await profils().get(n, { type: "json" })) || {}, m = (await as.get(n, { type: "json" })) || {}, sg = await rgs.get("s/" + n, { type: "json" });
-      return { photo: !!pr.photo, bio: !!(pr.bio && String(pr.bio).trim()), reglement: sg && sg.version === REG.VERSION ? sg.le : "", ...Object.fromEntries(MANUELS.map((k) => [k, m[k] || ""])) };
+      const pr = (await profils().get(n, { type: "json" })) || {}, m = (await as.get(n, { type: "json" })) || {}, sg = await rgSig(n);
+      return { photo: !!pr.photo, bio: !!(pr.bio && String(pr.bio).trim()), reglement: sg && rcur && sg.version === rcur.version ? sg.le : "", ...Object.fromEntries(MANUELS.map((k) => [k, m[k] || ""])) };
     };
     if (b.action === "accueil_set") {
       const k = String(b.step || ""); if (!MANUELS.includes(k)) return J({ error: "Étape inconnue." }, 400);
@@ -540,7 +587,7 @@ export default async (req) => {
       await as.setJSON(user, m);
       return J({ ok: true, moi: await etat(user) });
     }
-    const out = { ok: true, moi: await etat(user), reg: { publie: !!(await rgPub()), version: REG.VERSION } };
+    const out = { ok: true, moi: await etat(user), reg: { publie: !!rcur, version: rcur ? rcur.version : "" } };
     if (admin) {
       const roles = await rolesMap(), noms = Object.keys(roles).filter((n) => roles[n] === "etudiant" && !TECH.includes(n));
       out.equipe = Object.fromEntries(await Promise.all(noms.map(async (n) => [n, { ...(await etat(n)), depuis: NAME.test(n) ? ((await ac.get(n, { type: "json" }))?.creeLe || "") : "" }])));

@@ -249,6 +249,8 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 .scl{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;margin-top:-10px;margin-bottom:14px}.mq b{font-size:14.5px}.mq span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .egrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;margin-bottom:16px}.ec{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}.ec h3{margin:0 0 2px;font-size:16px}.ec .cap{font-size:13px;color:var(--muted);margin:0 0 10px}.ec svg{width:100%;height:auto;display:block}
 .eins{background:var(--rose);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;font-size:14.5px;line-height:1.55}.eins b{color:var(--rasp)}.enote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 2px 24px}
+#gent .cap{font-size:13px;color:var(--muted);line-height:1.5}
+.gbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}.gbar .filters{margin:0}
 .ekp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}.ekp .kpi{padding:16px}.ekp .kpi b{font-size:30px}.ekp .kpi small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
 .mchip{font-size:12px;color:var(--muted);background:var(--rose);border-radius:999px;padding:2px 9px}
 @media (max-width:860px){.egrid{grid-template-columns:1fr}}
@@ -350,8 +352,8 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 <section id="v11" class="hide"><header class="ph0 pastel t1 hhd"><span id="hav"></span><div><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></div></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag" id="gtag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
-<div class="filters hide" id="gtabs"></div><div id="gsup"><div class="row" style="margin:0 0 14px;gap:10px;flex-wrap:wrap"><button class="btn" id="sadd">+ Programmer une réunion ou une supervision</button></div>
-<div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div></section>
+<div class="filters hide" id="gtabs"></div><div id="gsup"><div class="ekp" id="skp"></div>
+<div class="gbar"><div class="filters" id="stabs"></div><button class="btn" id="sadd">+ Programmer une séance ou une réunion</button></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div><div id="gjur" class="hide"></div></section>
 <section id="v12" class="hide"><header class="ph0 pastel t2"><div class="tag">Communication</div><h1>Publications</h1><p class="sub">Créez un visuel pour les réseaux ou une fiche PDF à partir d’un modèle : choisissez, remplissez, téléchargez.</p></header></section>
 <section id="v13" class="hide"><header class="ph0 pastel t1"><div class="tag">Communication</div><h1>Charte graphique</h1><p class="sub">Logos, couleurs, police, trame de points et ton de CAPSULE : tout ce qu’il faut pour qu’une publication ressemble à CAPSULE.</p></header></section>
 <section id="v14" class="hide"><header class="ph0 pastel t2"><div class="tag">Vie d’équipe</div><h1>Équipe</h1><p class="sub">Qui fait quoi à CAPSULE : l’organigramme et le profil de chaque personne.</p></header></section>
@@ -916,16 +918,17 @@ var gtab='sup',etab='avenir';
 function drawGest(){
  var adm=isAdmin;$('gtabs').classList.toggle('hide',!adm);
  if(!adm){gtab='sup';$('gtag').textContent='Formation'}
- else{$('gtag').textContent='Équipe';$('gtabs').innerHTML=[['sup','Réunions & supervisions'],['ann','Annonces'],['ent','Entretiens privés']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
+ else{$('gtag').textContent='Espace admin';$('gtabs').innerHTML=[['sup','Réunions & supervisions'],['ann','Annonces'],['ent','Entretiens privés'],['jur','Juridique']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
   if(gtab==='ann')$('ssub').textContent='Écrivez une annonce pour les étudiant·es : elle s’affiche en haut de leur Accueil. Vous pouvez la programmer à une date et choisir sa durée d’affichage.';
   else if(gtab==='ent')$('ssub').textContent='Entretiens individuels avec un·e étudiant·e (feedback, recadrage, point d’étape). Seuls les admins voient le motif et les notes ; l’étudiant·e voit « Entretien individuel », la date et le lieu dans son agenda.';
+  else if(gtab==='jur')$('ssub').textContent='Le règlement intérieur de l’équipe : rédigez le texte, publiez-le pour qu’il apparaisse dans le parcours d’accueil des étudiant·es, et retrouvez l’exemplaire signé de chacun·e.';
   else $('ssub').textContent='Organisez une réunion d’équipe (elle s’ajoute à l’agenda des personnes invitées), programmez les supervisions et notez les présences.'}
- $('gsup').classList.toggle('hide',gtab!=='sup');$('gann').classList.toggle('hide',gtab!=='ann');$('gent').classList.toggle('hide',gtab!=='ent');
- if(adm&&gtab==='ann'&&window.annAdmin)window.annAdmin($('gann'));if(adm&&gtab==='ent')drawEnt()}
+ $('gsup').classList.toggle('hide',gtab!=='sup');$('gann').classList.toggle('hide',gtab!=='ann');$('gent').classList.toggle('hide',gtab!=='ent');$('gjur').classList.toggle('hide',gtab!=='jur'||!adm);
+ if(adm&&gtab==='ann'&&window.annAdmin)window.annAdmin($('gann'));if(adm&&gtab==='ent')drawEnt();if(adm&&gtab==='jur'&&window.jurAdmin)window.jurAdmin($('gjur'))}
 $('gtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){gtab=b.dataset.g;drawGest()}};
 function drawEnt(){
  var all=supItems.filter(function(x){return x.type==='entretien'}),up=all.filter(function(x){return !supPast(x)}),pa=all.filter(supPast).reverse(),l=etab==='avenir'?up:pa;
- $('gent').innerHTML='<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px"><div class="filters" id="etabs" style="margin:0"><button class="chip'+(etab==='avenir'?' on':'')+'" data-k="avenir">À venir'+(up.length?'<i>'+up.length+'</i>':'')+'</button><button class="chip'+(etab==='passes'?' on':'')+'" data-k="passes">Passés'+(pa.length?'<i>'+pa.length+'</i>':'')+'</button></div><button class="btn" id="ent_new">+ Nouvel entretien</button></div>'+
+ $('gent').innerHTML='<div class="gbar"><div class="filters" id="etabs"><button class="chip'+(etab==='avenir'?' on':'')+'" data-k="avenir">À venir'+(up.length?'<i>'+up.length+'</i>':'')+'</button><button class="chip'+(etab==='passes'?' on':'')+'" data-k="passes">Passés'+(pa.length?'<i>'+pa.length+'</i>':'')+'</button></div><button class="btn" id="ent_new">+ Nouvel entretien</button></div>'+
  (l.length?'<div class="sgrid">'+l.map(function(x){var n=(x.participants||[])[0]||'';return '<article class="sc2 pastel t1"><div class="sh"><b>'+esc(cap(fday(x.date)))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+'</span></div><h3>'+esc(cap(n))+' <span class="mtf '+esc(x.motif||'autre')+'">'+esc(MOTIF[x.motif]||'Entretien')+'</span></h3><p>'+esc(x.lieu||'Lieu à préciser')+(x.lien?' · <a href="'+esc(x.lien)+'" target="_blank" rel="noopener noreferrer"><b>Rejoindre la visio</b></a>':'')+'</p>'+(x.compteRendu?'<p class="ecr">'+esc(x.compteRendu.length>220?x.compteRendu.slice(0,220)+'…':x.compteRendu).replace(/\n/g,'<br>')+'</p>':'')+'<div class="row" style="margin-top:12px"><button class="btn l s" data-e="edit" data-id="'+esc(x.id)+'">'+(supPast(x)&&!x.compteRendu?'Ajouter un compte rendu':'Modifier')+'</button><button class="link" data-e="del" data-id="'+esc(x.id)+'" style="margin-left:0">Supprimer</button></div></article>'}).join('')+'</div>':'<div class="empty"><b>'+(etab==='avenir'?'Aucun entretien à venir':'Aucun entretien passé')+'</b>Créez un entretien : il s’ajoute à votre agenda et à celui de l’étudiant·e, qui voit seulement « Entretien individuel ».</div>')+
  '<p class="cap" style="margin-top:14px">Confidentialité : le motif et les notes ne sont visibles que par les comptes admin.</p>'}
 function entForm(id){
@@ -1103,4 +1106,4 @@ if(token)load();
 </script><script src="/gestion-com.js"></script>
 <script src="/gestion-annonces.js"></script>
 <script src="/gestion-charte.js"></script>
-<script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script><script src="/gestion-reglement.js"></script><script src="/gestion-fiches.js"></script></body></html>
+<script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script><script src="/gestion-reglement.js"></script><script src="/gestion-fiches.js"></script><script src="/gestion-juridique.js"></script></body></html>

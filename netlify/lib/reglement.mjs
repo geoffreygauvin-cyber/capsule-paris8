@@ -1,13 +1,10 @@
-/* Règlement intérieur de l'équipe CAPSULE.
-   POUR MODIFIER LE TEXTE : changer les articles ci-dessous.
-   - Correction mineure (faute, reformulation) : ne pas toucher à VERSION, les signatures restent valables.
-   - Changement de fond : augmenter VERSION (ex. "1.1"). Chacun·e devra relire et signer à nouveau, et un·e admin devra re-publier le texte.
-   Dans « p » : une ligne qui commence par « - » devient une puce. Écriture inclusive avec le point médian, comme sur tout le site.
+/* Règlement intérieur de l'équipe CAPSULE : TEXTE DE DÉPART.
+   Le texte en vigueur se modifie directement dans la plateforme (Gestion > Juridique, bouton « Modifier le texte ») : il est alors enregistré dans la base,
+   et ce fichier ne sert plus que de point de départ (premier brouillon, ou « Rétablir le texte de départ »).
+   Dans « p » : une ligne = un paragraphe ; une ligne qui commence par « - » devient une puce. Écriture inclusive avec le point médian, comme sur tout le site.
    Ce texte est un PROJET à faire valider par la coordination et les laboratoires porteurs avant publication. */
 import { createHash } from "node:crypto";
 
-export const VERSION = "1.0";
-export const DATE = "2026-10-14";
 export const TITRE = "Règlement intérieur de l'équipe CAPSULE";
 export const INTRO =
   "CAPSULE propose des consultations psychologiques gratuites aux étudiant·es de l'Université Paris 8, assurées par des étudiant·es de Master de psychologie, sous supervision. Le dispositif est porté par trois laboratoires de recherche : DysCo, LAPPS et LPPC. Ce règlement fixe les règles de fonctionnement de l'équipe et les engagements de chacun·e. Il existe pour que les personnes reçues soient accueillies dans un cadre sûr, et pour que l'équipe travaille sereinement.";
@@ -125,5 +122,24 @@ export const ARTICLES = [
   },
 ];
 
-/* Empreinte du texte exact : enregistrée avec chaque signature pour prouver ce qui a été signé. */
-export const EMPREINTE = createHash("sha256").update(JSON.stringify({ VERSION, TITRE, INTRO, ARTICLES })).digest("hex");
+export const DEFAUT = { titre: TITRE, intro: INTRO, articles: ARTICLES };
+
+/* Nettoie et valide un texte envoyé par l'éditeur. Retourne { titre, intro, articles } ou { error }. */
+const net = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000b-\u001f]+/g, " ").replace(/[ \t]+/g, " ").trim().slice(0, n);
+export function nettoyer(d) {
+  if (!d || typeof d !== "object") return { error: "Texte invalide." };
+  const titre = net(d.titre, 120) || "Règlement intérieur", intro = net(d.intro, 2500);
+  const src = Array.isArray(d.articles) ? d.articles : [];
+  if (src.length > 40) return { error: "40 articles au maximum." };
+  const articles = [];
+  for (const a of src) {
+    const t = net(a?.t, 120), p = (Array.isArray(a?.p) ? a.p : []).map((x) => net(x, 1500)).filter(Boolean);
+    if (!t && !p.length) continue;
+    if (!t) return { error: "Chaque article doit avoir un titre." };
+    if (p.length > 60) return { error: "« " + t + " » : 60 lignes au maximum par article." };
+    articles.push({ t, p });
+  }
+  return { titre, intro, articles };
+}
+/* Empreinte du texte exact (SHA-256) : sert d'identifiant à chaque version publiée et est enregistrée avec chaque signature. */
+export const empreinte = (d) => createHash("sha256").update(JSON.stringify({ titre: d.titre, intro: d.intro, articles: d.articles.map((a) => ({ t: a.t, p: a.p })) })).digest("hex").slice(0, 32);
