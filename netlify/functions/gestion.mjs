@@ -60,6 +60,11 @@ export default async (req) => {
     const c = comptes(); const u = String(b.compte || "").trim().toLowerCase();
     await new Promise((r) => setTimeout(r, 600)); // freine les essais répétés
     if (u in c) {
+      const ov = await getStore("codes").get(u, { type: "json" });
+      if (ov) {
+        if (!timingSafeEqual(Buffer.from(hashCode(String(b.code ?? "").trim(), ov.salt)), Buffer.from(ov.hash))) return J({ error: "Compte ou code incorrect." }, 401);
+        return J({ ok: true, token: makeToken(u, "admin", "o" + ov.hash.slice(0, 9)), compte: u });
+      }
       if (!timingSafeEqual(h(String(b.code ?? "").trim()), h(c[u].trim()))) return J({ error: "Compte ou code incorrect." }, 401);
       return J({ ok: true, token: makeToken(u, "admin", bind(c[u])), compte: u });
     }
@@ -73,7 +78,12 @@ export default async (req) => {
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
   const user = tk.u; let role = "admin";
-  if (tk.r === "admin") { if (!(user in comptes()) || bind(comptes()[user]) !== tk.k) return J({ error: "Session expirée, reconnectez-vous." }, 401); role = await prinRole(user); }
+  if (tk.r === "admin") {
+    if (!(user in comptes())) return J({ error: "Session expirée, reconnectez-vous." }, 401);
+    const ov = await getStore("codes").get(user, { type: "json" });
+    if ((ov ? "o" + ov.hash.slice(0, 9) : bind(comptes()[user])) !== tk.k) return J({ error: "Session expirée, reconnectez-vous." }, 401);
+    role = await prinRole(user);
+  }
   else {
     const acc = await ac.get(user, { type: "json" });
     if (!(acc?.hash || "").startsWith(tk.k || "!")) return J({ error: "Session expirée, reconnectez-vous." }, 401);
@@ -89,6 +99,12 @@ export default async (req) => {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = String(b.nom || "").trim().toLowerCase();
     const prin = async () => Object.fromEntries(await Promise.all(Object.keys(c).map(async (k) => [k, await prinRole(k)])));
+    if (b.action === "compte_reset" && n in c) {
+      const code = String(b.code || "").trim() || genCode(), salt = randomBytes(16).toString("hex");
+      await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), le: new Date().toISOString(), par: user });
+      const { blobs } = await ac.list();
+      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" })), principaux: Object.keys(c) });
+    }
     if (b.action === "compte_role" && n in c) {
       if (!ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
