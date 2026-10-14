@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
+import { resumePublic } from "../lib/capacite.mjs";
 
 export const config = { path: "/api/demande" };
 
@@ -8,6 +9,8 @@ const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]+/g, " ").trim()
 const CRENEAUX = ["Lundi", "Mardi", "Mercredi"];
 
 export default async (req) => {
+  // GET : le formulaire demande si toutes les places sont prises (liste d'attente), pour prévenir la personne avant l'envoi
+  if (req.method === "GET") return J({ complet: (await resumePublic().catch(() => ({}))).complet === true });
   if (req.method !== "POST") return J({ error: "Méthode refusée" }, 405);
   let b;
   try { b = await req.json(); } catch { return J({ error: "Requête invalide" }, 400); }
@@ -28,8 +31,10 @@ export default async (req) => {
   const now = Date.now();
   if (recentes.some((r) => r && r.email === email && now - Date.parse(r.creeLe) < 10 * 60 * 1000)) return J({ ok: true });
 
-  const id = randomUUID();
-  const rec = { id, creeLe: new Date(now).toISOString(), prenom, email, tel, creneaux, message, statut: "nouvelle", assigne: "", rdv: "", notes: "", maj: new Date(now).toISOString() };
-  await store.setJSON("d/" + new Date(now).toISOString() + "_" + id, rec);
-  return J({ ok: true });
+  const id = randomUUID(), iso = new Date(now).toISOString();
+  // Capacité atteinte : la demande entre directement en liste d'attente (ordre d'arrivée), sans rien perdre
+  const attente = (await resumePublic().catch(() => ({}))).complet === true;
+  const rec = { id, creeLe: iso, prenom, email, tel, creneaux, message, statut: attente ? "attente" : "nouvelle", ...(attente ? { attenteLe: iso, attenteAuto: true } : {}), assigne: "", rdv: "", notes: "", maj: iso };
+  await store.setJSON("d/" + iso + "_" + id, rec);
+  return J({ ok: true, attente });
 };

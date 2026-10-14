@@ -7,10 +7,11 @@ import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
 import * as REG from "../lib/reglement.mjs";
 import * as FI from "../lib/fiches.mjs";
+import * as CP from "../lib/capacite.mjs";
 
 export const config = { path: "/api/gestion" };
 
-const MAIL_ET = [["Accueil : ton profil", "Les annonces de l’équipe s’affichent tout en haut (pense à cliquer sur « C’est lu »), puis ton emploi du temps de la semaine (rendez-vous patients, supervisions, réunions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."], ["Demandes : prendre en charge", "Les demandes du site arrivent ici, classées par onglet. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d’un conflit, ou si la personne a déjà un rendez-vous la même semaine. Tu peux aussi déplacer une personne d’un onglet à l’autre à la main. Chaque mail de rendez-vous contient un lien : si la personne annule ou demande un autre créneau, le créneau est libéré et un bandeau apparaît sur sa fiche et sur ton Accueil (clique sur « C’est noté » une fois pris en compte)."], ["Après chaque séance", "Dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l’utilité de la séance (0 à 10). Chaque personne peut avoir plusieurs rendez-vous, numérotés 1, 2, 3…"], ["Calendrier, Patients, Messages, Ressources", "Calendrier : tous les rendez-vous, par thérapeute. Patients : la base avec le décompte des séances (sur 8) et les indicateurs généraux. Messages : mails types et historique. Ressources : documents utiles de l’équipe."], ["Supervisions et réunions : tu les programmes toi-même", "« + Programmer une séance ou une réunion » : choisis le type (supervision de groupe, individuelle ou réunion d’équipe), la date, l’heure, le lieu, un lien de visio si besoin et les personnes invitées. La séance s’ajoute à ton agenda et à celui des invités. Tu ne modifies ou ne supprimes que celles que tu as créées ; après la séance, note les présences."], ["Publications : réseaux sociaux", "Crée un visuel à partir d’un modèle (PNG, PDF ou PowerPoint), enregistre-le dans le planning avec sa date, et retrouve dans l’onglet Planning ce qui est prêt à publier, par réseau. Une publication passe en rouge la veille de sa date, pour ne pas l’oublier."]];
+const MAIL_ET = [["Accueil : ton profil", "Les annonces de l’équipe s’affichent tout en haut (pense à cliquer sur « C’est lu »), puis ton emploi du temps de la semaine (rendez-vous patients, supervisions, réunions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."], ["Demandes : prendre en charge", "Les demandes du site arrivent ici, classées par onglet. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d’un conflit, ou si la personne a déjà un rendez-vous la même semaine. Tu peux aussi déplacer une personne d’un onglet à l’autre à la main. Chaque mail de rendez-vous contient un lien : si la personne annule ou demande un autre créneau, le créneau est libéré et un bandeau apparaît sur sa fiche et sur ton Accueil (clique sur « C’est noté » une fois pris en compte). Quand toutes les places sont prises, les nouvelles demandes du site arrivent dans l’onglet « Liste d’attente », dans l’ordre d’arrivée : planifie la première dès qu’une place se libère (les admins règlent le nombre de places par étudiant·e avec « Régler »)."], ["Après chaque séance", "Dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l’utilité de la séance (0 à 10). Chaque personne peut avoir plusieurs rendez-vous, numérotés 1, 2, 3…"], ["Calendrier, Patients, Messages, Ressources", "Calendrier : tous les rendez-vous, par thérapeute. Patients : la base avec le décompte des séances (sur 8) et les indicateurs généraux. Messages : mails types et historique. Ressources : documents utiles de l’équipe."], ["Supervisions et réunions : tu les programmes toi-même", "« + Programmer une séance ou une réunion » : choisis le type (supervision de groupe, individuelle ou réunion d’équipe), la date, l’heure, le lieu, un lien de visio si besoin et les personnes invitées. La séance s’ajoute à ton agenda et à celui des invités. Tu ne modifies ou ne supprimes que celles que tu as créées ; après la séance, note les présences."], ["Publications : réseaux sociaux", "Crée un visuel à partir d’un modèle (PNG, PDF ou PowerPoint), enregistre-le dans le planning avec sa date, et retrouve dans l’onglet Planning ce qui est prêt à publier, par réseau. Une publication passe en rouge la veille de sa date, pour ne pas l’oublier."]];
 const MAIL_AD = [["Comptes : créer et gérer les comptes", "« Ajouter un compte » : prénom (accents acceptés), statut Admin ou Étudiant·e psy, code libre (8 caractères minimum) ou généré. Sur chaque ligne : « Envoyer l’accès » (mail avec identifiant, code et mode d’emploi) et le menu Actions : Voir le code, Fiche PDF, Changer le code (l’ancien cesse de marcher) et Supprimer. Le statut se change avec le menu déroulant, après confirmation."], ["Accès et fiches : à envoyer à chaque personne", "« Envoyer l’accès » envoie par mail la fiche de la personne : identifiant, code et mode d’emploi correspondant à son statut. Pour un PDF imprimable, utilise « Fiche PDF » dans le menu Actions, ou « Fiches de tous les comptes » dans le bloc d’export. Si le code est « non récupérable » (compte ancien), fais d’abord « Changer le code »."], ["Réunions & annonces", "Deux onglets. Réunions & supervisions : programme-les (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences, avec retards et absences. Annonces : écris un message pour les étudiant·es, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil."], ["Gestion RH", "Suivi de l’équipe (présences, retards, absences, personnes à voir), entretiens privés (feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu) et règlement intérieur, avec ses signatures."], ["Suivi d’activité : les indicateurs", "Chiffres généraux (demandes, personnes suivies, séances réalisées, présence, délai avant la première séance, satisfaction), graphiques par mois et par statut, bien-être, satisfaction et changement perçu, puis le détail par étudiant·e. Données descriptives : une tendance, pas une preuve d’efficacité."], ["Exports et sauvegarde", "Dans Suivi d’activité, « Exporter les données » : patients, demandes, séances, heures par étudiant·e et journal des messages en CSV (Excel), ou sauvegarde complète en JSON. Ce sont des données personnelles : à conserver et à partager avec précaution."]];
 
 const hx = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -67,7 +68,7 @@ const HEURES_SUP = Array.from({ length: 23 }, (_, k) => { const m = 8 * 60 + k *
 const DUREES = [60, 90, 120, 180];
 const fin = (h, d) => { const m = mn(h) + d; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
 const mn = (h) => +h.slice(0, 2) * 60 + +h.slice(3);
-const STATUTS = ["nouvelle", "a_recontacter", "contactee", "rdv_fixe", "en_cours", "terminee", "sans_suite"];
+const STATUTS = ["nouvelle", "a_recontacter", "attente", "contactee", "rdv_fixe", "en_cours", "terminee", "sans_suite"];
 
 // GESTION_COMPTES = "violette:code1,equipe:code2"
 function comptes() {
@@ -226,6 +227,7 @@ export default async (req) => {
   if (b.action === "list") {
     const { blobs } = await store.list({ prefix: "d/" });
     let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
+    const capacite = sup ? null : CP.calcul(items, await CP.etudiants(), await CP.chargerCfg());
     if (sup) items = items.map((i) => ({ id: i.id, creeLe: i.creeLe, prenom: i.prenom, statut: i.statut, assigne: i.assigne, therapeute: i.therapeute, seances: i.seances || [], rdvs: i.rdvs || [], changement: i.changement, creneaux: [], notes: "", email: "", tel: "" }));
     items.sort((a, z) => z.creeLe.localeCompare(a.creeLe));
     const { blobs: cb } = await ac.list();
@@ -238,7 +240,7 @@ export default async (req) => {
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
-    return J({ ok: true, items, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -265,6 +267,11 @@ export default async (req) => {
     if (autres.some((y) => y.therapeute === th)) return J({ error: cap(th) + " a déjà un rendez-vous à cette heure." }, 409);
     const ss = getStore("supervisions"), { blobs: sb } = await ss.list();
     for (const x of sb) { const v = await ss.get(x.key, { type: "json" }); if (v && v.date === date && (v.participants || []).includes(th) && mn(v.heure) < mn(heure) + 60 && mn(heure) < mn(v.heure) + v.duree) return J({ error: cap(th) + " est en supervision de " + v.heure + " à " + fin(v.heure, v.duree) + " ce jour-là." }, 409); }
+    const cfgCap = await CP.chargerCfg();
+    if (cfgCap.actif && (await CP.etudiants()).includes(th)) { // capacité : une personne de plus pour cet·te étudiant·e ?
+      const max = cfgCap.parEtudiant[th] || cfgCap.defaut, suivies = all.filter((x) => x.rec.id !== r.id && CP.enSuivi(x.rec) && x.rec.assigne === th).length;
+      if (!(CP.enSuivi(r) && r.assigne === th) && suivies >= max && !(admin && b.confirmerCapacite)) return J({ error: cap(th) + " suit déjà " + suivies + " personne" + (suivies > 1 ? "s" : "") + " (maximum " + max + ").", alerteCapacite: true, peutForcer: admin }, 409);
+    }
     const sem = lundi(date);
     const dejaSem = [...r.rdvs.filter((y) => y !== ex), ...(r.seances || [])].filter((y) => lundi(y.date) === sem);
     if (dejaSem.length && !b.confirmerSemaine) return J({ error: r.prenom + " a déjà " + dejaSem.length + " rendez-vous cette semaine-là (" + dejaSem.map((y) => jourLong(y.date)).join(", ") + "). Est-ce voulu ?", alerteSemaine: true }, 409);
@@ -274,6 +281,7 @@ export default async (req) => {
     if (!ex) r.rdvs.push(x);
     r.rdvs.sort((p1, p2) => (p1.date + p1.heure).localeCompare(p2.date + p2.heure));
     Object.assign(r, { assigne: th, statut: "rdv_fixe", maj: new Date().toISOString(), majPar: user });
+    delete r.attenteLe;
     let mail = "non_envoye";
     if (b.envoyer) mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte(modif ? "modification" : "invitation", v), "REQUEST", { modele: modif ? "modification" : "invitation", par: user, type: "auto" }); });
     x.invitEnvoyee = mail === "envoye";
@@ -292,6 +300,29 @@ export default async (req) => {
       if (!r.rdvs.length && r.statut === "rdv_fixe") r.statut = "a_recontacter";
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
+    return J({ ok: true, item: r, mail });
+  }
+
+  if (b.action === "capacite_save") {
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    const etu = await CP.etudiants(), nb = (v) => { const n = Number(v); return Number.isInteger(n) && n >= 1 && n <= 20 ? n : null; };
+    const defaut = nb(b.defaut); if (!defaut) return J({ error: "Indiquez un nombre de personnes entre 1 et 20." }, 400);
+    const parEtudiant = {};
+    for (const n of etu) { const v = (b.parEtudiant || {})[n]; if (v === "" || v === null || v === undefined) continue; if (!nb(v)) return J({ error: "Nombre invalide pour " + cap(n) + " (entre 1 et 20)." }, 400); if (nb(v) !== defaut) parEtudiant[n] = nb(v); }
+    await CP.enregistrerCfg({ actif: b.actif === true, defaut, parEtudiant }, user);
+    const items = (await chargerTout(store)).map((x) => x.rec);
+    return J({ ok: true, capacite: CP.calcul(items, etu, await CP.chargerCfg()) });
+  }
+  if (b.action === "attente_mettre") {
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
+    const r = cur.rec;
+    if (r.statut === "attente") return J({ error: r.prenom + " est déjà en liste d'attente." }, 409);
+    if (r.rdvs.length) return J({ error: r.prenom + " a déjà un rendez-vous : annulez-le avant de la mettre en liste d'attente." }, 409);
+    if (!["nouvelle", "a_recontacter", "contactee"].includes(r.statut)) return J({ error: "Cette fiche ne peut pas être mise en liste d'attente." }, 400);
+    r.statut = "attente"; r.attenteLe = new Date().toISOString(); r.maj = r.attenteLe; r.majPar = user;
+    let mail = "non_envoye";
+    if (b.envoyer) mail = await mailMsg(async () => envoyer(r, await texte("attente", r), null, { modele: "attente", par: user, type: "manuel" }));
+    await store.setJSON(cur.key, r);
     return J({ ok: true, item: r, mail });
   }
 
@@ -765,7 +796,11 @@ export default async (req) => {
   if (b.action === "update") {
     const k = await key(String(b.id)); if (!k) return J({ error: "Demande introuvable." }, 404);
     const r = norm(await store.get(k, { type: "json" })); const p = b.patch || {};
-    if ("statut" in p && STATUTS.includes(p.statut)) r.statut = p.statut;
+    if ("statut" in p && STATUTS.includes(p.statut)) {
+      if (p.statut === "attente" && r.statut !== "attente" && r.rdvs.length) return J({ error: "Cette personne a déjà un rendez-vous : annulez-le avant de la mettre en liste d'attente." }, 409);
+      r.statut = p.statut;
+    }
+    if (r.statut === "attente") r.attenteLe ||= new Date().toISOString(); else delete r.attenteLe;
     if ("assigne" in p) r.assigne = clean(p.assigne, 40);
     if ("notes" in p) r.notes = clean(p.notes, 1000);
     if (p.retoursVus === true && Array.isArray(r.retours)) for (const x of r.retours) x.vu = true;

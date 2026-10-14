@@ -57,6 +57,7 @@
 
     h += '<section id="demande" style="padding-top:24px"><form class="dem" id="demform" novalidate>' +
       '<div class="head"><div class="rule"><i></i><i></i><i></i></div><h2>Être recontacté·e</h2><p>Laissez-nous vos coordonnées : un·e étudiant·e de l’équipe vous écrit pour fixer un premier rendez-vous. C’est gratuit et sans engagement.</p></div>' +
+      '<p class="cap hide" id="demcap" role="note"></p>' +
       '<div class="dg"><label>Prénom<input name="prenom" required maxlength="60" autocomplete="given-name"></label>' +
       '<label>Adresse mail<input name="email" type="email" required maxlength="120" autocomplete="email"></label>' +
       '<label>Téléphone <small>(facultatif)</small><input name="tel" type="tel" maxlength="25" autocomplete="tel"></label>' +
@@ -215,11 +216,25 @@
     fetch('/api/demande', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prenom: f.prenom.value, email: f.email.value, tel: f.tel.value, message: f.message.value, creneaux: cr, consentement: true, site: f.site.value }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d.ok) { f.innerHTML = '<div class="head"><h2>Merci, c’est envoyé.</h2><p>Un·e étudiant·e de l’équipe vous écrira bientôt à l’adresse indiquée. Pensez à regarder vos courriers indésirables.</p></div>'; }
+        if (d.ok) {
+          f.innerHTML = d.attente
+            ? '<div class="head"><h2>Merci, votre demande est enregistrée.</h2><p>Toutes nos places sont occupées en ce moment : vous êtes sur liste d’attente, dans l’ordre d’arrivée. Nous vous écrirons dès qu’une place se libère, à l’adresse indiquée (pensez à regarder vos courriers indésirables). Nous ne pouvons pas dire précisément quand.</p><p>Si votre situation devient difficile en attendant, le 3114 est joignable 24 h/24, gratuitement. D’autres ressources sont indiquées plus bas sur cette page.</p></div>'
+            : '<div class="head"><h2>Merci, c’est envoyé.</h2><p>Un·e étudiant·e de l’équipe vous écrira bientôt à l’adresse indiquée. Pensez à regarder vos courriers indésirables.</p></div>';
+        }
         else { m.textContent = d.error || 'Une erreur est survenue.'; btn.disabled = false; }
       })
       .catch(function () { m.textContent = 'Connexion impossible. Écrivez-nous : ' + ((C.contact && C.contact.email) || ''); btn.disabled = false; });
   });
+
+  /* ---------- places : prévenir avant l'envoi quand tout est complet ---------- */
+  function demCap() {
+    var el = document.getElementById('demcap'); if (!el || EDIT) return;
+    fetch('/api/demande', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.complet) return;
+      el.textContent = 'Toutes nos places sont occupées en ce moment. Vous pouvez quand même envoyer votre demande : elle sera placée sur liste d’attente, dans l’ordre d’arrivée, et nous vous écrirons dès qu’une place se libère.';
+      el.classList.remove('hide');
+    }).catch(function () {});
+  }
 
   /* ---------- chargement ---------- */
   function load() {
@@ -228,7 +243,7 @@
       .catch(function () { return fetch('contenu.json', { cache: 'no-store' }).then(function (r) { return r.json(); }); });
   }
   load().then(function (data) {
-    C = data; render();
+    C = data; render(); demCap();
     if (/[?&]edit(=|&|$)/.test(location.search)) loginBar();
   }).catch(function () {
     app.innerHTML = '<p style="padding:24px">Le contenu du site n\'a pas pu être chargé. Écrivez-nous : capsule-contact@gmail.com</p>';
