@@ -500,7 +500,7 @@ export default async (req) => {
   if (["reglement_get", "reglement_sign", "reglement_copie", "reglement_texte", "juridique_get", "reglement_brouillon", "reglement_brouillon_reset", "reglement_pub"].includes(b.action)) {
     const cur = await rgCur();
     if (b.action === "reglement_get") {
-      const out = { ok: true, publie: !!cur, moi: rgVue(await rgSig(user), cur) };
+      const out = { ok: true, publie: !!cur, moi: admin || sup ? null : rgVue(await rgSig(user), cur) }; // seul·es les étudiant·es psy signent
       let doc = null;
       if (cur) { doc = await rgTexte(cur.hash); Object.assign(out, { version: cur.version, date: cur.le, empreinte: cur.hash }); }
       else if (admin) { doc = await rgBase(cur, (await rgs.get("meta", { type: "json" })) || {}); out.apercu = true; }
@@ -508,6 +508,7 @@ export default async (req) => {
       return J(out);
     }
     if (b.action === "reglement_sign") {
+      if (admin || sup) return J({ error: "Le règlement est signé par les étudiant·es psy : les admins n'ont pas à le signer." }, 403);
       if (!cur) return J({ error: "Le règlement n'est pas encore publié." }, 409);
       if (String(b.version) !== cur.version || String(b.hash) !== cur.hash) return J({ error: "Le règlement vient d'être mis à jour : recharge la page pour lire la dernière version." }, 409);
       const nom = clean(b.nom, 80).replace(/\s+/g, " ").trim();
@@ -537,9 +538,9 @@ export default async (req) => {
       const brouillon = await rgs.get("brouillon", { type: "json" }), publie = cur ? await rgTexte(cur.hash) : null;
       const base = await rgBase(cur, meta), nb = REG.nettoyer(base);
       const roles = await rolesMap();
-      const signatures = await Promise.all(Object.keys(roles).sort().map(async (n) => {
+      const signatures = await Promise.all(Object.keys(roles).filter((n) => roles[n] === "etudiant" && !TECH.includes(n)).sort().map(async (n) => {
         const sg = await rgSig(n);
-        return { nom: n, role: TECH.includes(n) ? "technique" : roles[n], ...(sg ? { version: sg.version, le: sg.le, signeNom: sg.nom, aJour: !!cur && sg.version === cur.version } : {}) };
+        return { nom: n, role: roles[n], ...(sg ? { version: sg.version, le: sg.le, signeNom: sg.nom, aJour: !!cur && sg.version === cur.version } : {}) };
       }));
       return J({ ok: true, cur, dernier: meta.dernier || 0, historique: (meta.hist || []).slice(-30).reverse(), source: brouillon ? "brouillon" : publie || meta.dernierHash ? "publie" : "defaut",
         brouillon: brouillon ? { maj: brouillon.maj, par: brouillon.par } : null, modifie: !!cur && REG.empreinte(nb) !== cur.hash, memeQueDernier: !!meta.dernierHash && REG.empreinte(nb) === meta.dernierHash,

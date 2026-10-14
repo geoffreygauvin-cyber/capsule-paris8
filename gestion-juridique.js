@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   var host = null, D = null, ed = null, dirty = false, busy = false;
-  var ROLE = { etudiant: 'Étudiant·e psy', admin: 'Admin', technique: 'Service technique' };
+  var ROLE = { etudiant: 'Étudiant·e psy' };
   function $(i) { return document.getElementById(i); }
   function e(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function nom(n) { n = String(n || ''); return n.charAt(0).toUpperCase() + n.slice(1); }
@@ -80,10 +80,10 @@
       '<div class="row">' + pubBtn + '<button type="button" class="btn' + (pubBtn ? ' l' : '') + '" data-j="edit">Modifier le texte</button><button type="button" class="btn l" data-j="lire">Lire</button>' +
       (D.cur ? '<button type="button" class="link" data-j="unpub" style="margin-left:auto">Retirer la publication</button>' : '') + '</div></section>';
     h += '<section class="jc"><div class="jbar"><div><h3 style="margin:0 0 2px;font-size:18px">Signatures</h3><p class="sub" style="margin:0">' +
-      (D.cur ? ok + ' sur ' + sg.length + ' ont signé la version ' + e(D.cur.version) + '.' : 'Les signatures apparaissent ici dès que le règlement est publié.') + '</p>' +
+      (D.cur ? ok + ' sur ' + sg.length + ' étudiant·es ont signé la version ' + e(D.cur.version) + '.' : 'Les signatures apparaissent ici dès que le règlement est publié.') + ' Seul·es les étudiant·es psy signent ; les admins n’ont pas à le faire.</p>' +
       (D.cur ? '<div class="jmeter" role="progressbar" aria-valuemin="0" aria-valuemax="' + sg.length + '" aria-valuenow="' + ok + '"><i style="width:' + (sg.length ? Math.round(100 * ok / sg.length) : 0) + '%"></i></div>' : '') + '</div>' +
       '<button type="button" class="btn l s" data-j="csv">Exporter (CSV)</button></div>' +
-      '<div>' + sg.slice().sort(function (a, b) { return (a.aJour === b.aJour ? 0 : a.aJour ? 1 : -1) || a.nom.localeCompare(b.nom, 'fr'); }).map(function (s) {
+      (sg.length ? '' : '<p class="sub" style="margin:14px 0 0">Aucun·e étudiant·e pour l’instant.</p>') + '<div>' + sg.slice().sort(function (a, b) { return (a.aJour === b.aJour ? 0 : a.aJour ? 1 : -1) || a.nom.localeCompare(b.nom, 'fr'); }).map(function (s) {
         var ph = ((C().data().photos) || {})[s.nom], stt = s.aJour ? ['Signé le ' + djc(s.le), 'ok'] : s.version ? ['À re-signer (version ' + s.version + ')', 'old'] : ['Pas encore signé', 'no'];
         return '<div class="jr"><span class="jav" style="' + (ph ? 'background-image:url(' + e(ph) + ')' : '') + '">' + (ph ? '' : e(nom(s.nom).charAt(0))) + '</span>' +
           '<div><b>' + e(nom(s.nom)) + '</b><small>' + e(ROLE[s.role] || s.role) + (s.signeNom ? ' · signé « ' + e(s.signeNom) + ' » le ' + e(djh(s.le)) : '') + '</small></div>' +
@@ -148,7 +148,7 @@
   function publier() {
     var c = D.cur, sg = D.signatures || [], ok = sg.filter(function (s) { return s.aJour; }).length, h;
     if (!D.dernier) {
-      h = '<div class="regm"><h3>Publier la version 1</h3><p class="sub">L’équipe pourra lire le règlement et le signer. L’étape « Lire et signer le règlement intérieur » apparaît en tête du parcours d’accueil des étudiant·es psy, et les admins voient un rappel sur leur Accueil.</p>' +
+      h = '<div class="regm"><h3>Publier la version 1</h3><p class="sub">L’équipe pourra lire le règlement et le signer. L’étape « Lire et signer le règlement intérieur » apparaît en tête du parcours d’accueil des étudiant·es psy.</p>' +
         '<div class="row"><button type="button" class="btn" data-j="pubgo">Publier</button><button type="button" class="btn l" data-m="x">Annuler</button></div></div>';
     } else if (D.memeQueDernier && !c) {
       h = '<div class="regm"><h3>Republier la version ' + e(D.dernier) + '</h3><p class="sub">Le texte est identique à celui de la version ' + e(D.dernier) + ' : les signatures déjà faites redeviennent valables.</p><div class="row"><button type="button" class="btn" data-j="pubgo">Republier</button><button type="button" class="btn l" data-m="x">Annuler</button></div></div>';

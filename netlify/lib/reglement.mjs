@@ -116,8 +116,8 @@ export const ARTICLES = [
   {
     t: "Acceptation et modification",
     p: [
-      "Chaque membre lit le règlement en entier et le signe depuis la plateforme, en saisissant son nom. La plateforme conserve le nom, la date et la version signée.",
-      "Le règlement peut évoluer. Lorsqu'un changement important est publié, la version change et chacun·e est invité·e à relire et à signer à nouveau.",
+      "Chaque étudiant·e psy lit le règlement en entier et le signe depuis la plateforme, en saisissant son nom. La plateforme conserve le nom, la date et la version signée. Les admins et le service technique y sont soumis aussi, sans avoir à le signer.",
+      "Le règlement peut évoluer. Lorsqu'un changement important est publié, la version change et les étudiant·es psy sont invité·es à relire et à signer à nouveau.",
     ],
   },
 ];

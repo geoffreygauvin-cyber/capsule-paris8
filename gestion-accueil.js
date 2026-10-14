@@ -65,7 +65,7 @@
   /* ---------- carte étudiant·e (Accueil) ---------- */
   function drawMine() {
     var head = document.querySelector('#v11 > header'), box = $('hacc'); if (!head || !C()) return;
-    if (!isStu() || !mine) { if (box && !box.classList.contains('accreg')) box.remove(); return; }
+    if (!isStu() || !mine) { if (box) box.remove(); return; }
     var st = live(), n = count(st);
     if (n === steps().length) { if (box) box.remove(); return; }
     css();
@@ -146,9 +146,9 @@
     else if (s === 'reglement') { if (window.regOpen) window.regOpen(); }
   });
   /* le règlement vient d'être signé ou publié : on relit l'avancement */
-  document.addEventListener('cap-reglement', function () { var c = C(); if (c && (isStu() || c.admin())) load(); });
+  document.addEventListener('cap-reglement', function () { if (isStu()) load(); });
 
-  window.accLoad = function () { if (isStu()) load(); else if (window.regHome) window.regHome(); };
+  window.accLoad = function () { if (isStu()) load(); };
   window.accAdmin = function () {
     if (C() && C().admin()) { if (team) drawTeam(); load(); } else { var b = $('eqacc'); if (b) b.remove(); }
   };

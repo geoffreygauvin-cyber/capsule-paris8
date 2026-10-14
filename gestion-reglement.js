@@ -1,7 +1,7 @@
-/* Règlement intérieur de l'équipe : lecture et signature (tout le monde), version imprimable.
+/* Règlement intérieur de l'équipe : lecture (tout le monde), signature (étudiant·es psy uniquement), version imprimable.
    - Le texte est rédigé, publié et suivi par les admins dans Gestion > Juridique (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
-   - Où le trouver : bouton « Règlement intérieur » du profil, étape en tête du parcours d'accueil des étudiant·es (gestion-accueil.js), rappel sur l'Accueil des admins tant qu'ils n'ont pas signé.
-   - Expose window.regOpen (fenêtre de lecture / signature), regHome (rappel Accueil), regCorps (rendu du texte) et regPrint (version imprimable, avec ou sans mention de signature).
+   - Où le trouver : bouton « Règlement intérieur » du profil, étape en tête du parcours d'accueil des étudiant·es (gestion-accueil.js). Les admins et le service technique peuvent le lire mais n'ont pas à le signer.
+   - Expose window.regOpen (fenêtre de lecture / signature), regCorps (rendu du texte) et regPrint (version imprimable, avec ou sans mention de signature).
    Données : actions reglement_get, reglement_sign, reglement_copie de netlify/functions/gestion.mjs (store Netlify Blobs « reglement »).
    Utilise window.CAPSULE (exposé par gestion.html). */
 (function () {
@@ -31,7 +31,6 @@
       '.regsig .f input{width:100%}' +
       '.regok{margin:14px 0 0;padding:12px 16px;border-radius:16px;background:#E9F5EA;color:#1F5E24;font-size:14px}.regok b{font-weight:600}' +
       '.regm .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}' +
-      '.regcard{margin:0 0 16px;border-radius:22px;padding:16px 18px;background:linear-gradient(135deg,var(--rose,#F9DEE5),var(--lilac,#EADCF0));display:flex;gap:14px;align-items:center;flex-wrap:wrap}.regcard>div{flex:1;min-width:200px}.regcard b{display:block;font-size:15px}.regcard small{display:block;color:var(--muted,#6B5861);font-size:13px}' +
       '@media(max-width:640px){.regtxt{max-height:42vh;padding:2px 14px 10px}}';
     document.head.appendChild(s);
   }
@@ -67,6 +66,8 @@
     h += '<div class="regtxt" id="regtxt" tabindex="0" role="region" aria-label="Texte du règlement intérieur">' + corps(r) + '</div>';
     if (r.publie && m && m.aJour) {
       h += '<div class="regok"><b>✓ Signé</b> par ' + e(m.nom) + ' le ' + e(djh(m.le)) + ' (version ' + e(m.version) + ').</div>';
+    } else if (r.publie && !isStu()) {
+      h += '<p class="sub" style="margin:10px 0 0">Lecture seule : le règlement est signé par les étudiant·es psy, les admins n’ont pas à le signer.</p>';
     } else if (r.publie) {
       h += '<div class="regsig"><p class="rn" id="regnote">Fais défiler le texte jusqu’en bas pour pouvoir signer.</p>' +
         '<label class="regchk"><input type="checkbox" id="regcb" disabled><span>J’ai lu le règlement intérieur en entier et je m’engage à le respecter.</span></label>' +
@@ -92,7 +93,6 @@
 
   function changed() {
     document.dispatchEvent(new CustomEvent('cap-reglement'));
-    if ($('hacc') && $('hacc').classList.contains('accreg') && window.regHome) window.regHome();
   }
 
   function sign() {
@@ -133,20 +133,6 @@
       });
     } else window.regPrint(cur, info, null);
   }
-
-  /* ---------- Accueil : rappel pour les non-étudiant·es (les étudiant·es ont l'étape dans leur parcours d'accueil) ---------- */
-  window.regHome = function () {
-    var c = C(), head = document.querySelector('#v11 > header'); if (!c || !head) return;
-    var box = $('hacc'); if (box && !box.classList.contains('accreg')) { box.remove(); box = null; }
-    api({ action: 'reglement_get', texte: false }).then(function (r) {
-      box = $('hacc');
-      var drop = function () { if (box && box.classList.contains('accreg')) box.remove(); };
-      if (!r || !r.ok || !r.publie || (r.moi && r.moi.aJour) || isStu()) { drop(); return; }
-      css();
-      if (!box) { head.insertAdjacentHTML('afterend', '<div class="regcard accreg" id="hacc"></div>'); box = $('hacc'); }
-      box.innerHTML = '<div><b>Règlement intérieur : à lire et signer</b><small>' + (r.moi ? 'Le texte a changé (version ' + e(r.version) + ').' : 'Quelques minutes de lecture, pour que chacun·e connaisse les règles de l’équipe.') + '</small></div><button type="button" class="btn s" data-rg="open">Lire et signer</button>';
-    });
-  };
 
   window.regOpen = open;
 
