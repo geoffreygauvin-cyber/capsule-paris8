@@ -124,7 +124,9 @@ export default async (req) => {
   }
 
   const rls = getStore("roles"), SEED = { violette: "etudiant" };
-  const prinRole = async (n) => { const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
+  // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
+  const TECH = ["violette"];
+  const prinRole = async (n) => { if (TECH.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
   const user = tk.u; let role = "admin";
@@ -183,6 +185,7 @@ export default async (req) => {
       return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action === "compte_role" && n in c) {
+      if (TECH.includes(n)) return J({ error: cap(n) + " a le statut Service technique : il ne se change pas ici." }, 400);
       if (!["admin", "etudiant"].includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
       await rls.setJSON(n, { role: b.role });
@@ -225,11 +228,11 @@ export default async (req) => {
     const ps = getStore("profils"); const { blobs: pb } = await ps.list();
     const profs = await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" })) || {}]));
     const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
-    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre]));
+    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre])); for (const n of TECH) titres[n] = "Service technique";
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
-    return J({ ok: true, items, compte: user, admin, role, roles, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -294,6 +297,7 @@ export default async (req) => {
     await ps.setJSON(user, { ...prev, photo: ph }); return J({ ok: true, photo: ph });
   }
   if (b.action === "profil_titre") {
+    if (TECH.includes(user)) return J({ error: "Ton titre est lié au statut Service technique : il ne se change pas." }, 400);
     const ps = getStore("profils"), t = clean(b.titre, 40).replace(/\s+/g, " ").trim();
     const prev = (await ps.get(user, { type: "json" })) || {};
     const next = { ...prev }; if (t) next.titre = t; else delete next.titre;

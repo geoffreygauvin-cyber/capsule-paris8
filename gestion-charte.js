@@ -32,11 +32,17 @@
       '.chb{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}#chbody a.btn,#chbody .chd a{text-decoration:none}#chbody a.btn{display:inline-block}' +
       '.chx{background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.55}.chx b.k{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--rasp,#AE164E);margin-bottom:5px}.chx q{display:block;margin-top:8px;font-weight:600;color:#75151F;quotes:none;font-size:16px;line-height:1.3}' +
       '.chq{margin-top:14px;border-radius:20px;padding:20px 22px;background:#AE164E;color:#fff;font-size:20px;font-weight:600;line-height:1.3}.chq small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.8;margin-bottom:6px}' +
-      '.chban{border-radius:14px;border:1px solid var(--line);overflow:hidden;margin-top:6px}.chban img{width:100%;display:block}';
+      '.chban{border-radius:14px;border:1px solid var(--line);overflow:hidden;margin-top:6px}.chban img{width:100%;display:block}' +
+      '.cha{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}@media(max-width:760px){.cha{grid-template-columns:1fr 1fr}.cha>.chc:first-child{grid-column:1/-1}}' +
+      '.cha video{width:100%;display:block;border-radius:12px;background:#FDF5EB;margin-bottom:10px}.cha .chc{padding:12px}.cha .chd{margin-top:4px}' +
+      '.chx .chb{margin-top:10px}.chx .chb .btn{font-size:13px;padding:8px 14px}';
     document.head.appendChild(s);
   }
   function tile(src, cls, bg, nm, dl) {
     return '<div class="chc"><div class="chl ' + cls + '" style="background:' + bg + '"><img src="' + D + 'svg/' + src + '" alt="' + e(nm) + '"></div><b>' + e(nm) + '</b><div class="chd" style="margin-top:4px">' + dl + '</div></div>';
+  }
+  function avid(f, nm, use, ext) {
+    return '<div class="chc"><video src="' + D + f + '.mp4" poster="' + D + 'apercus/' + f.replace('capsule-logo-', '') + '.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Logo CAPSULE animé, ' + e(nm) + '"></video><b>' + e(nm) + '</b><div style="font-size:12px;color:var(--muted)">' + e(use) + '</div><div class="chd"><a href="' + D + f + '.mp4" download>Télécharger (' + ext + ')</a></div></div>';
   }
   function draw() {
     var host = document.getElementById('v13'); if (!host) return; css();
@@ -52,6 +58,12 @@
       tile('capsule-horizontal-blanc.svg', '', '#AE164E', 'Blanc sur fond foncé', '<a href="' + D + 'svg/capsule-horizontal-blanc.svg" download>SVG</a>') +
       tile('capsule-vertical-couleur.svg', 'pastel t2', '', 'Version verticale', '<a href="' + D + 'svg/capsule-vertical-couleur.svg" download>SVG</a>') +
       '</div><p class="sub" style="margin-top:10px">Autres variantes (framboise, encre, PDF, PNG de toutes tailles, photos de profil, favicons) : dans le ZIP.</p></section>';
+    // logo animé
+    h += '<section class="chs"><h2>Logo animé</h2><p class="sub">Le « C » et le « S » du symbole se séparent, puis deviennent le C et le S de CAPSULE (près de 6 secondes). À utiliser en ouverture de vidéo, de présentation ou de story ; en boucle sur un écran. Fond crème, à ne pas recolorer.</p><div class="cha">' +
+      avid('capsule-logo-anime-16x9', '16:9 · 1920 × 1080', 'Vidéo, présentation, site', 'MP4') +
+      avid('capsule-logo-anime-carre', 'Carré · 1080 × 1080', 'Publication LinkedIn, Instagram', 'MP4') +
+      avid('capsule-logo-anime-story', 'Vertical · 1080 × 1920', 'Story, Reel', 'MP4') + '</div>' +
+      '<div class="chb"><a class="btn l" href="' + D + 'capsule-logo-anime.gif" download>Version GIF (960 × 540)</a></div></section>';
     // couleurs
     h += '<section class="chs"><h2>Couleurs</h2><p class="sub">Quatre couleurs fortes sur fond crème, trois teintes pâles pour les aplats. Cliquez sur une couleur pour copier son code. Pas de dégradé, pas d’ombre, pas de noir pur.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">' +
       COUL.map(function (c) { return '<button class="chw" data-hex="' + c[1] + '" style="background:' + c[1] + ';color:' + c[2] + '"><b>' + e(c[0]) + '</b><span>' + c[1] + '</span><small>' + e(c[3]) + '</small></button>'; }).join('') + '</div><div class="chp">' +
@@ -76,9 +88,9 @@
       '<div class="chx"><b class="k">Mots</b>À privilégier : consultation, étudiant·e, gratuit, confidentiel, équipe. À éviter sur les supports publics : « patient », « prise en charge », « cas ».</div></div>' +
       '<div class="chq"><small>Accroche de référence</small>Consultations psychologiques gratuites pour les étudiant·es de Paris 8</div></section>';
     // modèles PowerPoint
-    h += '<section class="chs"><h2>Modèles PowerPoint</h2><p class="sub">Deux modèles prêts à remplir, aux couleurs de CAPSULE (police Poppins à installer si besoin). Dupliquez une diapositive pour garder la mise en page.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">' +
-      '<div class="chx pastel t1"><b class="k">Étudiant·es</b>10 diapositives : le dispositif, prendre rendez-vous, questions, infos pratiques, urgences.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-etudiants.pptx" download>Télécharger</a></div></div>' +
-      '<div class="chx pastel t2"><b class="k">Directions et partenaires</b>13 diapositives : en bref, organisation, chiffres, graphique, besoins, calendrier, partenaires.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-directions.pptx" download>Télécharger</a></div></div></div></section>';
+    h += '<section class="chs"><h2>Modèles PowerPoint</h2><p class="sub">Deux modèles aux couleurs de CAPSULE (police Poppins à installer si besoin). Chaque modèle existe en deux versions : <b>à remplir</b>, avec des textes guides du type « Titre de la diapositive » à remplacer, et <b>avec exemple</b>, rédigé comme une vraie présentation. Dupliquez une diapositive pour garder la mise en page.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">' +
+      '<div class="chx pastel t1"><b class="k">Étudiant·es</b>10 diapositives : le dispositif, prendre rendez-vous, questions, infos pratiques, urgences.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-etudiants-vierge.pptx" download>Texte à remplir</a><a class="btn l" href="' + D + 'CAPSULE-modele-etudiants.pptx" download>Avec exemple</a></div></div>' +
+      '<div class="chx pastel t2"><b class="k">Directions et partenaires</b>13 diapositives : en bref, organisation, chiffres, graphique, besoins, calendrier, partenaires.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-directions-vierge.pptx" download>Texte à remplir</a><a class="btn l" href="' + D + 'CAPSULE-modele-directions.pptx" download>Avec exemple</a></div></div></div></section>';
     // applications
     h += '<section class="chs"><h2>Réseaux</h2><p class="sub">Bannière LinkedIn (1584 × 396 px) : texte décalé à droite du logo rond de la page. Photo de profil en 400 × 400 px, avec le nom.</p><div class="chban"><img src="' + D + 'banniere-linkedin-capsule.png" alt="Bannière LinkedIn"></div>' +
       '<div class="chb"><a class="btn l" href="' + D + 'banniere-linkedin-capsule.png" download>Bannière (PNG)</a><a class="btn l" href="' + D + 'capsule-profil-nom-1000px.png" download>Photo de profil (PNG)</a></div></section>';
