@@ -266,7 +266,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button></div>
 <div class="tbl" id="ptbl"></div></section>
-<section id="v5" class="hide"><header class="ph0 pastel t1"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p></header>
+<section id="v5" class="hide"><header class="ph0 pastel t1"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p></header><div class="filters ssw hide"></div>
 <div class="filters" id="atabs"></div><div id="amy" class="hide"></div>
 <div class="tbl" id="atbl"></div>
 </section>
@@ -277,7 +277,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées. À terme, le questionnaire en ligne alimentera cet onglet ; en attendant, les notes se saisissent à la main après chaque séance.</p></header><div id="efbody"></div></section>
 <section id="v11" class="hide"><header class="ph0 pastel t1"><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
-<section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header>
+<section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
 <div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une supervision</button></div>
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
@@ -460,7 +460,9 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function nav(n){[1,2,3,4,5,6,7,8,10,11].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff();if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup()}
+function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=role==='admin'&&(n===5||n===10);w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervision</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
+document.addEventListener('click',function(e){var b=e.target.closest('.ssw .chip');if(b)nav(+b.dataset.g)});
+function nav(n){[1,2,3,4,5,6,7,8,10,11].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff();if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -663,8 +665,8 @@ function buildNav(){
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
- var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Espace gestion',[10,5,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
- var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',11:'Accueil',10:role==='etudiant'?'Mes supervisions':'Supervision'};
+ var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Espace gestion',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
+ var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',11:'Accueil',10:role==='etudiant'?'Mes supervisions':role==='admin'?'Supervision & activité':'Supervision'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
    as.insertBefore(b,anchor)})});
