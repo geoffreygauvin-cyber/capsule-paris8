@@ -413,26 +413,28 @@
     if (liens === null) $('cmpages').innerHTML = '<p class="sub">Chargement…</p>';
     api2({ action: 'liens_list' }).then(function (d) { if (d && d.ok) { liens = d.liens || []; drawLiens(); } else $('cmpages').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger les liens.') + '</p>'; });
   }
-  function host(u) { return String(u).replace(/^https?:\/\/(www\.)?/i, '').replace(/^mailto:/i, '').replace(/\/$/, ''); }
+  function host(u) { return String(u).replace(/\?.*$/, '').replace(/^https?:\/\/(www\.)?/i, '').replace(/^mailto:/i, '').replace(/\/$/, ''); }
   function drawLiens() {
     var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin());
-    var h = '<div class="newc"><b id="lkft">Ajouter une page</b><div class="g2" style="margin-top:10px">' +
+    var f = '<div class="newc"><b id="lkft">Ajouter une page</b><div class="g2" style="margin-top:10px">' +
       '<label class="f">Réseau<select id="lk_r">' + Object.keys(RS).map(function (k) { return '<option value="' + k + '">' + RS[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<label class="f">Nom affiché<input id="lk_n" maxlength="80" placeholder="ex. Instagram CAPSULE"></label></div>' +
       '<label class="f" style="margin-top:10px">Adresse (lien)<input id="lk_u" maxlength="500" placeholder="https://www.instagram.com/…"></label>' +
       '<label class="f" style="margin-top:10px">Note (facultatif)<input id="lk_o" maxlength="200" placeholder="ex. compte géré par Camille, on y poste le jeudi"></label>' +
       '<div class="row" style="margin-top:12px"><button class="btn" id="lk_s">Ajouter</button><button class="btn l hide" id="lk_c">Annuler</button></div><div id="lk_m" class="cmmsg"></div></div>';
+    var h = '';
     if (!liens.length) {
-      h += '<div class="newc" style="margin-top:16px"><b>Aucune page enregistrée</b><p class="sub" style="margin:4px 0 10px">Ajoutez le site, puis chaque réseau où CAPSULE publie. Raccourcis :</p><div class="row" style="flex-wrap:wrap">' +
+      h += '<div class="newc"><b>Aucune page enregistrée</b><p class="sub" style="margin:4px 0 10px">Ajoutez le site, puis chaque réseau où CAPSULE publie. Raccourcis :</p><div class="row" style="flex-wrap:wrap">' +
         ['site', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'].map(function (k) { return '<button class="chip" style="background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)" data-q="' + k + '">+ ' + RS[k].lb + '</button>'; }).join('') + '</div></div>';
     } else {
-      h += '<div class="row" style="margin:18px 0 10px;justify-content:space-between;flex-wrap:wrap"><b>' + liens.length + ' page' + (liens.length > 1 ? 's' : '') + '</b><button class="btn l s" id="lk_all">Copier toute la liste</button></div><div class="lkg">' +
+      h += '<div class="row" style="margin:0 0 10px;justify-content:space-between;flex-wrap:wrap"><b>' + liens.length + ' page' + (liens.length > 1 ? 's' : '') + '</b><button class="btn l s" id="lk_all">Copier toute la liste</button></div><div class="lkg">' +
         liens.map(function (x) {
           var r = RS[x.reseau] || RS.autre, mine = adm || x.par === me;
           return '<div class="lkc"><span class="lkb" style="background:' + r.c + '">' + e(r.b) + '</span><div class="lkt"><b>' + e(x.nom) + '</b><a href="' + e(x.url) + '" target="_blank" rel="noopener noreferrer">' + e(host(x.url)) + '</a>' + (x.note ? '<small>' + e(x.note) + '</small>' : '') + '</div>' +
             '<div class="lka"><a class="btn l s" href="' + e(x.url) + '" target="_blank" rel="noopener noreferrer">Ouvrir</a><button class="btn l s" data-cp="' + e(x.id) + '">Copier</button>' + (mine ? '<button class="link" data-ed="' + e(x.id) + '">Modifier</button><button class="link" data-rm="' + e(x.id) + '">Supprimer</button>' : '') + '</div></div>';
         }).join('') + '</div>';
     }
+    h += '<div style="margin-top:18px">' + f + '</div>';
     $('cmpages').innerHTML = h; editId = '';
   }
   function lkMsg(t) { var m = $('lk_m'); if (m) m.textContent = t || ''; }
@@ -459,7 +461,7 @@
       else if (b.dataset.cp) { var x = liens.filter(function (l) { return l.id === b.dataset.cp; })[0]; if (x) copyText(x.url, 'Lien copié.'); }
       else if (b.dataset.ed) {
         var y = liens.filter(function (l) { return l.id === b.dataset.ed; })[0]; if (!y) return;
-        editId = y.id; $('lk_r').value = y.reseau; $('lk_n').value = y.nom; $('lk_u').value = y.url; $('lk_o').value = y.note || ''; $('lkft').textContent = 'Modifier la page'; $('lk_s').textContent = 'Enregistrer'; $('lk_c').classList.remove('hide'); $('lk_n').focus(); window.scrollTo(0, 0);
+        editId = y.id; $('lk_r').value = y.reseau; $('lk_n').value = y.nom; $('lk_u').value = y.url; $('lk_o').value = y.note || ''; $('lkft').textContent = 'Modifier la page'; $('lk_s').textContent = 'Enregistrer'; $('lk_c').classList.remove('hide'); $('lk_n').focus(); $('lkft').scrollIntoView({ block: 'center' });
       }
       else if (b.dataset.rm) { if (!confirm('Supprimer ce lien de la liste ?')) return; api2({ action: 'lien_del', id: b.dataset.rm }).then(function (d) { if (d && d.ok) { liens = d.liens; drawLiens(); } else note((d && d.error) || 'Suppression impossible.'); }); }
     });
