@@ -478,12 +478,16 @@
   };
 
 
-  /* ---------- onglet « Planning » : publications par réseau, en attente, programmées ---------- */
-  var SS = [['idee', 'Idée', '#6B5861'], ['attente', 'En attente de validation', '#7B206B'], ['programmee', 'Programmée', '#AE164E'], ['publiee', 'Publiée', '#2F7D4F']];
-  var noKeep = false, pubs = null, pEdit = '', pVis = null, pFilt = 'tous', pSt = 'tous', draftP = null;
-  function sLb(k) { var r = SS.filter(function (x) { return x[0] === k; })[0]; return r ? r[1] : k; }
+  /* ---------- onglet « Planning » : un bloc par plateforme ---------- */
+  var SS = [['idee', 'Idée', '#6B5861'], ['programmee', 'Prête à publier', '#AE164E'], ['publiee', 'Publiée', '#2F7D4F']];
+  var pubs = null, pEdit = '', pVis = null, pOpen = false, draftP = null, pTab = '', PFIX = ['linkedin', 'instagram', 'site'];
+  function sLb(k) { if (k === 'attente') k = 'idee'; var r = SS.filter(function (x) { return x[0] === k; })[0]; return r ? r[1] : k; }
   function tdy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function frDate(d, h) { if (!d) return 'Sans date'; var x = new Date(d + 'T12:00:00'), J = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']; return J[x.getDay()] + ' ' + x.getDate() + ' ' + MS[x.getMonth()] + (h ? ' · ' + h.replace(':', ' h ') : ''); }
+  /* échéance : rouge dès la veille de la date de publication */
+  function dTo(d) { return Math.round((new Date(d + 'T12:00:00') - new Date(tdy() + 'T12:00:00')) / 864e5); }
+  function urgent(x) { return x.statut !== 'publiee' && !!x.date && dTo(x.date) <= 1; }
+  function ech(x) { var n = dTo(x.date); return n < 0 ? 'En retard de ' + (-n) + (n === -1 ? ' jour' : ' jours') : n === 0 ? 'Aujourd’hui' : n === 1 ? 'Demain' : ''; }
   function loadPubs() {
     if (pubs === null) $('cmplan').innerHTML = '<p class="sub">Chargement…</p>';
     api2({ action: 'pub_list' }).then(function (d) { if (d && d.ok) { pubs = d.publis || []; drawPubs(); } else $('cmplan').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger le planning.') + '</p>'; });
@@ -493,53 +497,45 @@
     var vis = Object.assign({}, st); delete vis.legende;
     var d = ($('cm_pd') || {}).value || '', o = { reseau: $('cm_pr').value, titre: st.titre || 'Sans titre', texte: st.legende, statut: d ? 'programmee' : 'idee', date: d, heure: ($('cm_ph') || {}).value || '', lien: '', visuel: vis };
     api2(Object.assign({ action: 'pub_save' }, o)).then(function (r) {
-      if (r && r.ok) { pubs = r.publis; note(d ? 'Enregistré dans le planning : ' + frDate(d, o.heure) + '. Rappel sur l’accueil ce jour-là.' : 'Enregistré dans le planning (sans date : ajoutez-en une pour avoir un rappel).'); rappels(); tab('planning'); }
+      if (r && r.ok) { pubs = r.publis; note(d ? 'Enregistré dans le planning (' + frDate(d, o.heure) + '). Rappel en rouge dès la veille sur l’accueil.' : 'Enregistré dans le planning (sans date : ajoutez-en une pour avoir un rappel).'); rappels(); tab('planning'); }
       else note((r && r.error) || 'Échec de l’enregistrement.');
     });
   }
   function pForm(p) {
     p = p || { reseau: 'linkedin', statut: 'idee', titre: '', texte: '', date: '', heure: '', lien: '' };
     pVis = p.visuel || null;
-    return '<div class="newc"><b id="pf_t">' + (pEdit ? 'Modifier la publication' : 'Nouvelle publication') + '</b>' +
+    return '<div class="newc" style="margin-bottom:16px"><b id="pf_t">' + (pEdit ? 'Modifier la publication' : 'Nouvelle publication') + '</b>' +
       '<div class="g2" style="margin-top:10px"><label class="f">Réseau<select id="pf_r">' + Object.keys(RS).filter(function (k) { return k !== 'mail'; }).map(function (k) { return '<option value="' + k + '"' + (p.reseau === k ? ' selected' : '') + '>' + RS[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<label class="f">Statut<select id="pf_s">' + SS.map(function (x) { return '<option value="' + x[0] + '"' + (p.statut === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div>' +
       '<label class="f" style="margin-top:10px">Titre (pour s’y retrouver)<input id="pf_n" maxlength="120" value="' + e(p.titre) + '" placeholder="ex. Annonce de l’atelier sommeil"></label>' +
-      '<label class="f" style="margin-top:10px">Texte de la publication<textarea id="pf_x" rows="6" maxlength="3000" style="width:100%">' + e(p.texte) + '</textarea></label>' +
+      '<label class="f" style="margin-top:10px">Texte de la publication<textarea id="pf_x" rows="5" maxlength="3000" style="width:100%">' + e(p.texte) + '</textarea></label>' +
       '<div class="g2" style="margin-top:10px"><label class="f">Date de publication<input type="date" id="pf_d" value="' + e(p.date) + '"></label><label class="f">Heure<input type="time" id="pf_h" value="' + e(p.heure) + '"></label></div>' +
-      '<label class="f" style="margin-top:10px">Lien de la publication (une fois en ligne)<input id="pf_l" maxlength="500" value="' + e(p.lien) + '" placeholder="https://www.linkedin.com/posts/…"></label>' +
+      '<label class="f" style="margin-top:10px">Lien de la publication (une fois en ligne)<input id="pf_l" maxlength="500" value="' + e(p.lien) + '" placeholder="https://…"></label>' +
       (pVis ? '<p class="sub" style="margin:10px 0 0">✓ Un visuel est rattaché à cette publication (« ' + e(pVis.titre || '') + ' »).</p>' : '') +
-      '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l hide" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
+      '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
   }
   function pCard(x, me, adm) {
-    var mine = adm || x.par === me, r = RS[x.reseau] || RS.autre, late = x.statut !== 'publiee' && x.date && x.date < tdy(), now = x.statut !== 'publiee' && x.date === tdy();
-    var sc = (SS.filter(function (z) { return z[0] === x.statut; })[0] || SS[0])[2];
-    return '<div class="lkc' + (late ? ' late' : '') + '"><span class="lkb" style="background:' + r.c + '">' + e(r.b) + '</span><div class="lkt"><b>' + e(x.titre) + '</b>' +
-      '<span class="pst"><i style="background:' + sc + '"></i>' + e(sLb(x.statut)) + (x.date ? ' · ' + e(frDate(x.date, x.heure)) : '') + (late ? ' · <b style="color:var(--poppy)">à publier (en retard)</b>' : now ? ' · <b style="color:var(--rasp)">à publier aujourd’hui</b>' : '') + '</span>' +
-      (x.texte ? '<small>' + e(x.texte.length > 140 ? x.texte.slice(0, 140) + '…' : x.texte) + '</small>' : '') + '<small>par ' + e(x.par ? x.par.charAt(0).toUpperCase() + x.par.slice(1) : '') + '</small></div>' +
-      '<div class="lka">' + (x.lien ? '<a class="btn l s" href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">Voir en ligne</a>' : '') + (x.visuel ? '<button class="btn l s" data-pv="' + e(x.id) + '">Ouvrir le visuel</button>' : '') +
-      '<button class="btn l s" data-pc="' + e(x.id) + '">Copier le texte</button>' + (x.date && x.statut !== 'publiee' ? '<button class="btn l s" data-pi="' + e(x.id) + '">Agenda</button>' : '') +
-      (mine ? (x.statut !== 'publiee' ? '<button class="btn l s" data-pn="' + e(x.id) + '">' + (x.statut === 'idee' ? 'Mettre en attente' : x.statut === 'attente' ? 'Programmer' : 'Marquer publiée') + '</button>' : '') + '<button class="link" data-pe="' + e(x.id) + '">Modifier</button><button class="link" data-pr="' + e(x.id) + '">Supprimer</button>' : '') + '</div></div>';
+    var mine = adm || x.par === me, pub = x.statut === 'publiee', u = urgent(x), sc = (SS.filter(function (z) { return z[0] === (x.statut === 'attente' ? 'idee' : x.statut); })[0] || SS[0])[2];
+    var nx = x.statut === 'programmee' ? 'Marquer publiée' : 'Marquer prête à publier';
+    return '<div class="pc' + (u ? ' red' : '') + (pub ? ' ok' : '') + '"><b>' + e(x.titre) + '</b>' +
+      '<div class="pcs"><span class="pst"><i style="background:' + (u ? 'var(--poppy)' : sc) + '"></i>' + e(sLb(x.statut)) + '</span>' + (x.date ? '<span class="pcd">' + e(frDate(x.date, x.heure)) + '</span>' : (pub ? '' : '<span class="pcd">Sans date</span>')) + (u ? '<span class="pce">' + e(ech(x)) + '</span>' : '') + '</div>' +
+      (x.texte && !pub ? '<small>' + e(x.texte.length > 110 ? x.texte.slice(0, 110) + '…' : x.texte) + '</small>' : '') +
+      '<div class="pca">' + (mine && !pub ? '<button class="btn s" data-pn="' + e(x.id) + '">' + nx + '</button>' : '') + (x.lien ? '<a class="link" href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">Voir en ligne</a>' : '') + (x.visuel ? '<button class="link" data-pv="' + e(x.id) + '">Visuel</button>' : '') +
+      '<button class="link" data-pc="' + e(x.id) + '">Copier le texte</button>' + (x.date && !pub ? '<button class="link" data-pi="' + e(x.id) + '">Agenda</button>' : '') + (mine ? '<button class="link" data-pe="' + e(x.id) + '">Modifier</button><button class="link" data-pr="' + e(x.id) + '">Supprimer</button>' : '') + '</div></div>';
   }
+  function netsList() { var ks = Object.keys(RS).filter(function (k) { return k !== 'mail' && (PFIX.indexOf(k) > -1 || pubs.some(function (x) { return x.reseau === k; })); }); return PFIX.filter(function (k) { return ks.indexOf(k) > -1; }).concat(ks.filter(function (k) { return PFIX.indexOf(k) < 0; })); }
   function drawPubs() {
-    var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin()), keep = pubs.filter(function (x) { return (pFilt === 'tous' || x.reseau === pFilt) && (pSt === 'tous' || x.statut === pSt); });
-    var nets = Object.keys(RS).filter(function (k) { return pubs.some(function (x) { return x.reseau === k; }); });
-    if (!draftP && !pEdit && !noKeep && $('pf_n')) { var cur = pRead(); if (cur.titre || cur.texte || cur.lien) draftP = cur; }
-    noKeep = false; var h = pForm(draftP); draftP = null;
-    var cnt = function (k) { return pubs.filter(function (x) { return x.statut === k; }).length; };
-    h += '<div class="row" style="margin:18px 0 8px;flex-wrap:wrap;justify-content:space-between"><div class="filters" style="margin:0" id="pf_st"><button class="chip' + (pSt === 'tous' ? ' on' : '') + '" data-ps="tous">Tout<i>' + pubs.length + '</i></button>' + SS.map(function (x) { return '<button class="chip' + (pSt === x[0] ? ' on' : '') + '" data-ps="' + x[0] + '">' + x[1].replace(' de validation', '') + (cnt(x[0]) ? '<i>' + cnt(x[0]) + '</i>' : '') + '</button>'; }).join('') + '</div>' +
-      '<button class="btn l s" id="pf_ics">Exporter les publications programmées (agenda)</button></div>';
-    if (nets.length > 1) h += '<div class="filters" id="pf_net"><button class="chip' + (pFilt === 'tous' ? ' on' : '') + '" data-pn2="tous">Tous les réseaux</button>' + nets.map(function (k) { return '<button class="chip' + (pFilt === k ? ' on' : '') + '" data-pn2="' + k + '">' + RS[k].lb + '</button>'; }).join('') + '</div>';
-    var due = function (x) { return x.statut !== 'publiee' && x.date && x.date <= tdy(); }, any = false, rk = { programmee: 0, attente: 1, idee: 2, publiee: 3 };
+    var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin()), h = '', nets = netsList();
+    if (!pTab || nets.indexOf(pTab) < 0) { var u0 = nets.filter(function (k) { return pubs.some(function (x) { return x.reseau === k && urgent(x); }); })[0]; pTab = u0 || nets[0]; }
+    if (pOpen) h += pForm(draftP);
     var byDate = function (a, z) { return ((a.date || '9') + (a.heure || '')).localeCompare((z.date || '9') + (z.heure || '')); };
-    var dueL = keep.filter(due).sort(byDate);
-    if (dueL.length) { any = true; h += '<h3 style="margin:18px 0 8px;font-size:15px;color:var(--poppy)">À publier maintenant <span style="color:var(--muted);font-weight:500">· ' + dueL.length + '</span></h3><div class="lkg">' + dueL.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>'; }
-    Object.keys(RS).forEach(function (k) {
-      var l = keep.filter(function (x) { return x.reseau === k && !due(x); }).sort(function (a, z) { var ra = rk[a.statut], rz = rk[z.statut]; if ((ra === 3) !== (rz === 3)) return ra === 3 ? 1 : -1; return ra === 3 ? (z.date || '').localeCompare(a.date || '') : byDate(a, z); });
-      if (!l.length) return; any = true;
-      h += '<h3 style="margin:22px 0 8px;font-size:15px;display:flex;align-items:center;gap:8px"><span class="lkb" style="background:' + RS[k].c + ';width:26px;height:26px;font-size:12px">' + e(RS[k].b) + '</span>' + RS[k].lb + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3><div class="lkg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>';
-    });
-    if (!any) h += '<div class="empty" style="margin-top:16px"><b>' + (pubs.length ? 'Rien dans cette sélection' : 'Aucune publication pour le moment') + '</b>' + (pubs.length ? 'Changez de réseau ou de statut.' : 'Ajoutez une idée ci-dessus, ou créez un visuel puis « Enregistrer dans le planning ». Pour chaque publication : idée, en attente de validation, programmée (avec date et heure), puis publiée avec son lien.') + '</div>';
-    h += '<p class="cap" style="margin-top:16px">Le planning garde les publications et rappelle ce qui est à publier : il ne publie pas tout seul sur les réseaux. Utilisez « Copier le texte » puis publiez, ou ajoutez la date à votre agenda.</p>';
+    h += '<div class="filters" id="pf_tabs">' + nets.map(function (k) { var n = pubs.filter(function (x) { return x.reseau === k && urgent(x); }).length; return '<button class="chip' + (pTab === k ? ' on' : '') + '" data-ptab="' + k + '">' + RS[k].lb + (n ? '<i class="pfn">' + n + '</i>' : '') + '</button>'; }).join('') + '</div>';
+    var all = pubs.filter(function (x) { return x.reseau === pTab; }), ready = all.filter(function (x) { return x.statut === 'programmee'; }).sort(byDate), ideas = all.filter(function (x) { return x.statut === 'idee' || x.statut === 'attente'; }).sort(byDate), done = all.filter(function (x) { return x.statut === 'publiee'; }).sort(function (a, z) { return (z.date || '').localeCompare(a.date || ''); });
+    var sec = function (t, l, empty) { return '<h3 style="margin:18px 0 8px;font-size:15px">' + t + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3>' + (l.length ? '<div class="pfg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>' : '<p class="sub" style="margin:0">' + empty + '</p>'); };
+    h += '<div class="row" style="margin:14px 0 0;flex-wrap:wrap;justify-content:space-between;align-items:center"><div class="sub" style="margin:0">Une publication passe en rouge la veille de sa date, pour ne pas l’oublier.</div><div class="row" style="gap:8px"><button class="btn l s" id="pf_ics">Agenda (.ics)</button><button class="btn s" data-padd="' + pTab + '">+ Ajouter une publication</button></div></div>';
+    h += sec('Prêtes à publier', ready, 'Rien de prêt pour le moment.') + sec('Idées', ideas, 'Aucune idée en réserve.') +
+      '<h3 style="margin:18px 0 8px;font-size:15px">Publiées (archives) <span style="color:var(--muted);font-weight:500">· ' + done.length + '</span></h3>' + (done.length ? '<div class="pfg">' + done.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>' : '<p class="sub" style="margin:0">Rien de publié pour le moment.</p>');
+    h += '<p class="cap" style="margin-top:16px">Le planning garde les publications et vous rappelle ce qui est à publier (accueil et menu) : il ne publie pas tout seul. Utilisez « Copier le texte », publiez sur le réseau, puis « Marquer publiée ».</p>';
     $('cmplan').innerHTML = h; lastF = Date.now(); drawRappels();
   }
   function pMsg(t) { var m = $('pf_m'); if (m) m.textContent = t || ''; }
@@ -549,7 +545,7 @@
   }
   function pPush(o, ok) {
     pMsg('Enregistrement…');
-    api2(Object.assign({ action: 'pub_save' }, o)).then(function (d) { if (d && d.ok) { pubs = d.publis; pEdit = ''; noKeep = true; drawPubs(); note(ok); } else { pMsg((d && d.error) || 'Échec de l’enregistrement.'); note((d && d.error) || 'Échec de l’enregistrement.'); } });
+    api2(Object.assign({ action: 'pub_save' }, o)).then(function (d) { if (d && d.ok) { pubs = d.publis; pEdit = ''; pOpen = false; draftP = null; drawPubs(); note(ok); } else { pMsg((d && d.error) || 'Échec de l’enregistrement.'); note((d && d.error) || 'Échec de l’enregistrement.'); } });
   }
   function ics(list) {
     var pad = function (n) { return ('0' + n).slice(-2); }, esc2 = function (t) { return String(t || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, function (c) { return '\\' + c; }); };
@@ -561,32 +557,33 @@
     });
     out.push('END:VCALENDAR'); return out.join('\r\n');
   }
+  function openForm(x, msg) { pEdit = x && x.id || ''; draftP = x || null; pOpen = true; drawPubs(); if (msg) pMsg(msg); window.scrollTo(0, 0); }
   function bindPubs() {
     var R = $('cmplan');
     R.addEventListener('click', function (ev) {
       var b = ev.target.closest('button'); if (!b) return;
       var g = function (k) { return pubs.filter(function (x) { return x.id === b.dataset[k]; })[0]; };
       if (b.id === 'pf_save') pPush(pRead(), pEdit ? 'Publication modifiée.' : 'Ajoutée au planning.');
-      else if (b.id === 'pf_cancel') { pEdit = ''; drawPubs(); }
-      else if (b.dataset.ps) { pSt = b.dataset.ps; drawPubs(); }
-      else if (b.dataset.pn2) { pFilt = b.dataset.pn2; drawPubs(); }
-      else if (b.id === 'pf_ics') { var l = pubs.filter(function (x) { return x.statut === 'programmee' && x.date; }); if (!l.length) return note('Aucune publication programmée.'); save(new Blob([ics(l)], { type: 'text/calendar' }), 'capsule-planning.ics'); }
+      else if (b.id === 'pf_cancel') { pEdit = ''; pOpen = false; draftP = null; drawPubs(); }
+      else if (b.dataset.ptab) { pTab = b.dataset.ptab; pOpen = false; draftP = null; pEdit = ''; drawPubs(); }
+      else if (b.dataset.padd) { openForm({ reseau: b.dataset.padd, statut: 'idee', titre: '', texte: '', date: '', heure: '', lien: '' }); pEdit = ''; }
+      else if (b.id === 'pf_ics') { var l = pubs.filter(function (x) { return x.statut !== 'publiee' && x.date; }); if (!l.length) return note('Aucune publication datée.'); save(new Blob([ics(l)], { type: 'text/calendar' }), 'capsule-planning.ics'); }
       else if (b.dataset.pi) { var x1 = g('pi'); if (x1) save(new Blob([ics([x1])], { type: 'text/calendar' }), 'capsule-publication.ics'); }
       else if (b.dataset.pc) { var x2 = g('pc'); if (x2) copyText(x2.texte || x2.titre, 'Texte copié.'); }
       else if (b.dataset.pv) { var x3 = g('pv'); if (x3 && x3.visuel) { st = Object.assign(newState('libre'), x3.visuel); tab('creer'); fields(); later(); } }
       else if (b.dataset.pn) {
-        var x4 = g('pn'); if (!x4) return; var nx = x4.statut === 'idee' ? 'attente' : x4.statut === 'attente' ? 'programmee' : 'publiee';
-        if (nx === 'programmee' && !x4.date) { pEdit = x4.id; $('cmplan').innerHTML = pForm(x4) + ''; $('pf_s').value = 'programmee'; $('pf_cancel').classList.remove('hide'); $('pf_d').focus(); pMsg('Choisissez la date (et l’heure) de publication.'); window.scrollTo(0, 0); return; }
+        var x4 = g('pn'); if (!x4) return; var nx = x4.statut === 'programmee' ? 'publiee' : 'programmee';
+        if (nx === 'programmee' && !x4.date) { openForm(Object.assign({}, x4, { statut: 'programmee' }), 'Choisissez la date (et l’heure) de publication.'); pEdit = x4.id; return; }
         var o = Object.assign({}, x4, { statut: nx }); if (nx === 'publiee' && !o.date) o.date = tdy(); pPush(o, nx === 'publiee' ? 'Marquée comme publiée.' : 'Statut mis à jour.');
       }
-      else if (b.dataset.pe) { var x5 = g('pe'); if (x5) { pEdit = x5.id; $('cmplan').innerHTML = pForm(x5) + ''; $('pf_cancel').classList.remove('hide'); window.scrollTo(0, 0); } }
+      else if (b.dataset.pe) { var x5 = g('pe'); if (x5) openForm(x5); }
       else if (b.dataset.pr) { if (!confirm('Supprimer cette publication du planning ?')) return; api2({ action: 'pub_del', id: b.dataset.pr }).then(function (d) { if (d && d.ok) { pubs = d.publis; drawPubs(); } else note((d && d.error) || 'Suppression impossible.'); }); }
     });
   }
 
   /* ---------- rappels : publications à faire (menu + accueil), classées par réseau ---------- */
   var lastF = 0, fetching = false;
-  function dueList() { return (pubs || []).filter(function (x) { return x.statut !== 'publiee' && x.date && x.date <= tdy(); }); }
+  function dueList() { return (pubs || []).filter(urgent); }
   function drawRappels() {
     var l = dueList(), nb = document.querySelector('.nv[data-v="12"]');
     if (nb) { var bd = nb.querySelector('b'); if (bd) bd.remove(); if (l.length) nb.insertAdjacentHTML('beforeend', '<b title="Publications à faire">' + l.length + '</b>'); }
@@ -597,7 +594,7 @@
     Object.keys(RS).forEach(function (k) {
       var g = l.filter(function (x) { return x.reseau === k; }).sort(function (a, z) { return ((a.date || '') + (a.heure || '')).localeCompare((z.date || '') + (z.heure || '')); }); if (!g.length) return;
       h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><span class="lkb" style="background:' + RS[k].c + ';width:28px;height:28px;font-size:12px">' + e(RS[k].b) + '</span><div style="flex:1"><b style="font-size:13.5px">' + RS[k].lb + '</b>' +
-        g.map(function (x) { var late = x.date < tdy(); return '<div class="sub" style="margin:2px 0 0">' + e(x.titre) + ' · <span style="color:' + (late ? 'var(--poppy)' : 'var(--rasp)') + ';font-weight:600">' + (late ? 'en retard depuis le ' + e(frDate(x.date)) : 'aujourd’hui' + (x.heure ? ' à ' + e(x.heure.replace(':', ' h ')) : '')) + '</span></div>'; }).join('') + '</div></div>';
+        g.map(function (x) { return '<div class="sub" style="margin:2px 0 0">' + e(x.titre) + ' · <span style="color:var(--poppy);font-weight:600">' + e(ech(x)) + '</span> <span style="color:var(--muted)">(' + e(frDate(x.date, x.heure)) + ')</span></div>'; }).join('') + '</div></div>';
     });
     card.innerHTML = h;
     $('hpub_go').onclick = function () { window.CAPSULE.nav(12); window.comPlanning(); };
