@@ -53,3 +53,6 @@ Onglet « Emploi du temps » : la semaine d'une personne (rendez-vous patients +
 - Le statut « superviseur » est supprimé : un ancien compte superviseur est désactivé et peut être supprimé dans Équipe. Le nom d'un·e superviseur·e est saisi librement sur chaque séance.
 - Les étudiant·es programment eux-mêmes leurs supervisions et réunions d'équipe (elles s'ajoutent aux agendas des personnes invitées) ; ils ne modifient que les leurs.
 - Les comptes « principaux » (variable Netlify GESTION_COMPTES) ne sont pas supprimables depuis le site. Seul geoffrey y figure désormais ; les autres comptes se créent dans Équipe.
+
+## Logos des partenaires
+Bandeau en bas du site : déposer les fichiers dans `img/partenaires/` sous les noms `cvec.png`, `ars.png`, `lapps.png`, `lppc.png`, `dysco.png` (PNG fond transparent de préférence). Tant qu'un fichier manque, le nom s'affiche en texte. Liste et liens : variables `PART` et `LABS` dans `site.js`.
