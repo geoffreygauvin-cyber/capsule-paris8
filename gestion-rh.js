@@ -1,4 +1,4 @@
-/* menu RH (admins) : suivi de l'équipe et des présences.
+/* menu Gestion RH (admins) : suivi de l'équipe et des présences.
    - « Suivi de l'équipe » : une carte par étudiant·e psy (règlement signé, parcours d'accueil, présence, heures), une liste « À traiter » et un dossier détaillé par personne.
    - « Présences » : séances à pointer, bilan par étudiant·e (présence, retards, absences excusées ou non), journal des retards et absences, signalement manuel d'un retard ou d'une absence
      hors séance programmée (rendez-vous patient, permanence…), export CSV.

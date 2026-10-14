@@ -530,7 +530,7 @@ export default async (req) => {
     return J({ ok: true, event: rec });
   }
 
-  /* Règlement intérieur : texte modifiable par les admins (RH > Règlement intérieur), publié puis signé par chacun·e (nom saisi + case cochée).
+  /* Règlement intérieur : texte modifiable par les admins (Gestion RH > Règlement intérieur), publié puis signé par chacun·e (nom saisi + case cochée).
      Store « reglement » : « brouillon » (texte en cours de rédaction), « cur » (version publiée : numéro, empreinte, date, auteur), « meta » (dernier numéro de version, historique des publications),
      « t/<empreinte> » (texte exact de chaque version publiée, conservé pour retrouver ce qui a été signé), « s/<compte> » (dernière signature + historique). Texte de départ : netlify/lib/reglement.mjs. */
   const rgs = getStore({ name: "reglement", consistency: "strong" });

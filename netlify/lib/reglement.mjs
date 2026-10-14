@@ -1,5 +1,5 @@
 /* Règlement intérieur de l'équipe CAPSULE : TEXTE DE DÉPART.
-   Le texte en vigueur se modifie directement dans la plateforme (RH > Règlement intérieur, bouton « Modifier le texte ») : il est alors enregistré dans la base,
+   Le texte en vigueur se modifie directement dans la plateforme (Gestion RH > Règlement intérieur, bouton « Modifier le texte ») : il est alors enregistré dans la base,
    et ce fichier ne sert plus que de point de départ (premier brouillon, ou « Rétablir le texte de départ »).
    Dans « p » : une ligne = un paragraphe ; une ligne qui commence par « - » devient une puce. Écriture inclusive avec le point médian, comme sur tout le site.
    Ce texte est un PROJET à faire valider par la coordination et les laboratoires porteurs avant publication. */
