@@ -30,7 +30,8 @@
 
   function $(i) { return document.getElementById(i); }
   function e(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function note(t) { if (typeof toast === 'function') toast(t); }
+  function note(t) { if (window.CAPSULE) window.CAPSULE.toast(t); }
+  function who() { return window.CAPSULE ? window.CAPSULE.moi() : ''; }
 
   function newState(p) {
     var P = PRE[p];
@@ -343,7 +344,7 @@
     $('cm_pdf').textContent = 'Télécharger en PDF';
   }
   function build() {
-    var h = '<div class="cmw"><div class="cmf">' +
+    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="pages">Nos pages</button><button class="chip" data-tab="chiffres">Chiffres clés</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
       '<div class="newc"><b>1 · Format</b><div class="filters" id="cmfm" style="margin:10px 0 4px">' + Object.keys(FM).map(function (k) { return '<button class="chip" data-f="' + k + '">' + FM[k].lb + '</button>'; }).join('') + '</div><small id="cmsub" style="color:var(--muted)"></small></div>' +
       '<div class="newc" style="margin-top:14px"><b>2 · Modèle</b><label class="f" style="margin-top:8px">Point de départ<select id="cm_pre">' + Object.keys(PRE).map(function (k) { return '<option value="' + k + '">' + PRE[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<small style="color:var(--muted);display:block;margin-top:6px">Changer de modèle remplace les textes ci-dessous.</small>' +
@@ -366,7 +367,7 @@
       '<div class="newc" style="margin-top:16px"><b>Légende pour le post</b><p class="sub" style="margin:4px 0 8px">À coller sous l’image sur Instagram, LinkedIn…</p><textarea id="cm_legende" rows="6" style="width:100%"></textarea>' +
       '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div></div>' +
       '<div class="newc" style="margin-top:16px"><b>Brouillons</b><p class="sub" style="margin:4px 0 8px">Enregistrés sur cet appareil, dans ce navigateur.</p><div class="row"><input id="cm_dn" placeholder="Nom du brouillon" maxlength="40" style="flex:1"><button class="btn l s" id="cm_ds">Enregistrer</button></div><div id="cmdl" style="margin-top:10px"></div></div>' +
-      '</div></div>';
+      '</div></div></div><div id="cmpages" class="hide"></div><div id="cmchiffres" class="hide"></div>';
     $('v12').insertAdjacentHTML('beforeend', h);
     canvas = $('cmcv');
     var root = $('v12');
@@ -384,6 +385,7 @@
     });
     root.addEventListener('click', function (ev) {
       var b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.tab) { tab(b.dataset.tab); return; }
       if (b.dataset.f) { st.fmt = b.dataset.f; fields(); later(); }
       else if (b.dataset.t) { st.theme = b.dataset.t; fields(); later(); }
       else if (b.id === 'cm_png') toPng();
@@ -395,11 +397,148 @@
       else if (b.dataset.o) { var d2 = drafts(); if (d2[b.dataset.o]) { st = Object.assign(newState('libre'), d2[b.dataset.o]); fields(); later(); } }
       else if (b.dataset.x) { var d3 = drafts(); delete d3[b.dataset.x]; putDrafts(d3); drawDrafts(); }
     });
+    bindLiens();
+    bindChiffres();
     built = true;
   }
 
+
+  /* ---------- onglet « Nos pages » : liens vers les réseaux et le site ---------- */
+  var RS = {
+    site: { lb: 'Site web', b: 'www', c: '#AE164E' }, instagram: { lb: 'Instagram', b: 'IG', c: '#7B206B' }, linkedin: { lb: 'LinkedIn', b: 'in', c: '#75151F' },
+    facebook: { lb: 'Facebook', b: 'f', c: '#E30F1B' }, tiktok: { lb: 'TikTok', b: 'TT', c: '#1F1217' }, youtube: { lb: 'YouTube', b: 'YT', c: '#E30F1B' },
+    x: { lb: 'X', b: 'X', c: '#1F1217' }, mail: { lb: 'Adresse mail', b: '@', c: '#7B206B' }, autre: { lb: 'Autre lien', b: '↗', c: '#6B5861' }
+  };
+  var liens = null, editId = '';
+  function api2(b) { return window.CAPSULE ? window.CAPSULE.api(b) : Promise.resolve({ error: 'Indisponible' }); }
+  function tab(t) {
+    Array.prototype.forEach.call(document.querySelectorAll('#cmtabs .chip'), function (x) { x.classList.toggle('on', x.dataset.tab === t); });
+    $('cmcreer').classList.toggle('hide', t !== 'creer'); $('cmpages').classList.toggle('hide', t !== 'pages'); $('cmchiffres').classList.toggle('hide', t !== 'chiffres');
+    if (t === 'pages') loadLiens(); else if (t === 'chiffres') drawChiffres(); else later();
+  }
+  function loadLiens() {
+    if (liens === null) $('cmpages').innerHTML = '<p class="sub">Chargement…</p>';
+    api2({ action: 'liens_list' }).then(function (d) { if (d && d.ok) { liens = d.liens || []; drawLiens(); } else $('cmpages').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger les liens.') + '</p>'; });
+  }
+  function host(u) { return String(u).replace(/^https?:\/\/(www\.)?/i, '').replace(/^mailto:/i, '').replace(/\/$/, ''); }
+  function drawLiens() {
+    var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin());
+    var h = '<div class="newc"><b id="lkft">Ajouter une page</b><div class="g2" style="margin-top:10px">' +
+      '<label class="f">Réseau<select id="lk_r">' + Object.keys(RS).map(function (k) { return '<option value="' + k + '">' + RS[k].lb + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Nom affiché<input id="lk_n" maxlength="80" placeholder="ex. Instagram CAPSULE"></label></div>' +
+      '<label class="f" style="margin-top:10px">Adresse (lien)<input id="lk_u" maxlength="500" placeholder="https://www.instagram.com/…"></label>' +
+      '<label class="f" style="margin-top:10px">Note (facultatif)<input id="lk_o" maxlength="200" placeholder="ex. compte géré par Camille, on y poste le jeudi"></label>' +
+      '<div class="row" style="margin-top:12px"><button class="btn" id="lk_s">Ajouter</button><button class="btn l hide" id="lk_c">Annuler</button></div><div id="lk_m" class="cmmsg"></div></div>';
+    if (!liens.length) {
+      h += '<div class="newc" style="margin-top:16px"><b>Aucune page enregistrée</b><p class="sub" style="margin:4px 0 10px">Ajoutez le site, puis chaque réseau où CAPSULE publie. Raccourcis :</p><div class="row" style="flex-wrap:wrap">' +
+        ['site', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'].map(function (k) { return '<button class="chip" style="background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)" data-q="' + k + '">+ ' + RS[k].lb + '</button>'; }).join('') + '</div></div>';
+    } else {
+      h += '<div class="row" style="margin:18px 0 10px;justify-content:space-between;flex-wrap:wrap"><b>' + liens.length + ' page' + (liens.length > 1 ? 's' : '') + '</b><button class="btn l s" id="lk_all">Copier toute la liste</button></div><div class="lkg">' +
+        liens.map(function (x) {
+          var r = RS[x.reseau] || RS.autre, mine = adm || x.par === me;
+          return '<div class="lkc"><span class="lkb" style="background:' + r.c + '">' + e(r.b) + '</span><div class="lkt"><b>' + e(x.nom) + '</b><a href="' + e(x.url) + '" target="_blank" rel="noopener noreferrer">' + e(host(x.url)) + '</a>' + (x.note ? '<small>' + e(x.note) + '</small>' : '') + '</div>' +
+            '<div class="lka"><a class="btn l s" href="' + e(x.url) + '" target="_blank" rel="noopener noreferrer">Ouvrir</a><button class="btn l s" data-cp="' + e(x.id) + '">Copier</button>' + (mine ? '<button class="link" data-ed="' + e(x.id) + '">Modifier</button><button class="link" data-rm="' + e(x.id) + '">Supprimer</button>' : '') + '</div></div>';
+        }).join('') + '</div>';
+    }
+    $('cmpages').innerHTML = h; editId = '';
+  }
+  function lkMsg(t) { var m = $('lk_m'); if (m) m.textContent = t || ''; }
+  function lkSave() {
+    var u = ($('lk_u').value || '').trim(), r = $('lk_r').value;
+    if (u && !/^(https?:|mailto:)/i.test(u)) u = (r === 'mail' || /^[^\s@\/]+@[^\s@\/]+$/.test(u)) ? 'mailto:' + u : 'https://' + u;
+    var n = ($('lk_n').value || '').trim() || RS[r].lb;
+    lkMsg('Enregistrement…');
+    api2({ action: editId ? 'lien_upd' : 'lien_add', id: editId, nom: n, reseau: r, url: u, note: $('lk_o').value }).then(function (d) {
+      if (d && d.ok) { liens = d.liens; drawLiens(); note(editId ? 'Lien modifié.' : 'Lien ajouté.'); } else lkMsg((d && d.error) || 'Échec de l’enregistrement.');
+    });
+  }
+  function copyText(t, ok) {
+    var done = function () { note(ok); }, fb = function () { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); var g = false; try { g = document.execCommand('copy'); } catch (x) { } a.remove(); note(g ? ok : 'Copie impossible : sélectionnez le lien à la main.'); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fb); else fb();
+  }
+  function bindLiens() {
+    $('cmpages').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      if (b.id === 'lk_s') lkSave();
+      else if (b.id === 'lk_c') drawLiens();
+      else if (b.id === 'lk_all') copyText(liens.map(function (x) { return x.nom + ' : ' + x.url; }).join('\n'), 'Liste copiée.');
+      else if (b.dataset.q) { $('lk_r').value = b.dataset.q; $('lk_n').value = RS[b.dataset.q].lb + ' CAPSULE'; $('lk_u').focus(); }
+      else if (b.dataset.cp) { var x = liens.filter(function (l) { return l.id === b.dataset.cp; })[0]; if (x) copyText(x.url, 'Lien copié.'); }
+      else if (b.dataset.ed) {
+        var y = liens.filter(function (l) { return l.id === b.dataset.ed; })[0]; if (!y) return;
+        editId = y.id; $('lk_r').value = y.reseau; $('lk_n').value = y.nom; $('lk_u').value = y.url; $('lk_o').value = y.note || ''; $('lkft').textContent = 'Modifier la page'; $('lk_s').textContent = 'Enregistrer'; $('lk_c').classList.remove('hide'); $('lk_n').focus(); window.scrollTo(0, 0);
+      }
+      else if (b.dataset.rm) { if (!confirm('Supprimer ce lien de la liste ?')) return; api2({ action: 'lien_del', id: b.dataset.rm }).then(function (d) { if (d && d.ok) { liens = d.liens; drawLiens(); } else note((d && d.error) || 'Suppression impossible.'); }); }
+    });
+    $('cmpages').addEventListener('change', function (ev) {
+      if (ev.target.id === 'lk_r' && !editId) { var n = $('lk_n'); var vals = Object.keys(RS).map(function (k) { return RS[k].lb + ' CAPSULE'; }).concat(['']); if (vals.indexOf(n.value) > -1) n.value = RS[ev.target.value].lb + ' CAPSULE'; }
+    });
+  }
+
+
+  /* ---------- onglet « Chiffres clés » : le fonctionnement du service en nombres ---------- */
+  var MS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  var STL = [['nouvelle', 'Nouvelles'], ['a_recontacter', 'À recontacter'], ['contactee', 'Contactées'], ['rdv_fixe', 'RDV fixé'], ['en_cours', 'En cours'], ['terminee', 'Terminées'], ['sans_suite', 'Sans suite']];
+  var chK = null;
+  function f1(v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); }
+  function stats() {
+    var d = window.CAPSULE ? window.CAPSULE.data() : { items: [] }, items = d.items || [], real = [], abs = 0, upcoming = 0, today = new Date().toISOString().slice(0, 10);
+    items.forEach(function (i) { (i.seances || []).forEach(function (s) { if (s.issue === 'realisee') real.push(s); else abs++; }); (i.rdvs || []).forEach(function (r) { if (r.date >= today) upcoming++; }); });
+    var suivis = items.filter(function (i) { return (i.seances || []).some(function (s) { return s.issue === 'realisee'; }); });
+    var delais = suivis.map(function (i) { var f = (i.seances || []).filter(function (s) { return s.issue === 'realisee'; }).sort(function (a, z) { return a.date < z.date ? -1 : 1; })[0]; return i.creeLe && f ? Math.round((new Date(f.date) - new Date(i.creeLe.slice(0, 10))) / 864e5) : null; }).filter(function (x) { return x != null && x >= 0; }).sort(function (a, z) { return a - z; });
+    var sats = real.filter(function (s) { return s.satisfaction != null; }).map(function (s) { return s.satisfaction; });
+    var now = new Date(), mo = [];
+    for (var k = 5; k >= 0; k--) { var x = new Date(now.getFullYear(), now.getMonth() - k, 1); mo.push({ k: x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2), lb: MS[x.getMonth()], dem: 0, sea: 0 }); }
+    items.forEach(function (i) { var m = mo.filter(function (z) { return z.k === (i.creeLe || '').slice(0, 7); })[0]; if (m) m.dem++; });
+    real.forEach(function (s) { var m = mo.filter(function (z) { return z.k === (s.date || '').slice(0, 7); })[0]; if (m) m.sea++; });
+    var byS = STL.map(function (z) { return { l: z[1], v: items.filter(function (i) { return i.statut === z[0]; }).length }; });
+    return { dem: items.length, suivis: suivis.length, real: real.length, abs: abs, taux: real.length + abs ? Math.round(100 * real.length / (real.length + abs)) : null, delai: delais.length ? delais[Math.floor(delais.length / 2)] : null, sat: sats.length ? sats.reduce(function (a, b) { return a + b; }, 0) / sats.length : null, upcoming: upcoming, mo: mo, byS: byS, parP: suivis.length ? real.length / suivis.length : null };
+  }
+  function svgMonths(mo) {
+    var W = 620, H = 230, L = 34, B = 34, T = 18, mx = Math.max.apply(null, mo.map(function (m) { return Math.max(m.dem, m.sea); }).concat([1])), bw = 22, gw = (W - L - 10) / mo.length, o = '';
+    var step = mx <= 5 ? 1 : Math.ceil(mx / 5);
+    for (var v = 0; v <= mx; v += step) { var y = H - B - (H - B - T) * v / mx; o += '<line x1="' + L + '" x2="' + (W - 6) + '" y1="' + y + '" y2="' + y + '" stroke="#EBDDD6"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#6B5861">' + v + '</text>'; }
+    mo.forEach(function (m, i) {
+      var x = L + gw * i + gw / 2, hd = (H - B - T) * m.dem / mx, hs = (H - B - T) * m.sea / mx;
+      o += '<rect x="' + (x - bw - 2) + '" y="' + (H - B - hd) + '" width="' + bw + '" height="' + hd + '" rx="4" fill="#AE164E"/><rect x="' + (x + 2) + '" y="' + (H - B - hs) + '" width="' + bw + '" height="' + hs + '" rx="4" fill="#7B206B"/>' +
+        (m.dem ? '<text x="' + (x - bw / 2 - 2) + '" y="' + (H - B - hd - 5) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#AE164E">' + m.dem + '</text>' : '') + (m.sea ? '<text x="' + (x + bw / 2 + 2) + '" y="' + (H - B - hs - 5) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#7B206B">' + m.sea + '</text>' : '') +
+        '<text x="' + x + '" y="' + (H - 12) + '" text-anchor="middle" font-size="12" fill="#6B5861">' + m.lb + '</text>';
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Demandes reçues et séances réalisées par mois" style="width:100%;height:auto">' + o + '</svg><div class="cap" style="display:flex;gap:16px;margin-top:6px"><span><b style="color:#AE164E">■</b> Demandes reçues</span><span><b style="color:#7B206B">■</b> Séances réalisées</span></div>';
+  }
+  function svgStatus(rows) {
+    rows = rows.filter(function (r) { return r.v > 0; }); if (!rows.length) return '<p class="sub">Aucune demande pour le moment.</p>';
+    var mx = Math.max.apply(null, rows.map(function (r) { return r.v; })), o = '';
+    rows.forEach(function (r, i) { var y = 8 + i * 34, w = 360 * r.v / mx; o += '<text x="0" y="' + (y + 17) + '" font-size="13" fill="#1F1217">' + e(r.l) + '</text><rect x="120" y="' + y + '" width="' + Math.max(w, 4) + '" height="24" rx="6" fill="' + (['#AE164E', '#7B206B', '#E30F1B', '#75151F'][i % 4]) + '"/><text x="' + (126 + Math.max(w, 4)) + '" y="' + (y + 17) + '" font-size="13" font-weight="600" fill="#1F1217">' + r.v + '</text>'; });
+    return '<svg viewBox="0 0 560 ' + (rows.length * 34 + 12) + '" role="img" aria-label="Répartition des demandes par statut" style="width:100%;height:auto">' + o + '</svg>';
+  }
+  function drawChiffres() {
+    var k = chK = stats(), kp = function (b, l, sm) { return '<div class="kpi pastel"><b>' + b + '</b><span>' + l + '</span>' + (sm ? '<small>' + sm + '</small>' : '') + '</div>'; };
+    var h = '<div class="ekp">' + kp(k.dem, 'demandes reçues', 'depuis le début') + kp(k.suivis, 'personnes accompagnées', 'au moins 1 séance') + kp(k.real, 'séances réalisées', k.taux != null ? k.taux + ' % de présence' : '') + kp(k.upcoming, 'rendez-vous à venir', 'dans le calendrier') +
+      kp(k.delai != null ? k.delai + ' j' : '—', 'délai avant la 1ʳᵉ séance', 'médiane, demande → séance') + kp(k.sat != null ? f1(k.sat) + '/10' : '—', 'satisfaction moyenne', 'notée après les séances') + '</div>' +
+      '<div class="egrid"><article class="ec"><h3>Demandes et séances, mois par mois</h3><p class="cap">Les six derniers mois.</p>' + svgMonths(k.mo) + '</article>' +
+      '<article class="ec"><h3>Où en sont les demandes</h3><p class="cap">Nombre de demandes selon leur statut.</p>' + svgStatus(k.byS) + '</article></div>' +
+      '<div class="newc" style="margin-top:16px"><b>Utiliser ces chiffres</b><p class="sub" style="margin:4px 0 10px">Crée un visuel « CAPSULE en chiffres » prêt à retoucher. Ce sont des totaux sans aucun nom : vérifiez qu’ils sont assez grands avant de les publier (avec très peu de personnes, un chiffre peut permettre de les reconnaître).</p><div class="row"><button class="btn" id="ch_post">Créer un visuel avec ces chiffres</button><button class="btn l" id="ch_cp">Copier les chiffres</button></div></div>';
+    $('cmchiffres').innerHTML = h;
+  }
+  function chPoints() {
+    var k = chK || stats(), p = [];
+    if (k.suivis) p.push(k.suivis + ' étudiant·es accompagné·es'); if (k.real) p.push(k.real + ' séances réalisées'); if (k.taux != null && k.real + k.abs >= 10) p.push(k.taux + ' % de présence aux séances'); if (k.sat != null) p.push('Satisfaction moyenne : ' + f1(k.sat) + '/10');
+    return p;
+  }
+  function bindChiffres() {
+    $('cmchiffres').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      if (b.id === 'ch_cp') copyText(chPoints().join('\n') || 'Pas encore de chiffres.', 'Chiffres copiés.');
+      else if (b.id === 'ch_post') {
+        var f = st.fmt, lg = st.logos; st = newState('libre'); st.fmt = f; st.logos = lg; st.theme = 'framboise'; st.kicker = 'Bilan'; st.titre = 'CAPSULE en chiffres'; st.texte = 'Des consultations psychologiques gratuites, par des étudiant·es de Master de psychologie, pour les étudiant·es de Paris 8.'; st.points = chPoints().join('\n'); st.cta = 'Prendre rendez-vous : capsule-paris8.fr'; st.illu = 'ruban';
+        tab('creer'); fields(); later();
+      }
+    });
+  }
+
   window.drawCom = function () {
-    draftKey = 'capsule-com-' + (typeof moi === 'string' ? moi : '');
+    draftKey = 'capsule-com-' + who();
     if (!built) { st = newState('presentation'); build(); }
     fields(); drawDrafts();
     var go = function () { loadImgs(function () { render(); }); };

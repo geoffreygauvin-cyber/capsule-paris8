@@ -328,6 +328,29 @@ export default async (req) => {
     return J({ ok: true, items: out });
   }
 
+  if (["liens_list", "lien_add", "lien_upd", "lien_del"].includes(b.action)) {
+    const ls = getStore("liens"), cle = "liste", RES = ["site", "instagram", "linkedin", "facebook", "tiktok", "youtube", "x", "mail", "autre"];
+    const liste = (await ls.get(cle, { type: "json" })) || [];
+    if (b.action === "liens_list") return J({ ok: true, liens: liste });
+    if (b.action === "lien_del") {
+      const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Lien introuvable." }, 404);
+      if (!admin && cur.par !== user) return J({ error: "Seul·e l'auteur·e ou un admin peut supprimer ce lien." }, 403);
+      await ls.setJSON(cle, liste.filter((x) => x.id !== cur.id)); return J({ ok: true, liens: liste.filter((x) => x.id !== cur.id) });
+    }
+    const nom = clean(b.nom, 80).trim(), note = clean(b.note, 200).trim(), reseau = RES.includes(b.reseau) ? b.reseau : "autre", url = String(b.url || "").trim().slice(0, 500);
+    if (!nom) return J({ error: "Donnez un nom au lien." }, 400);
+    if (!/^(https?:\/\/[^\s]+|mailto:[^\s@]+@[^\s@]+)$/i.test(url)) return J({ error: "Le lien doit commencer par https:// (ou être une adresse mail précédée de mailto:)." }, 400);
+    if (b.action === "lien_upd") {
+      const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Lien introuvable." }, 404);
+      if (!admin && cur.par !== user) return J({ error: "Seul·e l'auteur·e ou un admin peut modifier ce lien." }, 403);
+      Object.assign(cur, { nom, note, reseau, url, maj: new Date().toISOString() });
+    } else {
+      if (liste.length >= 60) return J({ error: "Trop de liens (60 maximum) : supprimez-en avant d'en ajouter." }, 400);
+      liste.push({ id: randomUUID(), nom, note, reseau, url, par: user, le: new Date().toISOString() });
+    }
+    await ls.setJSON(cle, liste); return J({ ok: true, liens: liste });
+  }
+
   if (b.action === "res_get") {
     const rs = getStore("ressources"), m = await rs.get("m/" + String(b.id), { type: "json" });
     if (!m || m.type !== "fichier") return J({ error: "Fichier introuvable." }, 404);
