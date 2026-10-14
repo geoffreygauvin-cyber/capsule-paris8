@@ -288,7 +288,7 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 <section id="v11" class="hide"><header class="ph0 pastel t1 hhd"><span id="hav"></span><div><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></div></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag" id="gtag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
-<div class="filters hide" id="gtabs"></div><div id="gsup"><div class="row" style="margin:0 0 14px;gap:10px;flex-wrap:wrap"><button class="btn" id="sadd">+ Programmer une séance ou une réunion</button><button class="btn l hide" id="sadd_r">Organiser une réunion d’équipe</button></div>
+<div class="filters hide" id="gtabs"></div><div id="gsup"><div class="row" style="margin:0 0 14px;gap:10px;flex-wrap:wrap"><button class="btn" id="sadd">+ Programmer une réunion ou une supervision</button></div>
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div></section>
 <section id="v12" class="hide"><header class="ph0 pastel t2"><div class="tag">Communication</div><h1>Publications</h1><p class="sub">Créez un visuel pour les réseaux ou une fiche PDF à partir d’un modèle : choisissez, remplissez, téléchargez.</p></header></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
@@ -798,7 +798,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button[dat
  else{window.open('https://meet.google.com/new','_blank','noopener');toast('Copiez le lien de la réunion Google Meet, puis collez-le dans le champ.');t.focus()}});
 var gtab='sup',etab='avenir';
 function drawGest(){
- var adm=isAdmin;$('gtabs').classList.toggle('hide',!adm);$('sadd_r').classList.toggle('hide',!adm);
+ var adm=isAdmin;$('gtabs').classList.toggle('hide',!adm);
  if(!adm){gtab='sup';$('gtag').textContent='Formation'}
  else{$('gtag').textContent='Équipe';$('gtabs').innerHTML=[['sup','Réunions & supervisions'],['ann','Annonces'],['ent','Entretiens privés']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
   if(gtab==='ann')$('ssub').textContent='Écrivez une annonce pour les étudiant·es : elle s’affiche en haut de leur Accueil. Vous pouvez la programmer à une date et choisir sa durée d’affichage.';
@@ -832,7 +832,6 @@ $('gent').onclick=function(e){var b=e.target.closest('button');if(!b)return;
  if(b.id==='ent_new')entForm(null);else if(b.parentNode&&b.parentNode.id==='etabs'){etab=b.dataset.k;drawEnt()}
  else if(b.dataset.e==='edit')entForm(b.dataset.id);
  else if(b.dataset.e==='del'){if(!confirm('Supprimer cet entretien ?'))return;api({action:'sup_delete',id:b.dataset.id}).then(function(r){if(r.ok){supItems=supItems.filter(function(y){return r.supprimes.indexOf(y.id)<0});drawSup();drawEmp();toast('Supprimé.')}else toast(r.error||'Erreur')})}};
-$('sadd_r').onclick=function(){supForm(null,'reunion')};
 function supForm(id,pre0){
  var x=id?supItems.filter(function(y){return y.id===id})[0]:null,today=iso(new Date()),hs=cfg.heuresSup||[],du=cfg.durees||[60,90,120];
  var sv=Object.keys(roles).filter(function(n){return roles[n]==='admin'}),pr=x?x.participants:(isAdmin?[]:[moi]);
