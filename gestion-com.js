@@ -514,10 +514,10 @@
       (pVis ? '<p class="sub" style="margin:10px 0 0">✓ Un visuel est rattaché à cette publication (« ' + e(pVis.titre || '') + ' »).</p>' : '') +
       '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
   }
-  function pCard(x, me, adm) {
-    var mine = adm || x.par === me, pub = x.statut === 'publiee', u = urgent(x), sc = (SS.filter(function (z) { return z[0] === (x.statut === 'attente' ? 'idee' : x.statut); })[0] || SS[0])[2];
+  function pCard(x, me, adm, net) {
+    var r0 = RS[x.reseau] || RS.autre, mine = adm || x.par === me, pub = x.statut === 'publiee', u = urgent(x), sc = (SS.filter(function (z) { return z[0] === (x.statut === 'attente' ? 'idee' : x.statut); })[0] || SS[0])[2];
     var nx = x.statut === 'programmee' ? 'Marquer publiée' : 'Marquer prête à publier';
-    return '<div class="pc' + (u ? ' red' : '') + (pub ? ' ok' : '') + '"><b>' + e(x.titre) + '</b>' +
+    return '<div class="pc' + (u ? ' red' : '') + (pub ? ' ok' : '') + '">' + (net ? '<span class="pnet" style="background:' + r0.c + '">' + e(r0.lb) + '</span>' : '') + '<b>' + e(x.titre) + '</b>' +
       '<div class="pcs"><span class="pst"><i style="background:' + (u ? 'var(--poppy)' : sc) + '"></i>' + e(sLb(x.statut)) + '</span>' + (x.date ? '<span class="pcd">' + e(frDate(x.date, x.heure)) + '</span>' : (pub ? '' : '<span class="pcd">Sans date</span>')) + (u ? '<span class="pce">' + e(ech(x)) + '</span>' : '') + '</div>' +
       (x.texte && !pub ? '<small>' + e(x.texte.length > 110 ? x.texte.slice(0, 110) + '…' : x.texte) + '</small>' : '') +
       '<div class="pca">' + (mine && !pub ? '<button class="btn s" data-pn="' + e(x.id) + '">' + nx + '</button>' : '') + (x.lien ? '<a class="link" href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">Voir en ligne</a>' : '') + (x.visuel ? '<button class="link" data-pv="' + e(x.id) + '">Visuel</button>' : '') +
@@ -526,16 +526,18 @@
   function netsList() { var ks = Object.keys(RS).filter(function (k) { return k !== 'mail' && (PFIX.indexOf(k) > -1 || pubs.some(function (x) { return x.reseau === k; })); }); return PFIX.filter(function (k) { return ks.indexOf(k) > -1; }).concat(ks.filter(function (k) { return PFIX.indexOf(k) < 0; })); }
   function drawPubs() {
     var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin()), h = '', nets = netsList();
-    if (!pTab || nets.indexOf(pTab) < 0) { var u0 = nets.filter(function (k) { return pubs.some(function (x) { return x.reseau === k && urgent(x); }); })[0]; pTab = u0 || nets[0]; }
+    if (!pTab || (pTab !== 'tout' && nets.indexOf(pTab) < 0)) pTab = 'tout';
     if (pOpen) h += pForm(draftP);
     var byDate = function (a, z) { return ((a.date || '9') + (a.heure || '')).localeCompare((z.date || '9') + (z.heure || '')); };
-    h += '<div class="filters" id="pf_tabs">' + nets.map(function (k) { var n = pubs.filter(function (x) { return x.reseau === k && urgent(x); }).length; return '<button class="chip' + (pTab === k ? ' on' : '') + '" data-ptab="' + k + '">' + RS[k].lb + (n ? '<i class="pfn">' + n + '</i>' : '') + '</button>'; }).join('') + '</div>';
-    var all = pubs.filter(function (x) { return x.reseau === pTab; }), ready = all.filter(function (x) { return x.statut === 'programmee'; }).sort(byDate), ideas = all.filter(function (x) { return x.statut === 'idee' || x.statut === 'attente'; }).sort(byDate), done = all.filter(function (x) { return x.statut === 'publiee'; }).sort(function (a, z) { return (z.date || '').localeCompare(a.date || ''); });
-    var sec = function (t, l, empty) { return '<h3 style="margin:18px 0 8px;font-size:15px">' + t + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3>' + (l.length ? '<div class="pfg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>' : '<p class="sub" style="margin:0">' + empty + '</p>'); };
-    h += '<div class="row" style="margin:14px 0 0;flex-wrap:wrap;justify-content:space-between;align-items:center"><div class="sub" style="margin:0">Une publication passe en rouge la veille de sa date, pour ne pas l’oublier.</div><div class="row" style="gap:8px"><button class="btn l s" id="pf_ics">Agenda (.ics)</button><button class="btn s" data-padd="' + pTab + '">+ Ajouter une publication</button></div></div>';
-    h += sec('Prêtes à publier', ready, 'Rien de prêt pour le moment.') + sec('Idées', ideas, 'Aucune idée en réserve.') +
-      '<h3 style="margin:18px 0 8px;font-size:15px">Publiées (archives) <span style="color:var(--muted);font-weight:500">· ' + done.length + '</span></h3>' + (done.length ? '<div class="pfg">' + done.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>' : '<p class="sub" style="margin:0">Rien de publié pour le moment.</p>');
-    h += '<p class="cap" style="margin-top:16px">Le planning garde les publications et vous rappelle ce qui est à publier (accueil et menu) : il ne publie pas tout seul. Utilisez « Copier le texte », publiez sur le réseau, puis « Marquer publiée ».</p>';
+    var nU = pubs.filter(urgent).length;
+    h += '<div class="filters" id="pf_tabs"><button class="chip' + (pTab === 'tout' ? ' on' : '') + '" data-ptab="tout">Tout' + (nU ? '<i class="pfn">' + nU + '</i>' : '') + '</button>' + nets.map(function (k) { var n = pubs.filter(function (x) { return x.reseau === k && urgent(x); }).length; return '<button class="chip' + (pTab === k ? ' on' : '') + '" data-ptab="' + k + '">' + RS[k].lb + (n ? '<i class="pfn">' + n + '</i>' : '') + '</button>'; }).join('') + '</div>';
+    var net = pTab === 'tout', all = net ? pubs : pubs.filter(function (x) { return x.reseau === pTab; });
+    var ready = all.filter(function (x) { return x.statut === 'programmee'; }).sort(byDate), ideas = all.filter(function (x) { return x.statut === 'idee' || x.statut === 'attente'; }).sort(byDate), done = all.filter(function (x) { return x.statut === 'publiee'; }).sort(function (a, z) { return (z.date || '').localeCompare(a.date || ''); });
+    h += '<div class="pbar"><span>' + (nU ? '<b style="color:var(--poppy)">' + nU + ' à publier</b> aujourd’hui, demain ou en retard' : 'Une publication passe en rouge la veille de sa date') + '</span><span class="pbtn"><button class="btn l s" id="pf_ics">Agenda (.ics)</button><button class="btn s" data-padd="' + (net ? 'linkedin' : pTab) + '">+ Ajouter</button></span></div>';
+    var sec = function (t, l, c) { return l.length ? '<h3 class="psec"><i style="background:' + c + '"></i>' + t + ' <span>' + l.length + '</span></h3><div class="pfg">' + l.map(function (x) { return pCard(x, me, adm, net); }).join('') + '</div>' : ''; };
+    var body = sec('Prêtes à publier', ready, 'var(--rasp)') + sec('Idées', ideas, '#B9A9B4') + sec('Publiées', done, '#2F7D4F');
+    h += body || '<div class="empty" style="margin-top:8px"><b>' + (net ? 'Aucune publication pour le moment' : 'Rien pour ' + RS[pTab].lb + ' pour le moment') + '</b>Créez un visuel puis « Enregistrer dans le planning », ou ajoutez une idée avec « + Ajouter ».</div>';
+    h += '<p class="cap" style="margin-top:18px">Le planning vous rappelle ce qui est à publier (accueil et menu) mais ne publie rien tout seul : « Copier le texte », publiez sur le réseau, puis « Marquer publiée ».</p>';
     $('cmplan').innerHTML = h; lastF = Date.now(); drawRappels();
   }
   function pMsg(t) { var m = $('pf_m'); if (m) m.textContent = t || ''; }
