@@ -264,6 +264,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <div id="feed" class="note feed hide"></div></section>
 
 <section id="v4" class="hide"><header class="ph0 pastel t3"><div class="tag">Suivi</div><h1>Patients</h1><p class="sub">La base des personnes accompagnées, avec le décompte de leurs séances.</p></header>
+<div class="mkpis" id="pkp"></div>
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher un prénom, un mail…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button></div>
 <div class="tbl" id="ptbl"></div></section>
@@ -481,6 +482,8 @@ function drawPat(){
  var q=$('pq').value.toLowerCase(),b=base();
  var F=[['suivi','En suivi',function(i){return['contactee','rdv_fixe','en_cours','a_recontacter'].indexOf(i.statut)>-1}],['terminee','Terminés',function(i){return i.statut==='terminee'}],['sans_suite','Sans suite',function(i){return i.statut==='sans_suite'}],['tous','Tous',function(){return true}]];
  $('ptabs').innerHTML=F.map(function(f){return '<button class="chip'+(pf===f[0]?' on':'')+'" data-p="'+f[0]+'">'+f[1]+(b.filter(f[2]).length?'<i>'+b.filter(f[2]).length+'</i>':'')+'</button>'}).join('');
+ var suiv=b.filter(F[0][2]).length,sr=0,ab=0;b.forEach(function(i){sr+=nS(i);ab+=nS(i,'absence')});
+ $('pkp').innerHTML='<div class="kpi pastel"><b>'+suiv+'</b><span>patient'+(suiv>1?'s':'')+' suivi'+(suiv>1?'s':'')+' en ce moment</span></div><div class="kpi pastel"><b>'+b.length+'</b><span>personne'+(b.length>1?'s':'')+' accompagnée'+(b.length>1?'s':'')+' au total</span></div><div class="kpi pastel"><b>'+sr+'</b><span>séance'+(sr>1?'s':'')+' réalisée'+(sr>1?'s':'')+' au total</span></div><div class="kpi pastel"><b>'+(b.length?(sr/b.length).toFixed(1).replace('.',','):'0')+'</b><span>séances par personne en moyenne</span></div>';
  var fn=F.filter(function(f){return f[0]===pf})[0][2];
  var l=b.filter(function(i){return fn(i)&&(!q||(i.prenom+' '+i.email+' '+i.tel).toLowerCase().indexOf(q)>-1)}).sort(function(a,z){return a.prenom.localeCompare(z.prenom,'fr')});
  $('ptbl').innerHTML=l.length?'<div class="pr ph"><span>Patient</span><span class="c2">Thérapeute</span><span class="c3">Séances</span><span>Prochain RDV</span></div>'+l.map(function(i){
