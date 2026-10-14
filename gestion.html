@@ -219,6 +219,15 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 .hrow.r{background:var(--rose);border-color:transparent}.hrow.s{background:var(--lilac);border-color:transparent}.hrow.todo{outline:2px solid var(--poppy)}
 #hbody .none{color:var(--muted)}
 @media (max-width:860px){.hrow{grid-template-columns:62px 1fr;}.hrow small{grid-column:2}}
+
+/* accueil : hiérarchie plus lisible */
+#v11 .stats{gap:14px;margin-bottom:34px}#v11 .stat{min-height:104px;display:flex;flex-direction:column;justify-content:flex-end}#v11 .stat small{display:block;font-size:12px;opacity:.75;margin-top:2px}
+#v11 .ecard{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px 22px 22px;margin-bottom:34px}
+#v11 .ehd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}#v11 .ehd .hh{margin:0}
+#v11 .ekp2{display:flex;gap:8px;flex-wrap:wrap}#v11 .ekp2 span{font-size:12.5px;color:var(--muted);background:var(--cream);border-radius:99px;padding:4px 12px}#v11 .ekp2 b{color:var(--rasp)}
+#v11 .ecard .edays{gap:10px}#v11 .ecard .eday{background:var(--cream);border:0}#v11 .ecard .eday.today{background:#fff;box-shadow:0 0 0 2px var(--rasp)}
+#v11 .ecard .ev{box-shadow:none}#v11 .eday h4 em{display:none}#v11 .eday{min-height:0}#v11 #ewho{max-width:320px;margin-left:auto}
+#v11 #hbody .hh{margin:0 0 10px}#v11 #hbody>.hh:not(:first-child){margin-top:28px}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
@@ -266,8 +275,8 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
 <section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées. À terme, le questionnaire en ligne alimentera cet onglet ; en attendant, les notes se saisissent à la main après chaque séance.</p></header><div id="efbody"></div></section>
-<section id="v11" class="hide"><header class="ph0 pastel t1"><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></header><div class="stats" id="hstats"></div><h3 class="hh" id="htt">Mon emploi du temps</h3><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
-<div class="ekp" id="ekp"></div><div class="edays" id="ebody"></div><div id="hbody" style="margin-top:22px"></div></section>
+<section id="v11" class="hide"><header class="ph0 pastel t1"><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
+<div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header>
 <div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une supervision</button></div>
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></section>
@@ -675,9 +684,9 @@ function drawHome(){
  var oc=occs(),conf=oc.filter(function(o){return aConfirmer(o)&&(adm||o.therapeute===moi)}),
   upS=supItems.filter(function(x){return !past(x.date,x.heure)&&mine(x)}),pres=supItems.filter(function(x){return past(x.date,x.heure)&&!x.fait&&(adm||isSup)}).length,nx=upS[0];
  var tile=function(cls,k,num,lab){return '<button class="stat pastel '+cls+'" data-h="'+k+'"><b>'+num+'</b><span>'+lab+'</span></button>'};
- var nxT=nx?tile('t3','sup','<span style="font-size:20px;color:inherit;display:block;font-weight:600">'+esc(fday(nx.date))+'</span>','prochaine supervision · '+fh(nx.heure)+' – '+fh(supEnd(nx))):tile('t3','sup','—','aucune supervision prévue');
+ var nxT=nx?tile('t3','sup','<span style="font-size:20px;color:inherit;display:block;font-weight:600">'+esc(fday(nx.date))+'</span>','prochaine supervision<small>'+fh(nx.heure)+' – '+fh(supEnd(nx))+'</small>'):tile('t3','sup','—','aucune supervision prévue');
  var T='';
- if(!isSup)T=tile('t1','',ms.total+' h','de consultation · '+ms.mois+' h ce mois-ci')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
+ if(!isSup)T=tile('t1','',ms.total+' h','heures de consultation<small>dont '+ms.mois+' h ce mois-ci</small>')+tile('t2','',ms.patients,'patient'+(ms.patients>1?'s':'')+' suivi'+(ms.patients>1?'s':''))+nxT+tile('t1','conf',conf.length,'séance'+(conf.length>1?'s':'')+' à confirmer');
  else T=nxT+tile('t1','sup',upS.length,'supervisions à venir')+tile('t2','sup',pres,'présence'+(pres>1?'s':'')+' à saisir');
  $('hstats').innerHTML=T;
  $('htt').textContent=(emp.who&&emp.who!==moi&&(adm||isSup))?'Emploi du temps · '+cap(emp.who):'Mon emploi du temps';
@@ -699,7 +708,7 @@ function drawEmp(){
   supItems.filter(function(x){return x.date===d&&((x.participants||[]).indexOf(who)>-1||x.superviseur===who)}).forEach(function(x){ev.push({h:x.heure,dur:x.duree,kind:'s',t:'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe')+(x.titre?' · '+esc(x.titre):''),s:(x.lieu||'Lieu à préciser')+' · avec '+cap(x.superviseur)})});
   ev.sort(function(a,z){return a.h.localeCompare(z.h)});ev.forEach(function(e){if(e.kind==='r')rdv++;else{sc++;mins+=e.dur}});
   h+='<div class="eday'+(d===iso(new Date())?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(ev.length?ev.length+' créneau'+(ev.length>1?'x':''):'')+'</em></h4>'+(ev.length?ev.map(function(e){return '<div class="ev '+e.kind+'"><b>'+fh(e.h)+' – '+fh(addMin(e.h,e.dur))+'</b><span>'+e.t+'</span><small>'+esc(e.s)+'</small></div>'}).join(''):'<p class="none">Rien de prévu.</p>')+'</div>'}
- $('ekp').innerHTML='<div class="kpi pastel"><b>'+rdv+'</b><span>rendez-vous patients</span></div><div class="kpi pastel"><b>'+sc+'</b><span>séance'+(sc>1?'s':'')+' de supervision</span></div><div class="kpi pastel"><b>'+(mins/60).toString().replace('.',',')+' h</b><span>de supervision</span></div>';
+ $('ekp').innerHTML='<span><b>'+rdv+'</b> rendez-vous</span><span><b>'+sc+'</b> supervision'+(sc>1?'s':'')+(sc?' · '+(mins/60).toString().replace('.',',')+' h':'')+'</span>';
  $('ebody').innerHTML=h}
 $('ewp').onclick=function(){emp.wk=addDays(emp.wk||monday(iso(new Date())),-7);drawEmp()};$('ewn').onclick=function(){emp.wk=addDays(emp.wk||monday(iso(new Date())),7);drawEmp()};
 $('ewt0').onclick=function(){emp.wk=monday(iso(new Date()));drawEmp()};$('ewho').onchange=function(){emp.who=this.value;drawEmp()};
