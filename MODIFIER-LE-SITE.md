@@ -80,3 +80,8 @@ Mise en page du mail : le mail envoyé reprend la fiche d'utilisation en HTML (b
 
 ## Titre personnalisé (profil)
 Chaque personne peut changer le titre affiché sous son nom (fenêtre qui s'ouvre en cliquant sur son nom en bas du menu) : 40 caractères maximum, champ vide = titre par défaut (« Étudiant·e psy », « Administrateur·rice »…). Stocké avec la photo dans le store Blobs `profils` (champ `titre`), action `profil_titre` ; la liste renvoie `titres`.
+
+## Onglet « Charte graphique » (/gestion, section Communication)
+Visible par toute l'équipe (admins et étudiant·es). Page `gestion-charte.js` (vue `#v13` de gestion.html) : logos, couleurs (clic = copie du code HEX), typographie, trame de points, illustrations, ton, bannière LinkedIn. Pour changer une couleur ou un texte : modifier les tableaux `COUL`, `PAL` et les textes en haut de `gestion-charte.js`.
+Les fichiers à télécharger sont dans le dossier `charte/` du dépôt : `Charte-graphique-CAPSULE.pdf`, `Logos-CAPSULE.zip` (SVG, PDF, PNG, profils, favicons), `banniere-linkedin-capsule.png`, `svg/` (logos vectoriels). Pour les remplacer, déposer un fichier du même nom. Le dossier est exclu des moteurs de recherche (netlify.toml).
+Trame de points : classe `.pastel` (gestion.html) et `.point::after` (index.html) : points ronds de 1,5 px de rayon tous les 9 px, couleur de l'aplat à 36–42 % d'opacité, masque en diagonale depuis le coin haut droit.
