@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes } from "node:crypto";
+import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout } from "../lib/rdv.mjs";
 import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
@@ -26,6 +26,9 @@ const STATUTS = ["nouvelle", "a_recontacter", "contactee", "rdv_fixe", "en_cours
 function comptes() {
   return Object.fromEntries((process.env.GESTION_COMPTES || "").split(",").map((s) => s.trim()).filter(Boolean).map((s) => { const i = s.indexOf(":"); return [s.slice(0, i).trim().toLowerCase(), s.slice(i + 1)]; }));
 }
+const ckey = () => createHash("sha256").update("codes|" + (process.env.SESSION_SECRET || process.env.GESTION_COMPTES || "")).digest();
+const encCode = (t) => { const iv = randomBytes(12), c = createCipheriv("aes-256-gcm", ckey(), iv), e = Buffer.concat([c.update(String(t), "utf8"), c.final()]); return [iv, c.getAuthTag(), e].map((x) => x.toString("base64")).join("."); };
+const decCode = (v) => { try { const [iv, tag, e] = String(v).split(".").map((x) => Buffer.from(x, "base64")), d = createDecipheriv("aes-256-gcm", ckey(), iv); d.setAuthTag(tag); return Buffer.concat([d.update(e), d.final()]).toString("utf8"); } catch { return null; } };
 const secret = () => process.env.SESSION_SECRET || process.env.GESTION_COMPTES || "";
 const sign = (p) => createHmac("sha256", secret()).update(p).digest("base64url");
 function makeToken(user, role, k) { const p = Buffer.from(JSON.stringify({ u: user, r: role, k, e: Date.now() + 8 * 3600 * 1000 })).toString("base64url"); return p + "." + sign(p); }
@@ -99,13 +102,20 @@ export default async (req) => {
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
 
-  if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role"].includes(b.action)) {
+  if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = nrm(b.nom);
     const prin = async () => Object.fromEntries(await Promise.all(Object.keys(c).map(async (k) => [k, await prinRole(k)])));
+    if (b.action === "compte_code") {
+      let code = null;
+      if (n in c) { const ov = await getStore("codes").get(n, { type: "json" }); code = ov ? (ov.enc ? decCode(ov.enc) : null) : c[n]; }
+      else { const a = NAME.test(n) ? await ac.get(n, { type: "json" }) : null; if (!a) return J({ error: "Compte introuvable." }, 404); code = a.enc ? decCode(a.enc) : null; }
+      return code ? J({ ok: true, code }) : J({ error: "Ce code n’est pas récupérable (compte créé avant cette fonction) : utilisez « Changer le code »." }, 404);
+    }
     if (b.action === "compte_reset" && n in c) {
       const code = String(b.code || "").trim() || genCode(), salt = randomBytes(16).toString("hex");
-      await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), le: new Date().toISOString(), par: user });
+      if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
+      await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), enc: encCode(code), le: new Date().toISOString(), par: user });
       const { blobs } = await ac.list();
       return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) })), principaux: Object.keys(c) });
     }
@@ -131,7 +141,7 @@ export default async (req) => {
         if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
         const salt = randomBytes(16).toString("hex");
         const old = await ac.get(n, { type: "json" });
-        await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant") });
+        await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant") });
         const { blobs } = await ac.list();
         return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: rlv(v) }; })), principaux: Object.keys(c) });
       }
