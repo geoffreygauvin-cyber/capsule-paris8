@@ -55,7 +55,7 @@
         "icone": "cap",
         "etiquette": "M2 de psychologie",
         "titre": "Des étudiant·es formé·es",
-        "texte": "Ce sont des étudiant·es de Master 2 de psychologie qui reçoivent. Elles et ils connaissent le quotidien des études, parce qu'elles et ils le vivent aussi."
+        "texte": "Ce sont des étudiant·es de Master de psychologie qui reçoivent. Elles et ils connaissent le quotidien des études, parce qu'elles et ils le vivent aussi."
       },
       {
         "icone": "campus",
@@ -194,7 +194,7 @@
       },
       {
         "q": "Qui va me recevoir ?",
-        "r": "Des étudiant·es de Master 2 de psychologie de l'UFR de psychologie de Paris 8."
+        "r": "Des étudiant·es de Master de psychologie de l'UFR de psychologie de Paris 8."
       },
       {
         "q": "Faut-il aller très mal pour venir ?",
@@ -217,7 +217,7 @@
   "porteur": {
     "entite": "Laboratoires\nde recherche",
     "titre": "Porté par trois [[laboratoires de recherche]]",
-    "texte": "CAPSULE est porté par trois laboratoires de recherche de l'**Université Paris 8 Vincennes-Saint-Denis** : **DysCo**, **LAPPS** et **LPPC**. Les consultations sont proposées par des étudiant·es de Master 2 de psychologie, à destination des étudiant·es."
+    "texte": "CAPSULE est porté par trois laboratoires de recherche de l'**Université Paris 8 Vincennes-Saint-Denis** : **DysCo**, **LAPPS** et **LPPC**. Les consultations sont proposées par des étudiant·es de Master de psychologie, à destination des étudiant·es."
   },
   "urgence": {
     "titre": "CAPSULE n'est pas un service d'urgence",
