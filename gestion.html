@@ -35,7 +35,9 @@ aside{background:var(--maroon);color:var(--cream);padding:26px 18px;display:flex
 .me{flex:none;margin-top:auto;position:sticky;bottom:0;box-shadow:0 0 0 6px var(--maroon);padding:12px;border-radius:14px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)),var(--maroon);display:flex;align-items:center;gap:10px;color:var(--cream);font-size:14px}
 .me .av{flex:none;width:36px;height:36px}.me .tx{flex:1;min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis}
 .me small{font-size:11.5px;opacity:.75;display:block;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-main{padding:30px 34px 90px;max-width:1100px;width:100%}main.wide{max-width:none}body.emb #logout2,body.emb [data-m="logout"]{display:none!important}body.emb main{padding-top:20px}
+main{padding:30px 34px 90px;max-width:1100px;width:100%}
+.msw{display:flex;align-items:center;gap:4px;margin:2px 0 4px;padding:4px;border-radius:14px;background:rgba(253,245,235,.1)}.msw span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(253,245,235,.55);padding:0 4px 0 6px}.msw button{flex:1;white-space:nowrap;border:0;border-radius:10px;padding:7px 4px;font:inherit;font-size:12px;font-weight:600;background:none;color:rgba(253,245,235,.8);cursor:pointer}.msw button.on{background:var(--cream);color:var(--maroon)}.msw button:not(.on):hover{background:rgba(253,245,235,.14)}
+#modesw2{font-size:12.5px!important;font-weight:600;color:var(--rasp,#AE164E)!important}
 main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:var(--muted);margin:0 0 22px}
 .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:600;flex:none;font-size:15px;background-size:cover;background-position:center;color:var(--maroon)}
 .av.xl{width:96px;height:96px;font-size:36px}.av.sm{width:30px;height:30px;font-size:12px}
@@ -123,7 +125,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 @media (max-width:860px){
  #app{display:block}
  aside{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:2px;z-index:40;justify-content:space-around}
- aside .brand,aside .uni,.me{display:none}
+ aside .brand,aside .uni,.me,#modesw{display:none}
  .nv{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px;text-align:center;border-radius:12px;flex:1;position:relative}.nv b{position:absolute;top:2px;right:18%;margin:0}
  main{padding:20px 14px 100px}main h1{font-size:23px}
  .mobtop{display:flex!important}
@@ -251,6 +253,7 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 
 <div id="app" class="hide">
 <aside><div class="brand"><span data-logo="48" data-mono="#FDF5EB"></span><span class="wm">CAPSULE<small>Espace équipe</small></span></div>
+<div id="modesw" class="msw hide" role="group" aria-label="Mode d’affichage"><span>Mode</span><button type="button" data-mode="etu" title="Passer en mode étudiant psychologue">Étudiant psy</button><button type="button" data-mode="admin" title="Passer en mode admin">Admin</button></div>
 <button class="nv on" data-v="1"><svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></svg>Demandes<b id="nbn" class="hide"></b></button>
 <button class="nv" data-v="2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendrier</button>
 <button class="nv" data-v="4"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/></svg>Patients</button>
@@ -261,7 +264,7 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 <button class="nv hide" data-v="3" id="nvt"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2 .6 3.3 2.5 3.5 6"/></svg>Équipe</button>
 <div class="uni">Université Paris 8<br>UFR de psychologie</div><button class="me" id="meb" title="Mon profil"><span id="av"></span><span class="tx"><span id="whoname"></span><small id="whoc"></small></span></button></aside>
 <main>
-<div class="mobtop"><span class="lg" data-logo="30"></span><button id="whom" style="font-weight:600;color:var(--ink);text-decoration:none"></button><button id="logout2">Se déconnecter</button></div>
+<div class="mobtop"><span class="lg" data-logo="30"></span><button id="whom" style="font-weight:600;color:var(--ink);text-decoration:none"></button><button id="modesw2" class="hide" data-mode=""></button><button id="logout2">Se déconnecter</button></div>
 <section id="v1"><header class="ph0 pastel t1"><div class="tag">Recontacter</div><h1>Demandes</h1><p class="sub">Les personnes qui ont demandé à être recontactées.</p></header>
 <div class="stats" id="stats"></div>
 <div class="filters" id="tabs"></div>
@@ -295,7 +298,6 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div></section>
 <section id="v12" class="hide"><header class="ph0 pastel t2"><div class="tag">Communication</div><h1>Publications</h1><p class="sub">Créez un visuel pour les réseaux ou une fiche PDF à partir d’un modèle : choisissez, remplissez, téléchargez.</p></header></section>
 <section id="v13" class="hide"><header class="ph0 pastel t1"><div class="tag">Communication</div><h1>Charte graphique</h1><p class="sub">Logos, couleurs, police, trame de points et ton de CAPSULE : tout ce qu’il faut pour qu’une publication ressemble à CAPSULE.</p></header></section>
-<section id="v15" class="hide"><header class="ph0 pastel t3"><div class="tag">Service technique</div><h1>Plateformes</h1><p class="sub">Les deux plateformes côte à côte, en direct : choisissez ce que vous voulez voir de chaque côté.</p></header></section>
 <section id="v14" class="hide"><header class="ph0 pastel t2"><div class="tag">Vie d’équipe</div><h1>Équipe</h1><p class="sub">Qui fait quoi à CAPSULE : l’organigramme et le profil de chaque personne.</p></header></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
@@ -310,8 +312,8 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
 var SL={nouvelle:'Nouvelle',a_recontacter:'À recontacter',contactee:'Contactée',rdv_fixe:'RDV fixé',en_cours:'En cours',terminee:'Terminée',sans_suite:'Sans suite'};
-var role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},titres={},bios={},contacts={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false,techs=[],isTech=false,EMBED=(location.search.match(/[?&]embed=(ther|admin|full)\b/)||[])[1]||'';
-if(EMBED)document.body.classList.add('emb');
+var role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},titres={},bios={},contacts={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false,techs=[],isTech=false,viewMode='admin';
+try{if(localStorage.getItem('cap_mode')==='etu')viewMode='etu'}catch(e){}
 try{token=sessionStorage.getItem('cap_t')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -363,7 +365,7 @@ function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){toast(d.error||'Erreur');return}
  items=d.items;photos=d.photos||{};titres=d.titres||{};bios=d.bios||{};contacts=d.contacts||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
- role=d.role||(d.admin?'admin':'etudiant');isSup=role==='superviseur';roles=d.roles||{};superv=d.superviseurs||[];techs=d.techniques||[];isTech=!!d.technique&&!EMBED;buildNav();$('radd').classList.toggle('hide',!isAdmin);Array.prototype.forEach.call(document.querySelectorAll('#v3 .newc'),function(x){x.classList.toggle('hide',!isAdmin)});
+ role=d.role||(d.admin?'admin':'etudiant');isSup=role==='superviseur';roles=d.roles||{};superv=d.superviseurs||[];techs=d.techniques||[];isTech=!!d.technique;if(isTech&&viewMode==='etu'){role='etudiant';isAdmin=false}modeUI();buildNav();$('radd').classList.toggle('hide',!isAdmin);Array.prototype.forEach.call(document.querySelectorAll('#v3 .newc'),function(x){x.classList.toggle('hide',!isAdmin)});
  $('login').classList.add('hide');$('app').classList.remove('hide');
  $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=whoLine();
  if(!week)week=monday(iso(new Date()));
@@ -483,7 +485,7 @@ $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
 function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=false;w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervisions & réunions</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
 document.addEventListener('click',function(e){var b=e.target.closest('.ssw .chip');if(b)nav(+b.dataset.g)});
-function nav(n){[1,2,3,4,5,6,7,8,10,11,12,13,14,15].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte();if(n===14&&window.drawEquipe)drawEquipe();if(n===15&&window.drawPlat)drawPlat();document.querySelector('main').classList.toggle('wide',n===15)}
+function nav(n){[1,2,3,4,5,6,7,8,10,11,12,13,14].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte();if(n===14&&window.drawEquipe)drawEquipe()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -753,23 +755,28 @@ $('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)
  else if(k==='all'){api({action:'messages_data'}).then(function(z){dl(JSON.stringify({exporteLe:new Date().toISOString(),par:moi,demandes:items,equipe:equipe,messages:z.journal||[]},null,1),'capsule-sauvegarde-'+d+'.json','application/json')})}
 };
 
+/* ---- mode (compte Service technique) : voir la plateforme comme un·e étudiant·e psy ou comme un·e admin ---- */
+function modeUI(){var on=isTech;$('modesw').classList.toggle('hide',!on);$('modesw2').classList.toggle('hide',!on);if(!on)return;
+ Array.prototype.forEach.call(document.querySelectorAll('#modesw [data-mode]'),function(b){var a=b.dataset.mode===viewMode;b.classList.toggle('on',a);b.setAttribute('aria-pressed',a)});
+ var m2=$('modesw2');m2.dataset.mode=viewMode==='etu'?'admin':'etu';m2.textContent=viewMode==='etu'?'Passer en mode admin':'Passer en mode étudiant psy'}
+function setMode(m){if(m!=='etu'&&m!=='admin')return;if(m===viewMode)return;viewMode=m;try{localStorage.setItem('cap_mode',m)}catch(e){}load(function(){nav(11);toast(m==='etu'?'Mode étudiant psychologue : tu vois ce que voit un·e étudiant·e.':'Mode admin.')})}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#modesw [data-mode],#modesw2');if(b)setMode(b.dataset.mode)});
 /* ---- navigation selon le statut du compte ---- */
-var NIC={15:'<rect x="3" y="5" width="8.5" height="14" rx="2"/><rect x="12.5" y="5" width="8.5" height="14" rx="2"/><path d="M5.5 9h3.5M15 9h3.5"/>',14:'<circle cx="12" cy="6" r="2.6"/><circle cx="5.5" cy="18" r="2.4"/><circle cx="18.5" cy="18" r="2.4"/><path d="M12 8.6v4M5.5 15.6V13h13v2.6"/>',13:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7.5" r="1.1"/><circle cx="14.5" cy="7.5" r="1.1"/>',12:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/>',11:'<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5M10 20v-5h4v5"/>',9:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>',10:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19c.5-3.4 2.7-5.2 5.5-5.2s5 1.8 5.5 5.2M14 18.5c.4-2.4 1.9-3.7 3.6-3.7 1.9 0 3.3 1.2 3.9 3.7"/>'};
+var NIC={14:'<circle cx="12" cy="6" r="2.6"/><circle cx="5.5" cy="18" r="2.4"/><circle cx="18.5" cy="18" r="2.4"/><path d="M12 8.6v4M5.5 15.6V13h13v2.6"/>',13:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7.5" r="1.1"/><circle cx="14.5" cy="7.5" r="1.1"/>',12:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/>',11:'<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5M10 20v-5h4v5"/>',9:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>',10:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19c.5-3.4 2.7-5.2 5.5-5.2s5 1.8 5.5 5.2M14 18.5c.4-2.4 1.9-3.7 3.6-3.7 1.9 0 3.3 1.2 3.9 3.7"/>'};
 function buildNav(){
  var as=document.querySelector('aside');
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
  var C={etudiant:[['Espace étudiant psychologue',[11,14,1,2,4,10,5,6,7]],['Communication',[12,13]]],admin:[['Espace étudiant psychologue',[11,14,1,2,4,6,7]],['Communication',[12,13]],['Espace admin',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
- if(EMBED==='ther')C=C.filter(function(g){return g[0]!=='Espace admin'});if(EMBED==='admin')C=[['Espace admin',[11,10,8,3]]];if(isTech)C.push(['Service technique',[15]]);
- var LB={15:'Plateformes',1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Gestion':'Supervisions & réunions'};
+ var LB={1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Gestion':'Supervisions & réunions'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
    as.insertBefore(b,anchor)})});
  document.querySelector('#v5 h1').textContent=LB[5];document.querySelector('#v3 h1').textContent='Comptes';
  $('v10').querySelector('#sh1').textContent=LB[10];
  var first=11;var on=as.querySelector('.nv[data-v="'+first+'"]');
- var cv=[1,2,3,4,5,6,7,8,10,11,12,13,14,15].filter(function(k){return !$('v'+k).classList.contains('hide')})[0],cb2=as.querySelector('.nv[data-v="'+cv+'"]');if(cb2)cb2.classList.add('on');
+ var cv=[1,2,3,4,5,6,7,8,10,11,12,13,14].filter(function(k){return !$('v'+k).classList.contains('hide')})[0],cb2=as.querySelector('.nv[data-v="'+cv+'"]');if(cb2)cb2.classList.add('on');
  if(firstLoad){firstLoad=false;setTimeout(function(){nav(first)},0)}}
 
 
@@ -1026,11 +1033,10 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-window.CAPSULE={profil:function(){profil()},gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,contacts:contacts,titre:titre,techs:techs}},tech:function(){return isTech}};
+window.CAPSULE={profil:function(){profil()},gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,contacts:contacts,titre:titre,techs:techs}}};
 if(token)load();
 })();
 </script><script src="/gestion-com.js"></script>
 <script src="/gestion-annonces.js"></script>
 <script src="/gestion-charte.js"></script>
-<script src="/gestion-equipe.js"></script>
-<script src="/gestion-plateformes.js"></script></body></html>
+<script src="/gestion-equipe.js"></script></body></html>

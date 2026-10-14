@@ -98,16 +98,13 @@ Deux modèles dans `charte/` : `CAPSULE-modele-etudiants.pptx` (10 diapositives)
 ## Logo animé (onglet « Charte graphique »)
 Section « Logo animé » : aperçu en boucle (muet) et téléchargement de `capsule-logo-anime-16x9.mp4` (1920 × 1080), `…-carre.mp4` (1080 × 1080), `…-story.mp4` (1080 × 1920) et `capsule-logo-anime.gif` (960 × 540), durée ≈ 6 s. Les images fixes affichées avant lecture sont dans `charte/apercus/`. Pour remplacer une vidéo, déposer un fichier du même nom (H.264, yuv420p, `-movflags +faststart` pour que l'aperçu démarre vite).
 
-## Statut « Service technique » et onglet « Plateformes »
+## Statut « Service technique » et interrupteur de mode
 Compte avec le statut spécial **Service technique** (aujourd'hui : `violette`, liste `TECH` dans `netlify/functions/gestion.mjs`) :
 - droits admin permanents (le statut ne se change pas dans l'onglet Comptes : l'action `compte_role` est refusée, la ligne affiche « Service technique ») ;
 - titre fixe « Service technique » (renvoyé dans `titres` par `list` ; `profil_titre` est refusé pour ce compte, le champ est grisé dans le profil) ;
 - dans l'organigramme, bloc « Service technique · transversal » sous les étudiant·es ;
-- un onglet **Plateformes** (groupe « Service technique » du menu, visible seulement pour ce compte : `list` renvoie `technique: true`) qui affiche deux fenêtres en direct, côte à côte ou l'une sous l'autre. Chaque fenêtre montre au choix le site public, la plateforme complète, l'espace thérapeute ou l'espace admin ; préréglages « Thérapeute + Admin » et « Site + Plateforme », choix mémorisé dans le navigateur. Page `gestion-plateformes.js` (vue `#v15`).
-Les fenêtres sont des iframes de `/gestion?embed=ther|admin|full` : la même page en mode intégré (pas d'onglet Plateformes, pas de bouton de déconnexion à l'intérieur ; la session ouverte est partagée). Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minuscules) à `TECH`.
-
-Contact dans l'organigramme : chacun·e peut ajouter son mail et son téléphone (facultatifs) dans la fenêtre de profil ; ils s'affichent sur sa carte de l'onglet Équipe, visibles par tous les comptes de l'équipe, avec lien mailto / tel. Action `profil_contact` (mail vérifié, téléphone de 6 chiffres minimum), champs `email` et `tel` du store `profils`, renvoyés par `list` sous `contacts`. Ce sont des champs distincts de l'adresse utilisée pour l'envoi des accès (store `emails`, visible des admins seulement).
-
+- un interrupteur **Mode : Étudiant psy | Admin** en haut du menu (visible seulement pour ce compte : `list` renvoie `technique: true`). « Étudiant psy » affiche la plateforme comme la voit un·e étudiant·e psychologue (menu et pages réduits, « Mon activité »…), « Admin » la montre en entier. C'est un changement d'affichage côté navigateur (choix mémorisé dans le navigateur) : les droits réels restent ceux d'un admin. Sur téléphone, le bouton « Passer en mode… » est dans la barre du haut.
+Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minuscules) à `TECH`.
 
 ## Vocabulaire
 L'espace de l'équipe étudiante s'appelle **Espace étudiant psychologue** (menu, mails d'accès, fiches PDF). Les autres espaces : Communication, Espace admin, et Service technique pour le compte concerné.
