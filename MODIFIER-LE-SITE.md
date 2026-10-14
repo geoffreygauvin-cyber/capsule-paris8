@@ -59,3 +59,4 @@ Bandeau en bas du site : déposer les fichiers dans `img/partenaires/` sous les 
 
 ## Espace « Publications » (/gestion)
 Page `gestion-com.js` : visuels réseaux (post carré, story) et supports A4 (affiche, fiche info). Tout est dessiné dans un canvas : aperçu, PNG et PDF viennent du même dessin. Modèles, couleurs et logos : constantes `PRE`, `TH`, `SRC` en haut du fichier. Les brouillons sont enregistrés dans le navigateur de chaque personne (pas sur le serveur). Le PDF contient une image haute définition de la page (texte non sélectionnable).
+Export PowerPoint : bibliothèque PptxGenJS 4.0.1 (MIT) copiée dans `vendor-pptxgen.bundle.js`, chargée seulement au clic. Chaque texte, forme et image du visuel devient un élément modifiable.
