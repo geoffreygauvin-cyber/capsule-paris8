@@ -925,7 +925,7 @@ var gtab='sup',rtab='eq',etab='avenir';
    « Réunions & annonces » (vue v10, drawGest) : Réunions & supervisions, Annonces.
    « Gestion RH » (vue v15, drawRH) : Suivi de l'équipe, Présences, Entretiens privés, Règlement intérieur.
    Pour ajouter un onglet Gestion RH : l'ajouter dans RT et RBOX, créer son conteneur dans la section v15 et l'appeler en fin de drawRH. */
-var GSUB={sup:'Organisez une réunion d’équipe (elle s’ajoute à l’agenda des personnes invitées), programmez les supervisions et notez les présences.',
+var GSUB={sup:'',
  ann:'Écrivez une annonce pour les étudiant·es : elle s’affiche en haut de leur Accueil. Vous pouvez la programmer à une date et choisir sa durée d’affichage.',
  eq:'Chaque étudiant·e psy en un coup d’œil : règlement signé, parcours d’accueil, présence et heures. Ouvrez un dossier pour le détail et les actions.',
  pre:'Qui était là, qui était en retard, qui était absent·e (excusé·e ou non) aux réunions et aux supervisions. Vous pouvez aussi signaler un retard ou une absence à un rendez-vous patient ou à une permanence.',
@@ -935,12 +935,12 @@ var RT=[['eq','Suivi de l’équipe'],['pre','Présences'],['ent','Entretiens pr
 function aPointer(){var E=etuL();return supItems.filter(function(x){return x.type!=='entretien'&&!x.fait&&supPast(x)&&(x.participants||[]).some(function(n){return E.indexOf(n)>-1})})}
 function drawGest(){
  var adm=isAdmin;$('gtabs').classList.toggle('hide',!adm);
- if(!adm){gtab='sup';$('gtag').textContent='Formation'}
+ if(!adm){gtab='sup';$('gtag').textContent='Formation';$('ssub').classList.remove('hide')}
  else{
   if(gtab!=='sup'&&gtab!=='ann')gtab='sup';
   $('gtag').textContent='Espace admin';
   $('gtabs').innerHTML=[['sup','Réunions & supervisions'],['ann','Annonces']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
-  $('ssub').textContent=GSUB[gtab]}
+  $('ssub').textContent=GSUB[gtab];$('ssub').classList.toggle('hide',!GSUB[gtab])}
  $('gsup').classList.toggle('hide',gtab!=='sup');$('gann').classList.toggle('hide',gtab!=='ann'||!adm);
  if(adm&&gtab==='ann'&&window.annAdmin)window.annAdmin($('gann'));
  drawRH()}

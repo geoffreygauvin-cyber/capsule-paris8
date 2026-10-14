@@ -1,7 +1,7 @@
 /* Onglet « Règlement intérieur » de menu Gestion RH (admins) : le règlement intérieur de l'équipe.
    - Rédiger : éditeur du texte (introduction + articles), brouillon enregistré dans la base (le fichier netlify/lib/reglement.mjs ne sert que de texte de départ).
    - Publier : une version est visible et signable par l'équipe une fois publiée ; pour un changement de fond, tout le monde doit signer à nouveau (nouveau numéro de version) ; une correction mineure garde les signatures.
-   - Suivre : registre des signatures (qui, quand, quel texte), exemplaire signé de chaque personne retrouvable et imprimable tel que signé, export CSV, historique des versions.
+   - Suivre : registre des signatures (qui, quand, quel texte), exemplaire signé de chaque personne retrouvable et imprimable tel que signé, historique des versions.
    Lecture et signature par l'équipe : gestion-reglement.js. Données : actions juridique_get, reglement_brouillon, reglement_brouillon_reset, reglement_pub, reglement_copie, reglement_texte de netlify/functions/gestion.mjs.
    Utilise window.CAPSULE (exposé par gestion.html). Point d'entrée : window.jurAdmin(élément) appelé par drawGest(). */
 (function () {
@@ -81,8 +81,7 @@
       (D.cur ? '<button type="button" class="link" data-j="unpub" style="margin-left:auto">Retirer la publication</button>' : '') + '</div></section>';
     h += '<section class="jc"><div class="jbar"><div><h3 style="margin:0 0 2px;font-size:18px">Signatures</h3><p class="sub" style="margin:0">' +
       (D.cur ? ok + ' sur ' + sg.length + ' étudiant·es ont signé la version ' + e(D.cur.version) + '.' : 'Les signatures apparaissent ici dès que le règlement est publié.') + ' Seul·es les étudiant·es psy signent ; les admins n’ont pas à le faire.</p>' +
-      (D.cur ? '<div class="jmeter" role="progressbar" aria-valuemin="0" aria-valuemax="' + sg.length + '" aria-valuenow="' + ok + '"><i style="width:' + (sg.length ? Math.round(100 * ok / sg.length) : 0) + '%"></i></div>' : '') + '</div>' +
-      '<button type="button" class="btn l s" data-j="csv">Exporter (CSV)</button></div>' +
+      (D.cur ? '<div class="jmeter" role="progressbar" aria-valuemin="0" aria-valuemax="' + sg.length + '" aria-valuenow="' + ok + '"><i style="width:' + (sg.length ? Math.round(100 * ok / sg.length) : 0) + '%"></i></div>' : '') + '</div></div>' +
       (sg.length ? '' : '<p class="sub" style="margin:14px 0 0">Aucun·e étudiant·e pour l’instant.</p>') + '<div>' + sg.slice().sort(function (a, b) { return (a.aJour === b.aJour ? 0 : a.aJour ? 1 : -1) || a.nom.localeCompare(b.nom, 'fr'); }).map(function (s) {
         var ph = ((C().data().photos) || {})[s.nom], stt = s.aJour ? ['Signé le ' + djc(s.le), 'ok'] : s.version ? ['À re-signer (version ' + s.version + ')', 'old'] : ['Pas encore signé', 'no'];
         return '<div class="jr"><span class="jav" style="' + (ph ? 'background-image:url(' + e(ph) + ')' : '') + '">' + (ph ? '' : e(nom(s.nom).charAt(0))) + '</span>' +
@@ -191,13 +190,6 @@
       voirTexte(r, 'Version ' + v, 'Publiée le ' + e(djh(l)), function () { window.regPrint(r, { version: v, date: l }, null); });
     });
   }
-  function csv() {
-    var l = (D && D.signatures) || [], q = function (x) { return '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"'; };
-    var rows = [['Compte', 'Rôle', 'Statut', 'Version signée', 'Date de signature', 'Nom saisi']].concat(l.map(function (s) { return [nom(s.nom), ROLE[s.role] || s.role, s.aJour ? 'À jour' : s.version ? 'À re-signer' : 'Pas signé', s.version || '', s.le ? djh(s.le) : '', s.signeNom || '']; }));
-    var blob = new Blob(['﻿' + rows.map(function (r) { return r.map(q).join(';'); }).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'signatures-reglement-' + new Date().toISOString().slice(0, 10) + '.csv';
-    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  }
 
   /* ---------- clics ---------- */
   document.addEventListener('click', function (ev) {
@@ -211,7 +203,6 @@
     else if (a === 'unpub') { if (confirm('Retirer la publication ? L’équipe ne pourra plus lire ni signer le règlement. Les signatures déjà faites sont conservées.')) api({ action: 'reglement_pub', publie: false }).then(function (r) { if (r && r.ok) { toast('Publication retirée.'); load(); } else toast((r && r.error) || 'Action impossible.'); }); }
     else if (a === 'copie') copie(b.getAttribute('data-n'));
     else if (a === 'ver') version(b);
-    else if (a === 'csv') csv();
     else if (a === 'back') { if (!dirty || confirm('Quitter sans enregistrer les modifications ?')) leave(); }
     else if (a === 'save') save();
     else if (a === 'apercu') { collect(); voirTexte({ articles: ed.articles.filter(function (x) { return x.t || x.p.length; }), intro: ed.intro }, ed.titre || 'Règlement intérieur', 'Aperçu : texte tel que le verra l’équipe (non enregistré)', function () { window.regPrint({ titre: ed.titre, intro: ed.intro, articles: ed.articles }, {}, null); }); }
