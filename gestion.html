@@ -203,6 +203,16 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 .mv{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 10px;font:500 13px Poppins,sans-serif;color:var(--muted);max-width:132px;cursor:pointer}
 .rtop{flex-wrap:wrap}.qa{align-items:center}
 @media (max-width:860px){.mv{max-width:104px;padding:7px 6px;font-size:12px}}
+.grp{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,245,235,.5);padding:16px 14px 4px;font-weight:600}
+.edays{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.eday{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px}.eday.today{border-color:var(--rasp);box-shadow:0 0 0 2px var(--rose)}
+.eday h4{margin:0 0 10px;font-size:14px;display:flex;justify-content:space-between;align-items:baseline}.eday h4 em{font-style:normal;font-size:12px;color:var(--rasp);font-weight:600}
+.ev{border-radius:12px;padding:9px 11px;margin-bottom:8px;font-size:13.5px;line-height:1.4}.ev b{display:block;font-size:12px;letter-spacing:.02em}.ev small{display:block;color:var(--muted);font-size:12px}
+.ev.r{background:var(--rose)}.ev.s{background:var(--lilac)}.eday .none{color:var(--muted);font-size:13px;margin:0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sc2{border-radius:var(--r);padding:18px 20px;position:relative}.sc2 .sh{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.sc2 .sh b{color:var(--rasp)}.sc2 h3{margin:6px 0 4px;font-size:17px}.sc2 p{margin:0;font-size:13.5px}
+.pp{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.pp span{background:rgba(255,255,255,.7);border-radius:999px;padding:3px 10px;font-size:12.5px}.pp .ok{background:#DDF0DD}.pp .ko{background:#F6D9D9}
+@media (max-width:860px){.grp{display:none}.sgrid{grid-template-columns:1fr}.edays{grid-template-columns:1fr}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
@@ -250,11 +260,17 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
 <section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées. À terme, le questionnaire en ligne alimentera cet onglet ; en attendant, les notes se saisissent à la main après chaque séance.</p></header><div id="efbody"></div></section>
+<section id="v9" class="hide"><header class="ph0 pastel t2"><div class="tag">Planning personnel</div><h1>Emploi du temps</h1><p class="sub">Rendez-vous avec les patients et séances de supervision de la semaine, au même endroit.</p></header>
+<div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
+<div class="ekp" id="ekp"></div><div class="edays" id="ebody"></div></section>
+<section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header>
+<div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une supervision</button></div>
+<div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
 <section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
 <div class="tm" id="tl"></div>
-<div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label></div>
+<div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label><label class="f">Statut du compte<select id="tr"><option value="etudiant">Étudiant·e psy (thérapeute)</option><option value="superviseur">Superviseur·e</option><option value="admin">Admin</option></select></label></div>
 <div class="row"><button class="btn" id="tadd">Créer le compte</button></div><div id="tmsg"></div></div><div class="newc" id="exp" style="margin-top:16px"><b>Exporter les données</b><p class="sub" style="margin:4px 0 12px">Fichiers CSV (ouvrables dans Excel) ou sauvegarde complète. Données personnelles : à conserver et partager avec précaution.</p>
 <div class="row" style="flex-wrap:wrap"><button class="btn l s" data-x="pat">Patients</button><button class="btn l s" data-x="dem">Demandes</button><button class="btn l s" data-x="sea">Séances</button><button class="btn l s" data-x="act">Heures par étudiant·e</button><button class="btn l s" data-x="msg">Journal des messages</button><button class="btn s" data-x="all">Sauvegarde complète (JSON)</button></div></div></section>
 </main></div>
@@ -263,7 +279,7 @@ section{animation:fin .28s ease both}@keyframes fin{from{opacity:0;transform:tra
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
 var SL={nouvelle:'Nouvelle',a_recontacter:'À recontacter',contactee:'Contactée',rdv_fixe:'RDV fixé',en_cours:'En cours',terminee:'Terminée',sans_suite:'Sans suite'};
-var ress=[],rc='tous',photos={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false;
+var role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false;
 try{token=sessionStorage.getItem('cap_t')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -271,7 +287,9 @@ function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1)}
 function api(b){b.token=token;return fetch('/api/gestion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){d._s=r.status;return d})}).catch(function(){return{error:'Connexion impossible.'}})}
 function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.add('hide')},5000)}
 function pad(n){return(n<10?'0':'')+n}
-function titre(n){return n==='geoffrey'?'Grand chef':n==='violette'?'Dr. Assistante':'Compte principal'}
+var RL={admin:'Administrateur·rice',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy'};
+function titre(n){return n==='geoffrey'?'Grand chef':n==='violette'?'Dr. Assistante':RL[roles[n]||'etudiant']}
+function whoLine(){var ms=mesStats(moi);return titre(moi)+(isSup?'':' · '+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':''))}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function parse(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2],12)}
 function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
@@ -310,11 +328,11 @@ function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){toast(d.error||'Erreur');return}
  items=d.items;photos=d.photos||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
- $('nvt').classList.toggle('hide',!isAdmin);$('nve').classList.toggle('hide',!isAdmin);$('radd').classList.toggle('hide',!isAdmin);
+ role=d.role||(d.admin?'admin':'etudiant');isSup=role==='superviseur';roles=d.roles||{};superv=d.superviseurs||[];buildNav();$('radd').classList.toggle('hide',!isAdmin);Array.prototype.forEach.call(document.querySelectorAll('#v3 .newc'),function(x){x.classList.toggle('hide',!isAdmin)});
  $('login').classList.add('hide');$('app').classList.remove('hide');
- $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+(moi==='geoffrey'||moi==='violette'?' ('+titre(moi)+')':'');$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=(moi==='geoffrey'||moi==='violette'?titre(moi)+' · ':'')+ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'');
+ $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=whoLine();
  if(!week)week=monday(iso(new Date()));
- draw();drawCal();if(cb)cb()})}
+ draw();drawCal();loadSup();if(cb)cb()})}
 /* ---- demandes ---- */
 function drawToday(){
  var t=iso(new Date()),l=occs().filter(function(i){return i.rdvDate===t}).sort(function(a,z){return a.rdvHeure.localeCompare(z.rdvHeure)}),d=new Date();
@@ -328,7 +346,7 @@ function stats(){drawToday();
  var IC={inbox:'<path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',tel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
  function tile(cls,ic,k,num,lab){return '<button class="stat pastel '+cls+'" data-s="'+k+'"><span class="bd"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg></span><b>'+num+'</b><span>'+lab+'</span></button>'}
  $('stats').innerHTML=tile('t1','inbox','nouvelle',n,'à traiter')+tile('t2','cal','rdv_fixe',r,'rendez-vous cette semaine')+tile('t3','tel','a_recontacter',a,'à recontacter')+(cf?tile('t1','ok','rdv_fixe',cf,'séance'+(cf>1?'s':'')+' à confirmer'):'');
- var nb=$('nbn');nb.textContent=n;nb.classList.toggle('hide',!n)}
+ var nb=$('nbn');if(nb){nb.textContent=n;nb.classList.toggle('hide',!n)}}
 function rdvBox(i,modal){
  var at=function(act,x,extra){return modal?'data-m="'+(act==='det'?'det2':act)+'" data-id="'+esc(i.id)+'" data-r="'+esc(x.rdvId)+'"':'data-a="'+act+'" data-r="'+esc(x.rdvId)+'"'},h='';
  occs().filter(function(o){return o.id===i.id}).forEach(function(x){
@@ -360,8 +378,8 @@ function gridHtml(wk,picking){
  cfg.jours.forEach(function(j){var d=addDays(wk,j-1),n=occs().filter(function(o){return o.rdvDate===d}).length;
   h+='<div class="day'+(d===today?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(d===today?'Aujourd’hui':n?n+' RDV':'')+'</em></h4><table><tr><th></th>'+cfg.salles.map(function(s){return '<th>'+esc(s.replace('Salle ','S'))+'</th>'}).join('')+'</tr>';
   cfg.heures.forEach(function(hh){h+='<tr><td class="h'+(d===today&&parseInt(hh,10)===new Date().getHours()?' now':'')+'">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
-   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'" style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'" title="RDV '+o.no+'">'+esc(o.prenom)+' <span style="font-weight:500;opacity:.7">#'+o.no+'</span>'+(dupSem(o).some(function(x){return x.sem===monday(o.rdvDate)})?' ⚠':'')+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
-   return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':' aria-label="Planifier le '+esc(fday(d))+' à '+fh(hh)+', '+esc(s)+'"')+'>'+(past(d,hh)?'':'+')+'</button></td>'}).join('')+'</tr>'});
+   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" '+(isSup?'':'data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'" ')+'style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'" title="RDV '+o.no+'">'+esc(o.prenom)+' <span style="font-weight:500;opacity:.7">#'+o.no+'</span>'+(dupSem(o).some(function(x){return x.sem===monday(o.rdvDate)})?' ⚠':'')+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
+   if(isSup)return '<td></td>';return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':' aria-label="Planifier le '+esc(fday(d))+' à '+fh(hh)+', '+esc(s)+'"')+'>'+(past(d,hh)?'':'+')+'</button></td>'}).join('')+'</tr>'});
   h+='</table></div>'});return h}
 function drawCal(){
  $('wt').textContent='Semaine du '+fday(week);
@@ -431,7 +449,7 @@ $('wp').onclick=function(){week=addDays(week,-7);drawCal()};$('wn').onclick=func
 $('wt0').onclick=function(){week=monday(iso(new Date()));var t=iso(new Date()),d=(parse(t).getDay()+6)%7;dayIdx=d<3?d:0;drawCal()};
 $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
-function nav(n){[1,2,3,4,5,6,7,8].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff()}
+function nav(n){[1,2,3,4,5,6,7,8,9,10].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n)});window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8)drawEff();if(n===9)drawEmp();if(n===10)drawSup()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -440,7 +458,7 @@ function issue(id,iss,rid){api({action:'seance_issue',id:id,rdvId:rid,issue:iss}
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
  if(iss==='realisee'){mesureForm(id,r.item.seances.length-1,true);return;var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
  else toast('Absence enregistrée. La personne repasse « à recontacter ».')})}
-function refreshMe(){var ms=mesStats(moi);$('whoc').textContent=ms.total+' h · '+ms.patients+' patient'+(ms.patients>1?'s':'')}
+function refreshMe(){$('whoc').textContent=whoLine()}
 /* ---- patients ---- */
 var pf='suivi';
 function base(){return items.filter(function(i){return i.statut!=='nouvelle'||nS(i)||nS(i,'absence')})}
@@ -499,7 +517,7 @@ function drawActMe(){
  $('amy').innerHTML='<div class="mkpis">'+k('t1','h',ms.total+' h','de consultation au total')+k('t2','h',ms.mois+' h','ce mois-ci')+k('t3','p',ms.patients,'personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':''))+k('t2','s',ms.avenir,'rendez-vous à venir')+'</div>'+
   '<div class="tbl"><div class="pr ph act"><span>Mois</span><span class="c2">Heures</span><span class="c3">Patients</span><span></span></div>'+(ks.length?ks.map(function(m){var y=m.slice(0,4),mo=+m.slice(5);return '<div class="pr act"><span><b style="text-transform:capitalize">'+MOIS[mo-1]+' '+y+'</b></span><span class="c2"><b style="font-size:20px;color:var(--rasp)">'+par[m].h+'</b> h</span><span class="c3"><b>'+Object.keys(par[m].p).length+'</b> patient'+(Object.keys(par[m].p).length>1?'s':'')+'</span><span></span></div>'}).join(''):'<div class="empty" style="border:0"><b>Pas encore de séance</b>Vos heures apparaîtront ici dès que vous aurez confirmé votre première séance réalisée.</div>')+'</div>'}
 function drawAct(){
- if(!isAdmin){drawActMe();return}
+ if(!isAdmin&&!isSup){drawActMe();return}
  $('atabs').classList.remove('hide');$('atbl').classList.remove('hide');$('amy').classList.add('hide');
  var mois=iso(new Date()).slice(0,7),mm=ap==='mois'?mois:null;
  $('atabs').innerHTML='<button class="chip'+(ap==='tout'?' on':'')+'" data-a2="tout">Depuis le début</button><button class="chip'+(ap==='mois'?' on':'')+'" data-a2="mois">Ce mois-ci</button>';
@@ -612,20 +630,109 @@ $('lform').onsubmit=function(e){e.preventDefault();$('lerr').textContent='';var 
   token=d.token;try{sessionStorage.setItem('cap_t',token)}catch(e){}$('p').value='';load()})};
 $('logout2').onclick=logout;$('q').oninput=draw;
 /* ---- équipe ---- */
-function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span>'+(n==='geoffrey'||n==='violette'?titre(n):'compte principal')+' · '+mesStats(n).total+' h</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+mesStats(x.nom).total+' h · créé par '+esc(cap(x.creePar||''))+'</span><button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button></div>'}).join('')}
+function team(d){var m=d.membres||[];$('tl').innerHTML=(d.principaux||[]).map(function(n){return '<div class="tr">'+av(n)+'<b>'+esc(cap(n))+'</b><span><span class="mchip">'+esc(titre(n))+'</span> · compte principal</span></div>'}).join('')+m.map(function(x){return '<div class="tr">'+av(x.nom)+'<b>'+esc(cap(x.nom))+'</b><span>'+(isAdmin?'<select class="mv" data-t="role" data-n="'+esc(x.nom)+'" style="max-width:none;color:var(--ink,#2b1d22)" aria-label="Statut du compte"><option value="etudiant"'+(x.role==='etudiant'?' selected':'')+'>Étudiant·e psy</option><option value="superviseur"'+(x.role==='superviseur'?' selected':'')+'>Superviseur·e</option><option value="admin"'+(x.role==='admin'?' selected':'')+'>Admin</option></select>':'<span class="mchip">'+esc(RL[x.role]||'')+'</span>')+(x.role==='superviseur'?'':' '+mesStats(x.nom).total+' h')+' · créé par '+esc(cap(x.creePar||''))+'</span>'+(isAdmin?'<button class="btn l s" data-t="reset" data-n="'+esc(x.nom)+'">Nouveau code</button><button class="link" style="margin-left:0" data-t="del" data-n="'+esc(x.nom)+'">Supprimer</button>':'')+'</div>'}).join('')}
 function loadTeam(){api({action:'comptes_list'}).then(function(d){if(d.ok)team(d);else $('tmsg').textContent=d.error})}
 function shown(n,d){if(d.ok){team(d);$('tmsg').innerHTML='<span class="code">'+esc(n)+' · '+esc(d.code)+'</span><small style="color:var(--muted)">À noter et à transmettre maintenant : il ne sera plus affiché.</small>';$('tn').value='';$('tc').value='';load()}else $('tmsg').innerHTML='<div class="err" style="margin-top:10px">'+esc(d.error||'Erreur')+'</div>'}
 /* export (comptes principaux) */
 function dl(txt,name,mime){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=name;a.click()}
 function nt(i){return Array.isArray(i.notes)?i.notes.map(function(x){return typeof x==='string'?x:(x.texte||x.t||'')}).join(' | '):(i.notes||'')}
-$('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)return;var k=b.dataset.x,d=iso(new Date()),R;
- if(k==='pat'){R=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Changement perçu (1-7)','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',i.changement?i.changement.v:'',(i.creeLe||'').slice(0,10)]}));csv(R,'patients-'+d+'.csv')}
- else if(k==='dem'){R=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',R(i).map(function(x){return x.date+' '+x.heure+' '+x.salle}).join(' | '),nt(i)]}));csv(R,'demandes-'+d+'.csv')}
- else if(k==='sea'){R=[['Date','Heure','Salle','Thérapeute','Patient','Issue','Bien-être (0-10)','Satisfaction (0-10)']];items.forEach(function(i){(i.seances||[]).forEach(function(s){R.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence',s.bienEtre==null?'':s.bienEtre,s.satisfaction==null?'':s.satisfaction])})});R.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(R,'seances-'+d+'.csv')}
- else if(k==='act'){R=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(R,'heures-equipe-'+d+'.csv')}
- else if(k==='msg'){api({action:'messages_data'}).then(function(z){if(!z.ok)return toast(z.error||'Erreur');R=[['Date','Destinataire','Adresse','Objet','Modèle','Envoyé par','Statut','Erreur']].concat((z.journal||[]).map(function(x){return[x.le,x.nom,x.a,x.objet,x.modele,x.type==='auto'?'automatique':x.par,x.statut,x.erreur||'']}));csv(R,'messages-'+d+'.csv')})}
+$('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)return;var k=b.dataset.x,d=iso(new Date()),RR;
+ if(k==='pat'){RR=[['Prénom','Email','Téléphone','Statut','Thérapeute','Séances réalisées','Absences','Dernière séance','Changement perçu (1-7)','Reçue le']].concat(items.map(function(i){var r=(i.seances||[]).filter(function(s){return s.issue==='realisee'}).slice(-1)[0];return[i.prenom,i.email,i.tel,i.statut,i.therapeute||i.assigne||'',nS(i),nS(i,'absence'),r?r.date:'',i.changement?i.changement.v:'',(i.creeLe||'').slice(0,10)]}));csv(RR,'patients-'+d+'.csv')}
+ else if(k==='dem'){RR=[['Reçue le','Prénom','Email','Téléphone','Créneaux souhaités','Message','Statut','Assignée à','RDV','Notes']].concat(items.map(function(i){return[(i.creeLe||'').slice(0,16).replace('T',' '),i.prenom,i.email,i.tel,Array.isArray(i.creneaux)?i.creneaux.join(', '):(i.creneaux||''),i.message,i.statut,i.assigne||'',R(i).map(function(x){return x.date+' '+x.heure+' '+x.salle}).join(' | '),nt(i)]}));csv(RR,'demandes-'+d+'.csv')}
+ else if(k==='sea'){RR=[['Date','Heure','Salle','Thérapeute','Patient','Issue','Bien-être (0-10)','Satisfaction (0-10)']];items.forEach(function(i){(i.seances||[]).forEach(function(s){RR.push([s.date,s.heure,s.salle,s.therapeute,i.prenom,s.issue==='realisee'?'Réalisée':'Absence',s.bienEtre==null?'':s.bienEtre,s.satisfaction==null?'':s.satisfaction])})});RR.sort(function(a,z){return String(a[0]+a[1]).localeCompare(z[0]+z[1])});csv(RR,'seances-'+d+'.csv')}
+ else if(k==='act'){RR=[['Étudiant·e','Heures réalisées','Patients suivis','Absences','RDV à venir']].concat(equipe.map(function(n){var x=stat(n);return[cap(n),x.heures,x.patients,x.abs,mesStats(n).avenir]}));csv(RR,'heures-equipe-'+d+'.csv')}
+ else if(k==='msg'){api({action:'messages_data'}).then(function(z){if(!z.ok)return toast(z.error||'Erreur');RR=[['Date','Destinataire','Adresse','Objet','Modèle','Envoyé par','Statut','Erreur']].concat((z.journal||[]).map(function(x){return[x.le,x.nom,x.a,x.objet,x.modele,x.type==='auto'?'automatique':x.par,x.statut,x.erreur||'']}));csv(RR,'messages-'+d+'.csv')})}
  else if(k==='all'){api({action:'messages_data'}).then(function(z){dl(JSON.stringify({exporteLe:new Date().toISOString(),par:moi,demandes:items,equipe:equipe,messages:z.journal||[]},null,1),'capsule-sauvegarde-'+d+'.json','application/json')})}
 };
+
+/* ---- navigation selon le statut du compte ---- */
+var NIC={9:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>',10:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19c.5-3.4 2.7-5.2 5.5-5.2s5 1.8 5.5 5.2M14 18.5c.4-2.4 1.9-3.7 3.6-3.7 1.9 0 3.3 1.2 3.9 3.7"/>'};
+function buildNav(){
+ var as=document.querySelector('aside');
+ if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
+ Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
+ var anchor=as.querySelector('.uni')||as.querySelector('.me');
+ var C={etudiant:[['Espace thérapeute',[1,2,4,9,10,5,6,7]]],admin:[['Espace thérapeute',[1,2,4,9,6,7]],['Espace gestion',[10,5,8,3]]],superviseur:[['Espace gestion',[9,2,10,5,8,3,6]]]}[role];
+ var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',9:'Emploi du temps',10:role==='etudiant'?'Mes supervisions':'Supervision'};
+ C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
+   if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
+   as.insertBefore(b,anchor)})});
+ document.querySelector('#v5 h1').textContent=LB[5];document.querySelector('#v3 h1').textContent=isAdmin?'Équipe':'Équipe';
+ $('v10').querySelector('#sh1').textContent=LB[10];
+ var first=C[0][1][0];var on=as.querySelector('.nv[data-v="'+first+'"]');
+ var cv=[1,2,3,4,5,6,7,8,9,10].filter(function(k){return !$('v'+k).classList.contains('hide')})[0],cb2=as.querySelector('.nv[data-v="'+cv+'"]');if(cb2)cb2.classList.add('on');
+ if(firstLoad){firstLoad=false;setTimeout(function(){nav(first)},0)}}
+
+/* ---- emploi du temps ---- */
+function addMin(h,m){var t=+h.slice(0,2)*60+ +h.slice(3)+m;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}
+function drawEmp(){
+ var wk=emp.wk||(emp.wk=monday(iso(new Date())));$('ewt').textContent='Semaine du '+fday(wk);
+ var pick=isAdmin||isSup,sel=$('ewho');sel.classList.toggle('hide',!pick);
+ if(pick){var names=Object.keys(roles).sort(function(a,z){return a.localeCompare(z,'fr')});if(!emp.who)emp.who=moi;sel.innerHTML=names.map(function(n){return '<option value="'+esc(n)+'"'+(n===emp.who?' selected':'')+'>'+esc(cap(n))+(n===moi?' (moi)':'')+' · '+esc(RL[roles[n]])+'</option>'}).join('')}
+ var who=pick?(emp.who||moi):moi,rdv=0,sc=0,mins=0,h='';
+ for(var k=0;k<5;k++){var d=addDays(wk,k),ev=[];
+  occs().filter(function(o){return o.rdvDate===d&&o.therapeute===who}).forEach(function(o){ev.push({h:o.rdvHeure,dur:60,kind:'r',t:esc(o.prenom)+' <span class="mchip">RDV '+o.no+'</span>',s:o.salle})});
+  supItems.filter(function(x){return x.date===d&&((x.participants||[]).indexOf(who)>-1||x.superviseur===who)}).forEach(function(x){ev.push({h:x.heure,dur:x.duree,kind:'s',t:'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe')+(x.titre?' · '+esc(x.titre):''),s:(x.lieu||'Lieu à préciser')+' · avec '+cap(x.superviseur)})});
+  ev.sort(function(a,z){return a.h.localeCompare(z.h)});ev.forEach(function(e){if(e.kind==='r')rdv++;else{sc++;mins+=e.dur}});
+  h+='<div class="eday'+(d===iso(new Date())?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(ev.length?ev.length+' créneau'+(ev.length>1?'x':''):'')+'</em></h4>'+(ev.length?ev.map(function(e){return '<div class="ev '+e.kind+'"><b>'+fh(e.h)+' – '+fh(addMin(e.h,e.dur))+'</b><span>'+e.t+'</span><small>'+esc(e.s)+'</small></div>'}).join(''):'<p class="none">Rien de prévu.</p>')+'</div>'}
+ $('ekp').innerHTML='<div class="kpi pastel"><b>'+rdv+'</b><span>rendez-vous patients</span></div><div class="kpi pastel"><b>'+sc+'</b><span>séance'+(sc>1?'s':'')+' de supervision</span></div><div class="kpi pastel"><b>'+(mins/60).toString().replace('.',',')+' h</b><span>de supervision</span></div>';
+ $('ebody').innerHTML=h}
+$('ewp').onclick=function(){emp.wk=addDays(emp.wk||monday(iso(new Date())),-7);drawEmp()};$('ewn').onclick=function(){emp.wk=addDays(emp.wk||monday(iso(new Date())),7);drawEmp()};
+$('ewt0').onclick=function(){emp.wk=monday(iso(new Date()));drawEmp()};$('ewho').onchange=function(){emp.who=this.value;drawEmp()};
+
+/* ---- supervision ---- */
+var stab='avenir';
+function loadSup(){api({action:'sup_list'}).then(function(d){if(d.ok){supItems=d.items;drawSup();if(!$('v9').classList.contains('hide'))drawEmp()}})}
+function supEnd(x){return addMin(x.heure,x.duree)}
+function supPast(x){return past(x.date,x.heure)}
+function drawSup(){
+ var mine=!(isAdmin||isSup),adm=isAdmin||isSup;$('sadd').classList.toggle('hide',!adm);
+ $('ssub').textContent=adm?'Programmez les séances de supervision (ponctuelles ou chaque semaine), choisissez les personnes concernées et notez les présences.':'Vos séances de supervision programmées, et vos heures de supervision suivies.';
+ var up=supItems.filter(function(x){return !supPast(x)}),pa=supItems.filter(supPast).reverse(),h=0,fait=0;
+ supItems.forEach(function(x){if(mine){if((x.presents||[]).indexOf(moi)>-1)h+=x.duree}else if(supPast(x)&&x.fait)fait++});
+ var nx=up[0];
+ $('skp').innerHTML='<div class="kpi pastel"><b>'+up.length+'</b><span>à venir</span></div>'+(mine?'<div class="kpi pastel"><b>'+(h/60).toString().replace('.',',')+' h</b><span>de supervision suivies</span></div>':'<div class="kpi pastel"><b>'+pa.filter(function(x){return !x.fait}).length+'</b><span>présence'+(pa.filter(function(x){return !x.fait}).length>1?'s':'')+' à saisir</span></div>')+'<div class="kpi pastel"><b style="font-size:17px;line-height:1.5">'+(nx?esc(fday(nx.date))+'<br>'+fh(nx.heure):'—')+'</b><span>prochaine séance</span></div>';
+ $('stabs').innerHTML='<button class="chip'+(stab==='avenir'?' on':'')+'" data-k="avenir">À venir'+(up.length?'<i>'+up.length+'</i>':'')+'</button><button class="chip'+(stab==='passees'?' on':'')+'" data-k="passees">Passées'+(pa.length?'<i>'+pa.length+'</i>':'')+'</button>';
+ var l=stab==='avenir'?up:pa;
+ $('slist').innerHTML=l.length?'<div class="sgrid">'+l.map(function(x){
+  var pres=x.presents||[];
+  return '<article class="sc2 pastel '+(x.type==='individuelle'?'t1':'t2')+'"><div class="sh"><b>'+esc(cap(fday(x.date)))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+'</span></div><h3>'+(x.titre?esc(x.titre):'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe'))+'</h3><p>'+esc(x.lieu||'Lieu à préciser')+' · avec <b>'+esc(cap(x.superviseur))+'</b></p><div class="pp">'+(x.participants||[]).map(function(n){var ok=pres.indexOf(n)>-1;return '<span class="'+(x.fait?(ok?'ok':'ko'):'')+'">'+esc(cap(n))+(x.fait?(ok?' ✓':' ✗'):'')+'</span>'}).join('')+'</div>'+(x.notes?'<p class="sub" style="margin:8px 0 0">'+esc(x.notes)+'</p>':'')+
+  (adm?'<div class="row" style="margin-top:12px">'+(supPast(x)?'<button class="btn s" data-s="pres" data-id="'+esc(x.id)+'">'+(x.fait?'Modifier les présences':'Noter les présences')+'</button>':'')+'<button class="btn l s" data-s="edit" data-id="'+esc(x.id)+'">Modifier</button><button class="link" data-s="del" data-id="'+esc(x.id)+'" style="margin-left:0">Supprimer</button></div>':'')+'</article>'}).join('')+'</div>':'<div class="empty"><b>'+(stab==='avenir'?'Aucune supervision à venir':'Aucune supervision passée')+'</b>'+(adm&&stab==='avenir'?'Utilisez « Programmer une supervision » pour en ajouter.':'')+'</div>';
+ if(adm){var rows=equipe.map(function(n){var hh=0,c=0;supItems.forEach(function(x){if((x.presents||[]).indexOf(n)>-1){hh+=x.duree;c++}});return{n:n,h:hh,c:c}}).sort(function(a,z){return z.h-a.h||a.n.localeCompare(z.n,'fr')});
+  $('shrs').innerHTML='<h3 style="margin:26px 0 10px">Heures de supervision par étudiant·e</h3><div class="tm">'+rows.map(function(r){return '<div class="tr">'+av(r.n)+'<b>'+esc(cap(r.n))+'</b><span><b style="color:var(--rasp);font-size:18px">'+(r.h/60).toString().replace('.',',')+' h</b> · '+r.c+' séance'+(r.c>1?'s':'')+' suivie'+(r.c>1?'s':'')+'</span></div>'}).join('')+'</div>'}
+ else $('shrs').innerHTML=''}
+$('stabs').onclick=function(e){var b=e.target.closest('.chip');if(b){stab=b.dataset.k;drawSup()}};
+function supForm(id){
+ var x=id?supItems.filter(function(y){return y.id===id})[0]:null,today=iso(new Date()),hs=cfg.heuresSup||[],du=cfg.durees||[60,90,120];
+ var sv=superv.length?superv:[moi],pr=x?x.participants:[];
+ openM('<h3>'+(x?'Modifier la supervision':'Programmer une supervision')+'</h3><div class="g2"><label class="f w">Intitulé (facultatif)<input id="sti" maxlength="80" value="'+esc(x?x.titre:'')+'" placeholder="ex. Supervision de groupe du mardi"></label>'+
+ '<label class="f">Type<select id="sty"><option value="groupe"'+(x&&x.type==='groupe'?' selected':'')+'>De groupe</option><option value="individuelle"'+(x&&x.type==='individuelle'?' selected':'')+'>Individuelle</option></select></label>'+
+ '<label class="f">Superviseur·e<select id="ssv">'+sv.map(function(n){return '<option value="'+esc(n)+'"'+((x?x.superviseur:moi)===n?' selected':'')+'>'+esc(cap(n))+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Date<input id="sda" type="date" value="'+esc(x?x.date:today)+'"'+(x?'':' min="'+today+'"')+'></label>'+
+ '<label class="f">Heure de début<select id="sho">'+hs.map(function(t){return '<option value="'+t+'"'+((x?x.heure:'10:00')===t?' selected':'')+'>'+fh(t)+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Durée<select id="sdu">'+du.map(function(m){return '<option value="'+m+'"'+((x?x.duree:60)===m?' selected':'')+'>'+(m%60?Math.floor(m/60)+' h 30':(m/60)+' h')+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Lieu<input id="sli" maxlength="80" list="sli-l" value="'+esc(x?x.lieu:'')+'" placeholder="ex. Salle 1"><datalist id="sli-l">'+(cfg.salles||[]).map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></label>'+
+ (x?'':'<label class="f">Répéter<select id="sre"><option value="1">Une seule fois</option>'+[2,3,4,6,8,10,12].map(function(n){return '<option value="'+n+'">Chaque semaine, '+n+' fois</option>'}).join('')+'</select></label>')+'</div>'+
+ '<div class="mq" style="margin-top:10px"><b>Personnes en supervision</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+equipe.map(function(n){return '<button type="button" data-p="'+esc(n)+'" class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
+ '<div id="serr" style="margin:8px 0"></div><div class="row"><button class="btn" id="sgo">'+(x?'Enregistrer':'Programmer')+'</button><button class="btn l" data-m="x">Annuler</button></div>');
+ $('spp').onclick=function(e){var b=e.target.closest('button[data-p]');if(b)b.classList.toggle('on')};
+ $('sall').onclick=function(){Array.prototype.forEach.call($('spp').children,function(b){b.classList.add('on')})};
+ var go=function(force){
+  var ps=Array.prototype.map.call($('spp').querySelectorAll('button.on'),function(b){return b.dataset.p});$('sgo').disabled=true;
+  api({action:'sup_save',id:x?x.id:null,titre:$('sti').value,type:$('sty').value,superviseur:$('ssv').value,date:$('sda').value,heure:$('sho').value,duree:+$('sdu').value,lieu:$('sli').value,participants:ps,repeter:x?1:+($('sre')?$('sre').value:1),forcer:!!force}).then(function(r){
+   if(!r.ok){if(r.alerte){$('serr').innerHTML='<div class="warn">⚠ '+esc(r.error)+'</div><button class="btn s" id="sforce">Programmer quand même</button>';$('sforce').onclick=function(){go(true)}}else $('serr').innerHTML='<div class="err">'+esc(r.error||'Erreur')+'</div>';$('sgo').disabled=false;return}
+   r.items.forEach(function(it){var f=false;supItems=supItems.map(function(y){if(y.id===it.id){f=true;return it}return y});if(!f)supItems.push(it)});
+   supItems.sort(function(a,z){return(a.date+a.heure).localeCompare(z.date+z.heure)});closeM();drawSup();drawEmp();toast(r.items.length>1?r.items.length+' séances programmées.':'Supervision enregistrée.')})};
+ $('sgo').onclick=function(){go(false)}}
+function presForm(id){var x=supItems.filter(function(y){return y.id===id})[0];if(!x)return;var pre=x.fait?(x.presents||[]):x.participants;
+ openM('<h3>Présences</h3><p class="sub">'+esc(cap(fday(x.date)))+', '+fh(x.heure)+' – '+fh(supEnd(x))+' · cochez les personnes présentes.</p><div class="sc" id="spr">'+(x.participants||[]).map(function(n){return '<button type="button" data-p="'+esc(n)+'" class="'+(pre.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><label class="f">Notes de séance (organisationnel, sans détail de patient)<textarea id="sno" rows="3" maxlength="600">'+esc(x.notes||'')+'</textarea></label><div id="serr"></div><div class="row"><button class="btn" id="sgo2">Enregistrer</button><button class="btn l" data-m="x">Annuler</button></div>');
+ $('spr').onclick=function(e){var b=e.target.closest('button[data-p]');if(b)b.classList.toggle('on')};
+ $('sgo2').onclick=function(){var ps=Array.prototype.map.call($('spr').querySelectorAll('button.on'),function(b){return b.dataset.p});api({action:'sup_presence',id:id,presents:ps,notes:$('sno').value}).then(function(r){if(!r.ok){$('serr').innerHTML='<div class="err">'+esc(r.error||'Erreur')+'</div>';return}supItems=supItems.map(function(y){return y.id===id?r.item:y});closeM();drawSup();toast('Présences enregistrées.')})}}
+$('sadd').onclick=function(){supForm(null)};
+$('slist').onclick=function(e){var b=e.target.closest('button[data-s]');if(!b)return;var id=b.dataset.id,k=b.dataset.s;
+ if(k==='edit')supForm(id);else if(k==='pres')presForm(id);
+ else if(k==='del'){var x=supItems.filter(function(y){return y.id===id})[0];if(!confirm('Supprimer cette séance de supervision ?'))return;var serie=!!(x.serie&&confirm('Supprimer aussi toutes les séances suivantes de cette série ?'));
+  api({action:'sup_delete',id:id,serie:serie}).then(function(r){if(r.ok){supItems=supItems.filter(function(y){return r.supprimes.indexOf(y.id)<0});drawSup();drawEmp();toast('Supprimé.')}else toast(r.error||'Erreur')})}};
 /*EFF*/
 /* ---- mesures de séance et changement perçu ---- */
 var CHG=['Beaucoup moins bien','Moins bien','Un peu moins bien','Inchangé','Un peu mieux','Mieux','Beaucoup mieux'];
@@ -700,7 +807,8 @@ function drawEff(){
  h+='<article class="ec"><h3>Issue des suivis</h3><p class="cap">Suivis terminés comparés aux arrêts sans suite (personnes ayant eu au moins une séance).</p>'+((ter+ss)?svgStack([{l:'Terminés',v:ter,c:'#7B206B'},{l:'Sans suite',v:ss,c:'#B9A9B4'}]):'<p class="sub">Aucun suivi clos pour le moment.</p>')+'</article></div>';
  h+='<p class="enote">Lecture : données descriptives issues de l’activité courante, sans groupe de comparaison ni outil validé : elles montrent une tendance, pas un effet prouvé. Les petits effectifs (n) sont à interpréter avec prudence. Complétude : '+pct(mes,real.length)+' % des séances réalisées ont au moins une mesure.</p>';
  $('efbody').innerHTML=h}
-$('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value}).then(function(d){shown(n,d)})};
+$('tadd').onclick=function(){var n=$('tn').value.trim().toLowerCase();api({action:'compte_create',nom:n,code:$('tc').value,role:$('tr').value}).then(function(d){shown(n,d)})};
+$('tl').onchange=function(e){var sl=e.target.closest('select[data-t="role"]');if(!sl)return;api({action:'compte_role',nom:sl.dataset.n,role:sl.value}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Statut modifié : '+cap(sl.dataset.n)+' est maintenant '+RL[sl.value]+'.';load()}else $('tmsg').textContent=d.error})};
 $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)return;var n=b.dataset.n;
  if(b.dataset.t==='reset'){if(confirm('Générer un nouveau code pour '+n+' ? L’ancien ne fonctionnera plus.'))api({action:'compte_reset',nom:n}).then(function(d){shown(n,d)})}
  else if(confirm('Supprimer le compte '+n+' ?'))api({action:'compte_delete',nom:n}).then(function(d){if(d.ok){team(d);$('tmsg').textContent='Compte supprimé.';load()}else $('tmsg').textContent=d.error})};

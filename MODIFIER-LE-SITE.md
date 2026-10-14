@@ -38,3 +38,10 @@ Onglet « Efficacité » : indicateurs et graphiques calculés à partir des mes
 
 ## Plusieurs rendez-vous par personne, déplacement entre onglets
 Une personne peut avoir plusieurs rendez-vous à venir (« Planifier un autre rendez-vous » depuis sa fiche, ou « + » dans le calendrier). Chaque rendez-vous est numéroté (RDV 1, 2, 3…, séances passées comprises). Si la personne a déjà un rendez-vous la même semaine (du lundi au dimanche), la plateforme demande confirmation (« Oui, c'est voulu ») et affiche un ⚠ dans la liste, le calendrier et la fiche. Le menu « Déplacer ⇄ » sur chaque ligne de la liste Demandes change l'onglet (statut) en un clic, sans toucher aux rendez-vous. Les anciennes fiches (un seul rendez-vous) sont converties automatiquement.
+
+## Statuts de compte, emploi du temps et supervision
+Trois statuts de compte (Équipe › « Statut du compte », modifiable ensuite dans la liste) :
+- **Étudiant·e psy** : espace thérapeute (demandes, calendrier, patients, emploi du temps, ses supervisions, son activité, ressources, messages).
+- **Superviseur·e** : espace gestion (emploi du temps, calendrier en lecture, supervision, activité de l'équipe, efficacité, équipe en lecture, ressources). Aucune coordonnée de patient n'est transmise à ce compte, et il ne peut pas modifier les rendez-vous ni écrire aux patients.
+- **Admin** : les deux espaces, et la gestion des comptes. Les comptes principaux (variable `GESTION_COMPTES`) sont toujours admin.
+Onglet « Emploi du temps » : la semaine d'une personne (rendez-vous patients + supervisions) ; les admins et superviseurs peuvent choisir la personne. Onglet « Supervision » : les admins et superviseurs programment des séances (ponctuelles ou chaque semaine, jusqu'à 26 fois), choisissent superviseur·e, participant·es, lieu et durée, puis notent les présences après la séance ; les heures de supervision suivies sont comptées par étudiant·e. Un chevauchement (supervision, rendez-vous patient) est signalé ; un rendez-vous patient ne peut pas être placé pendant une supervision de la personne.
