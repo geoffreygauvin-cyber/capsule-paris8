@@ -271,7 +271,8 @@ export default async (req) => {
   if (b.action === "sup_list" || b.action === "sup_save" || b.action === "sup_delete" || b.action === "sup_presence") {
     const ss = getStore("supervisions");
     const toutes = async () => { const { blobs } = await ss.list(); return (await Promise.all(blobs.map((x) => ss.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => (a.date + a.heure).localeCompare(z.date + z.heure)); };
-    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); return J({ ok: true, items: l }); }
+    const masque = (x) => (x.type === "entretien" && !admin ? { ...x, titre: "", motif: undefined, compteRendu: undefined, notes: undefined } : x);
+    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); return J({ ok: true, items: l.map(masque) }); }
     const own = (x) => admin || x.creePar === user;
     if (b.action === "sup_delete") {
       const l = await toutes(), x = l.find((y) => y.id === String(b.id)); if (!x) return J({ error: "Séance introuvable." }, 404);
@@ -293,21 +294,24 @@ export default async (req) => {
     const date = String(b.date || ""), heure = String(b.heure || ""), duree = Number(b.duree);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || ![1, 2, 3, 4, 5].includes(weekday(date))) return J({ error: "La supervision a lieu du lundi au vendredi." }, 400);
     if (!HEURES_SUP.includes(heure) || !DUREES.includes(duree)) return J({ error: "Horaire ou durée invalide." }, 400);
-    const typeB = ["individuelle", "reunion"].includes(b.type) ? b.type : "groupe";
+    const typeB = ["individuelle", "reunion"].includes(b.type) ? b.type : b.type === "entretien" && admin ? "entretien" : "groupe";
     let superviseur = clean(b.superviseur, 60).trim();
     if (superviseur.toLowerCase() in roles) superviseur = superviseur.toLowerCase();
     if (typeB === "reunion" && !admin) superviseur = user;
+    if (typeB === "entretien") superviseur = user;
     if (!superviseur) return J({ error: "Indiquez le nom du ou de la superviseur·e." }, 400);
     const type = typeB;
     const participants = [...new Set((Array.isArray(b.participants) ? b.participants : []).map((n) => String(n).toLowerCase()))].filter((n) => roles[n] && (type === "reunion" || roles[n] !== "superviseur"));
+    if (type === "entretien" && (participants.length !== 1 || roles[participants[0]] === "admin")) return J({ error: "Choisissez une seule personne (un·e étudiant·e) pour l'entretien." }, 400);
     if (!admin && !participants.includes(user)) participants.push(user);
     if (!participants.length) return J({ error: "Choisissez au moins une personne." }, 400);
-    const titre = clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
+    const titre = type === "entretien" ? "" : clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
+    const motif = type === "entretien" ? (["feedback", "recadrage", "point", "autre"].includes(b.motif) ? b.motif : "autre") : undefined, compteRendu = type === "entretien" ? clean(b.compteRendu, 1500) : undefined;
     const existantes = await toutes();
     const ex = b.id ? existantes.find((y) => y.id === String(b.id)) : null; if (b.id && !ex) return J({ error: "Séance introuvable." }, 404);
     if (ex && !own(ex)) return J({ error: "Vous ne pouvez modifier que vos propres séances." }, 403);
     if (!ex && parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);
-    const n = ex ? 1 : Math.min(26, Math.max(1, Math.floor(Number(b.repeter)) || 1)), serie = ex ? ex.serie : n > 1 ? randomUUID() : "";
+    const n = ex || type === "entretien" ? 1 : Math.min(26, Math.max(1, Math.floor(Number(b.repeter)) || 1)), serie = ex ? ex.serie : n > 1 ? randomUUID() : "";
     const dates = Array.from({ length: n }, (_, k) => { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 7 * k); return d.toISOString().slice(0, 10); });
     const tous = await chargerTout(store), conflits = [];
     for (const d of dates) {
@@ -322,7 +326,7 @@ export default async (req) => {
     const out = [];
     for (const d of dates) {
       const id = ex ? ex.id : randomUUID();
-      const rec = { ...(ex || { creeLe: new Date().toISOString(), creePar: user }), id, serie, titre, type, date: d, heure, duree, lieu, superviseur, participants, maj: new Date().toISOString() };
+      const rec = { ...(ex || { creeLe: new Date().toISOString(), creePar: user }), id, serie, titre, type, date: d, heure, duree, lieu, superviseur, participants, ...(type === "entretien" ? { motif, compteRendu } : {}), maj: new Date().toISOString() };
       await ss.setJSON(id, rec); out.push(rec);
     }
     return J({ ok: true, items: out });
@@ -384,7 +388,8 @@ export default async (req) => {
   if (["annonce_list", "annonce_save", "annonce_del", "annonce_lu", "annonce_arch"].includes(b.action)) {
     const as = getStore("annonces"), cle = "liste";
     const liste = (await as.get(cle, { type: "json" })) || [];
-    const vue = (l) => l.map((x) => (admin ? x : { ...x, lus: undefined, lu: (x.lus || []).includes(user) }));
+    const auj = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+    const vue = (l) => (admin ? l : l.filter((x) => !x.debut || x.debut <= auj)).map((x) => (admin ? x : { ...x, lus: undefined, lu: (x.lus || []).includes(user) }));
     if (b.action === "annonce_list") return J({ ok: true, annonces: vue(liste) });
     if (b.action === "annonce_lu") {
       const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
@@ -398,18 +403,19 @@ export default async (req) => {
       await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
     }
     if (b.action === "annonce_del") { const reste = liste.filter((x) => x.id !== String(b.id)); await as.setJSON(cle, reste); return J({ ok: true, annonces: reste }); }
-    const titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 2000).trim(), important = !!b.important, jusqua = String(b.jusqua || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
+    const titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 2000).trim(), important = !!b.important, debut = String(b.debut || "").trim(), jusqua = String(b.jusqua || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
     if (!titre) return J({ error: "Donnez un titre à l'annonce." }, 400);
-    if (jusqua && !/^\d{4}-\d{2}-\d{2}$/.test(jusqua)) return J({ error: "Date invalide." }, 400);
+    if ((jusqua && !/^\d{4}-\d{2}-\d{2}$/.test(jusqua)) || (debut && !/^\d{4}-\d{2}-\d{2}$/.test(debut))) return J({ error: "Date invalide." }, 400);
+    if (debut && jusqua && jusqua < debut) return J({ error: "La date de fin est avant la date de début." }, 400);
     if (lien && !/^https?:\/\/[^\s]+$/i.test(lien)) return J({ error: "Le lien doit commencer par https://." }, 400);
     const now = new Date().toISOString();
     if (b.id) {
       const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
       const change = cur.titre !== titre || cur.texte !== texte;
-      Object.assign(cur, { titre, texte, important, jusqua, lien, maj: now, archivee: false }); if (change) cur.lus = [];
+      Object.assign(cur, { titre, texte, important, debut, jusqua, lien, maj: now, archivee: false }); if (change) cur.lus = [];
     } else {
       while (liste.length >= 60) liste.pop();
-      liste.unshift({ id: randomUUID(), titre, texte, important, jusqua, lien, par: user, le: now, lus: [] });
+      liste.unshift({ id: randomUUID(), titre, texte, important, debut, jusqua, lien, par: user, le: now, lus: [] });
     }
     await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
   }
