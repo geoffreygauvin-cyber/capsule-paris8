@@ -123,6 +123,13 @@ Fichier `gestion-accueil.js` (étapes dans la liste `BASE` en tête de fichier ;
 - **Suivi (admins)** : « Signatures » dans l'onglet Équipe liste tous les comptes (signé le…, à re-signer, pas encore signé) avec export CSV ; l'avancement du parcours d'accueil compte aussi l'étape règlement.
 - **Stockage** : Netlify Blobs, store `reglement` (`pub` = publication de la version en cours, `s/<compte>` = dernière signature + historique). Actions `reglement_get`, `reglement_sign`, `reglement_pub` dans `netlify/functions/gestion.mjs`.
 
+## Fiches de prévention pour les patients (Ressources > « Fiches patients »)
+- **13 fiches** d'une page : Mieux dormir, Apaiser l'anxiété, Quand le moral reste bas, Stress des partiels, Respirer pour se détendre, Quand les pensées tournent en boucle, Crise d'angoisse, Se mettre au travail, Se sentir seul·e, Prendre soin de son corps, Alcool et cannabis, Se parler avec bienveillance, Violences sexistes et sexuelles. Chaque fiche se **lit** dans la plateforme, s'**imprime** en une page A4 (bouton « Imprimer » : le navigateur propose aussi « Enregistrer au format PDF ») ou s'**envoie par mail** à une personne suivie, avec un mot personnel facultatif.
+- **Le texte** est dans `netlify/lib/fiches.mjs` (une fiche = titre, accroche, blocs de paragraphes et de puces, « Quand en parler », numéros utiles propres à la fiche ; les numéros d'urgence communs sont en haut du fichier). Vouvoiement, ton simple et doux. Ajouter une fiche = ajouter un objet à `FICHES` : elle apparaît partout (liste, recherche, impression, mail) au déploiement suivant. Pour que l'impression tienne sur une page, viser environ 350 mots.
+- **Mail** : mis en forme aux couleurs de CAPSULE, envoyé par le même service que l'onglet Messages ; l'envoi est noté dans Messages > Historique (« Fiche · Mieux dormir »). La personne peut répondre directement. Les étudiant·es voient et écrivent aux mêmes personnes que dans Messages.
+- **À faire relire** par les superviseur·es avant usage : ce sont des repères généraux, avec numéros d'urgence (3114, 15, 112) et ressources du site. Vérifier de temps en temps que les numéros sont toujours valables.
+- Code : `gestion-fiches.js` (affichage, lecture, impression, envoi) ; actions `fiches_list` et `fiche_envoyer` dans `netlify/functions/gestion.mjs`.
+
 ## Page de connexion (/gestion)
 Page en deux volets (dans `gestion.html`, section `#login`, CSS « connexion » en haut du fichier) :
 - à gauche, un panneau dégradé bordeaux → violet avec trame de points et le logo CAPSULE (qui se dessine à l'ouverture), volontairement sans texte ni illustration ;

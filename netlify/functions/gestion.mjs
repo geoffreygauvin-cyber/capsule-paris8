@@ -6,6 +6,7 @@ import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
 import * as REG from "../lib/reglement.mjs";
+import * as FI from "../lib/fiches.mjs";
 
 export const config = { path: "/api/gestion" };
 
@@ -636,6 +637,16 @@ export default async (req) => {
     const mail = await mailMsg(async () => envoyer(r, { subject: objet, text: corps }, null, { modele: m.id, par: user, type: "manuel" }));
     if (mail === "envoye") { base.maj = new Date().toISOString(); base.majPar = user; if (base.statut === "nouvelle") base.statut = "contactee"; await store.setJSON(cur.key, base); }
     return J({ ok: mail === "envoye", mail, item: base, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
+  }
+
+  /* Fiches de prévention pour les patients (texte : netlify/lib/fiches.mjs) : lecture / impression côté page, envoi par mail ici. */
+  if (b.action === "fiches_list") return J({ ok: true, fiches: FI.FICHES, urgences: FI.URGENCES, soutiens: FI.SOUTIENS, avertissement: FI.AVERTISSEMENT, contact: FI.CONTACT, version: FI.VERSION, mail: mailReady() });
+  if (b.action === "fiche_envoyer") {
+    const f = FI.FICHES.find((x) => x.id === String(b.fiche)); if (!f) return J({ error: "Fiche introuvable." }, 404);
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
+    const r = vue(cur.rec, cur.rec.rdvs[0]), c = FI.courrier(f, { prenom: r.prenom, note: clean(b.note, 600) });
+    const mail = await mailMsg(async () => envoyer(r, { subject: c.objet, text: c.text, html: c.html }, null, { modele: "Fiche · " + f.titre, par: user, type: "manuel" }));
+    return J({ ok: mail === "envoye", mail, prenom: r.prenom, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
   if (b.action === "update") {

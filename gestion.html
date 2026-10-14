@@ -648,7 +648,8 @@ function drawRes(){
  $('rlist').innerHTML=l.length?l.map(function(r){var e=ext(r);
   return '<article class="rc pastel" data-id="'+esc(r.id)+'"><span class="ico" style="background:'+(RCOL[e]||'#6B5861')+'">'+(e==='lien'?'LIEN':esc(e.toUpperCase().slice(0,4)))+'</span><h3>'+esc(r.titre)+'</h3>'+(r.description?'<p>'+esc(r.description)+'</p>':'<p></p>')+
   '<small>'+esc(r.categorie)+(r.type==='fichier'?' · '+fsize(r.taille):'')+' · ajouté par '+esc(cap(r.par))+' le '+esc(fday(r.le.slice(0,10)))+'</small>'+
-  '<div class="row">'+(r.type==='lien'?'<a class="btn s" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Ouvrir le lien</a>':'<button class="btn s" data-r="dl">Télécharger</button>')+(isAdmin?'<button class="link" data-r="edit">modifier</button><button class="link" data-r="del">supprimer</button>':'')+'</div></article>'}).join(''):'<div class="empty" style="grid-column:1/-1"><b>'+(ress.length?'Aucun résultat':'Aucune ressource pour le moment')+'</b>'+(ress.length?'Essayez un autre mot.':isAdmin?'Ajoutez un premier document avec le bouton ci-dessus.':'Les documents ajoutés par les responsables apparaîtront ici.')+'</div>'}
+  '<div class="row">'+(r.type==='lien'?'<a class="btn s" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Ouvrir le lien</a>':'<button class="btn s" data-r="dl">Télécharger</button>')+(isAdmin?'<button class="link" data-r="edit">modifier</button><button class="link" data-r="del">supprimer</button>':'')+'</div></article>'}).join(''):'<div class="empty" style="grid-column:1/-1"><b>'+(ress.length?'Aucun résultat':'Aucune ressource pour le moment')+'</b>'+(ress.length?'Essayez un autre mot.':isAdmin?'Ajoutez un premier document avec le bouton ci-dessus.':'Les documents ajoutés par les responsables apparaîtront ici.')+'</div>';
+ if(window.fichesDraw)window.fichesDraw()}
 $('rtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){rc=b.dataset.c;drawRes()}};
 $('rq').oninput=drawRes;
 $('rlist').onclick=function(e){var b=e.target.closest('button[data-r]');if(!b)return;var id=b.closest('.rc').dataset.id,r=ress.filter(function(x){return x.id===id})[0];
@@ -1096,10 +1097,10 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-window.CAPSULE={modal:function(h,sm){openM(h,sm)},closeModal:function(){closeM()},profil:function(){profil()},gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,contacts:contacts,titre:titre,techs:techs}}};
+window.CAPSULE={rc:function(){return rc},resDraw:function(){drawRes()},modal:function(h,sm){openM(h,sm)},closeModal:function(){closeM()},profil:function(){profil()},gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,contacts:contacts,titre:titre,techs:techs}}};
 if(token)load();
 })();
 </script><script src="/gestion-com.js"></script>
 <script src="/gestion-annonces.js"></script>
 <script src="/gestion-charte.js"></script>
-<script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script><script src="/gestion-reglement.js"></script></body></html>
+<script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script><script src="/gestion-reglement.js"></script><script src="/gestion-fiches.js"></script></body></html>
