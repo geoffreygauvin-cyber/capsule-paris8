@@ -8,20 +8,33 @@ import { randomUUID } from "node:crypto";
 
 export const config = { path: "/api/gestion" };
 
-const MAIL_ET = [
-  ["Accueil", "ton emploi du temps de la semaine (rendez-vous patients et supervisions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."],
-  ["Demandes", "les demandes du site arrivent ici. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d'un conflit."],
-  ["Après chaque séance", "dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l'utilité de la séance (0 à 10)."],
-  ["Calendrier, Patients, Messages, Ressources", "tous les rendez-vous par thérapeute ; la base des patients avec le décompte des séances (sur 8) ; les mails types et l'historique ; les documents utiles de l'équipe."],
-  ["Gestion de ton planning", "tu programmes toi-même tes supervisions et réunions d'équipe (« Supervisions & réunions ») : elles s'ajoutent à ton agenda et à celui des invités."],
-  ["Annonces", "les annonces de l'équipe s'affichent en haut de ton Accueil : pense à les lire et à cliquer sur « C'est lu »."],
-];
-const MAIL_AD = [
-  ["Équipe", "créer et gérer les comptes, voir ou changer les codes, envoyer leurs accès à chaque personne."],
-  ["Gestion", "programmer des réunions et des supervisions, écrire des annonces (programmables, avec une durée d'affichage) et organiser des entretiens privés avec les étudiant·es."],
-  ["Suivi d'activité", "chiffres généraux, bien-être, satisfaction, détail par étudiant·e. Ce sont des données descriptives : une tendance, pas une preuve d'efficacité."],
-  ["Exports et sauvegarde", "dans Équipe, exports CSV et sauvegarde complète : ce sont des données personnelles, à conserver avec précaution."],
-];
+const MAIL_ET = [["Accueil : ton profil", "Les annonces de l’équipe s’affichent tout en haut (pense à cliquer sur « C’est lu »), puis ton emploi du temps de la semaine (rendez-vous patients, supervisions, réunions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."], ["Demandes : prendre en charge", "Les demandes du site arrivent ici, classées par onglet. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d’un conflit, ou si la personne a déjà un rendez-vous la même semaine. Tu peux aussi déplacer une personne d’un onglet à l’autre à la main."], ["Après chaque séance", "Dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l’utilité de la séance (0 à 10). Chaque personne peut avoir plusieurs rendez-vous, numérotés 1, 2, 3…"], ["Calendrier, Patients, Messages, Ressources", "Calendrier : tous les rendez-vous, par thérapeute. Patients : la base avec le décompte des séances (sur 8) et les indicateurs généraux. Messages : mails types et historique. Ressources : documents utiles de l’équipe."], ["Supervisions et réunions : tu les programmes toi-même", "« + Programmer une séance ou une réunion » : choisis le type (supervision de groupe, individuelle ou réunion d’équipe), la date, l’heure, le lieu, un lien de visio si besoin et les personnes invitées. La séance s’ajoute à ton agenda et à celui des invités. Tu ne modifies ou ne supprimes que celles que tu as créées ; après la séance, note les présences."], ["Publications : réseaux sociaux", "Crée un visuel à partir d’un modèle (PNG, PDF ou PowerPoint), enregistre-le dans le planning avec sa date, et retrouve dans l’onglet Planning ce qui est prêt à publier, par réseau. Une publication passe en rouge la veille de sa date, pour ne pas l’oublier."]];
+const MAIL_AD = [["Équipe : créer et gérer les comptes", "« Ajouter un compte » : prénom (accents acceptés), statut Admin ou Étudiant·e psy, code libre (8 caractères minimum) ou généré. Sur chaque ligne : « Envoyer l’accès » (mail avec identifiant, code et mode d’emploi) et le menu Actions : Voir le code, Fiche PDF, Changer le code (l’ancien cesse de marcher) et Supprimer. Le statut se change avec le menu déroulant, après confirmation."], ["Accès et fiches : à envoyer à chaque personne", "« Envoyer l’accès » envoie par mail la fiche de la personne : identifiant, code et mode d’emploi correspondant à son statut. Pour un PDF imprimable, utilise « Fiche PDF » dans le menu Actions, ou « Fiches de tous les comptes » dans le bloc d’export. Si le code est « non récupérable » (compte ancien), fais d’abord « Changer le code »."], ["Gestion : réunions, annonces, entretiens", "Trois onglets. Réunions & supervisions : programme-les (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences. Annonces : écris un message pour les étudiant·es, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil. Entretiens privés : feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu."], ["Suivi d’activité : les indicateurs", "Chiffres généraux (demandes, personnes suivies, séances réalisées, présence, délai avant la première séance, satisfaction), graphiques par mois et par statut, bien-être, satisfaction et changement perçu, puis le détail par étudiant·e. Données descriptives : une tendance, pas une preuve d’efficacité."], ["Exports et sauvegarde", "Dans Équipe, « Exporter les données » : patients, demandes, séances, heures par étudiant·e et journal des messages en CSV (Excel), ou sauvegarde complète en JSON. Ce sont des données personnelles : à conserver et à partager avec précaution."]];
+
+const hx = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const ETIQ = "font-size:11px;font-weight:600;letter-spacing:.12em;color:#7B206B;padding:18px 0 6px";
+function mailAccesHtml(nom, role, code, origin) {
+  const adm = role === "admin", pr = cap(nom), F = "font-family:Poppins,Segoe UI,Helvetica,Arial,sans-serif;";
+  const steps = (l, from = 1) => l.map((x, i) => `<tr><td width="34" valign="top" style="padding:8px 12px 8px 0"><div style="width:26px;height:26px;border-radius:13px;background:#AE164E;color:#fff;font:700 13px/26px Arial,sans-serif;text-align:center">${i + from}</div></td><td style="padding:8px 0;${F}"><div style="font-size:14.5px;font-weight:600;color:#2B1A22">${hx(x[0])}</div><div style="font-size:13px;line-height:1.55;color:#5B4A52;margin-top:2px">${hx(x[1])}</div></td></tr>`).join("");
+  const box = (t, c, bg) => `<td valign="top" width="50%" style="padding:0 6px 0 0"><div style="background:${bg};border-radius:14px;padding:14px 16px;${F}font-size:13px;line-height:1.5;color:#2B1A22"><div style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#7B206B;margin-bottom:4px">${t}</div>${c}</div></td>`;
+  const lien = `${origin}/gestion`;
+  const body = `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF5EB"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;${F}">
+<tr><td style="padding:0 4px 14px"><table role="presentation" width="100%"><tr><td><div style="font-weight:700;font-size:20px;letter-spacing:.22em;color:#75151F">CAPSULE</div><div style="font-size:10px;letter-spacing:.14em;color:#7B206B;margin-top:2px">ESPACE ÉQUIPE · UNIVERSITÉ PARIS 8</div></td><td align="right"><span style="display:inline-block;background:${adm ? "#7B206B" : "#F8DCE4"};color:${adm ? "#fff" : "#AE164E"};border-radius:999px;padding:5px 14px;font-size:12px;font-weight:600">${adm ? "Admin" : "Étudiant·e psy"}</span></td></tr></table></td></tr>
+<tr><td style="background:#AE164E;border-radius:20px;padding:22px 24px;color:#fff"><div style="font-size:24px;font-weight:700;line-height:1.2">Bonjour ${hx(pr)}</div>
+<div style="font-size:14px;line-height:1.5;margin-top:8px;opacity:.95">${adm ? "Voici tes accès à la plateforme CAPSULE, en tant qu’administrateur·rice : tu gères l’équipe, les comptes et le suivi." : "Voici tes accès à la plateforme CAPSULE."} Garde ce message pour toi.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px"><tr>
+<td width="50%" style="padding-right:6px"><div style="background:#fff;border-radius:12px;padding:12px 14px;color:#2B1A22"><div style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#7B206B">IDENTIFIANT</div><div style="font:700 18px/1.3 Consolas,Menlo,monospace;margin-top:2px;word-break:break-all">${hx(nom)}</div></div></td>
+<td width="50%" style="padding-left:6px"><div style="background:#fff;border-radius:12px;padding:12px 14px;color:#2B1A22"><div style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#7B206B">CODE</div><div style="font:700 18px/1.3 Consolas,Menlo,monospace;margin-top:2px;word-break:break-all">${hx(code)}</div></div></td></tr></table></td></tr>
+<tr><td style="padding:14px 0 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${box("SE CONNECTER", `<a href="${hx(lien)}" style="color:#AE164E;font-weight:600">${hx(lien.replace(/^https?:\/\//, ""))}</a><br>avec ton identifiant et ton code.`, "#F8DCE4")}${box("À SAVOIR", adm ? "Les admins ne sont pas comptés comme des étudiant·es : leurs séances n’entrent ni dans les heures de consultation ni dans celles de supervision. La session dure 8 h." : "Une séance réalisée = 1 h comptée. La session dure 8 h, puis il faut se reconnecter.", "#E9DCEF")}</tr></table></td></tr>
+<tr><td style="${ETIQ}">${adm ? "ESPACE GESTION" : "ESPACE THÉRAPEUTE"}</td></tr>
+<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${steps(adm ? MAIL_AD : MAIL_ET)}</table></td></tr>
+${adm ? `<tr><td style="${ETIQ}">ESPACE THÉRAPEUTE</td></tr><tr><td style="font-size:13px;color:#5B4A52;line-height:1.55;padding-bottom:4px">En tant qu’admin, tu as aussi accès à tout l’espace thérapeute :</td></tr><tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${steps(MAIL_ET)}</table></td></tr><tr><td style="padding-top:10px"><div style="background:#E9DCEF;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.5;color:#2B1A22"><b style="font-size:10.5px;letter-spacing:.12em;color:#7B206B">PRÉCAUTIONS</b><br>Tout admin peut lire les codes de tous les comptes. Quand un·e étudiant·e part, supprime son compte dans Équipe.</div></td></tr>` : ""}
+<tr><td style="padding:18px 4px 0;font-size:11.5px;line-height:1.5;color:#7a6a72;border-top:1px solid #EBDDD6;margin-top:14px">Données de patients confidentielles. Ne partage jamais ton code ; déconnecte-toi sur un poste partagé. Si quelque chose ne marche pas, réponds simplement à ce mail.<br>L’équipe CAPSULE</td></tr>
+</table></td></tr></table>`;
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tes accès à la plateforme CAPSULE</title></head><body style="margin:0;background:#FDF5EB">${body}</body></html>`;
+}
 function mailAcces(nom, role, code, origin) {
   const adm = role === "admin", pr = cap(nom), liste = (adm ? MAIL_AD.concat([["Espace thérapeute", "tu as aussi accès à tout l'espace thérapeute (demandes, calendrier, patients, messages, ressources), comme les étudiant·es."]]) : MAIL_ET);
   const texte = [
@@ -35,7 +48,7 @@ function mailAcces(nom, role, code, origin) {
     "Si quelque chose ne marche pas, réponds simplement à ce mail.", "",
     "À très vite,", "L'équipe CAPSULE",
   ].join("\n");
-  return { sujet: "Tes accès à la plateforme CAPSULE", texte };
+  return { sujet: "Tes accès à la plateforme CAPSULE", texte, html: mailAccesHtml(nom, role, code, origin) };
 }
 
 
@@ -152,7 +165,7 @@ export default async (req) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse e-mail invalide." }, 400);
       if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré sur ce site : utilisez « Ouvrir dans ma messagerie »." }, 400);
       await getStore("emails").setJSON(n, { email });
-      try { await envoyer({ email, prenom: cap(n), id: "" }, { subject: mailTxt.sujet, text: mailTxt.texte }, null, { modele: "Accès à la plateforme", par: user, type: "manuel" }); }
+      try { await envoyer({ email, prenom: cap(n), id: "" }, { subject: mailTxt.sujet, text: mailTxt.texte, html: mailTxt.html }, null, { modele: "Accès à la plateforme", par: user, type: "manuel" }); }
       catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
       return J({ ok: true });
     }

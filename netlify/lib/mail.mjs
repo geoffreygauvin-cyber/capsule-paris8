@@ -14,12 +14,12 @@ async function journaliser(e) {
 }
 // method : REQUEST (invitation / mise à jour), CANCEL (annulation), ou null (message simple)
 // meta : { modele, par, type: "auto" | "manuel" } pour l'historique
-export async function envoyer(r, { subject, text }, method, meta = {}) {
+export async function envoyer(r, { subject, text, html }, method, meta = {}) {
   const base = { a: r.email, nom: r.prenom, patientId: r.id || "", objet: subject, modele: meta.modele || "", par: meta.par || "", type: meta.type || "auto" };
   if (!mailReady()) { await journaliser({ ...base, statut: "echec", erreur: "Envoi de mail non configuré" }); throw new Error("Envoi de mail non configuré"); }
   try {
     await transport().sendMail({
-      from: `"CAPSULE Paris 8" <${process.env.MAIL_USER}>`, to: r.email, replyTo: process.env.MAIL_USER, subject, text,
+      from: `"CAPSULE Paris 8" <${process.env.MAIL_USER}>`, to: r.email, replyTo: process.env.MAIL_USER, subject, text, ...(html ? { html } : {}),
       ...(method ? { icalEvent: { method, filename: "rendez-vous.ics", content: icsPatient(r, method) } } : {}),
     });
   } catch (e) { await journaliser({ ...base, statut: "echec", erreur: String(e.message || e).slice(0, 200) }); throw e; }
