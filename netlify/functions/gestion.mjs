@@ -56,6 +56,7 @@ function mailAcces(nom, role, code, origin) {
 
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 const h = (x) => createHash("sha256").update(String(x)).digest();
+const STATUTS_PRES = ["present", "retard", "excuse", "absent"];
 const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"];
 const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
 const MAX_FICHIER = 4 * 1024 * 1024;
@@ -371,7 +372,16 @@ export default async (req) => {
   if (b.action === "sup_list" || b.action === "sup_save" || b.action === "sup_delete" || b.action === "sup_presence") {
     const ss = getStore("supervisions");
     const toutes = async () => { const { blobs } = await ss.list(); return (await Promise.all(blobs.map((x) => ss.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => (a.date + a.heure).localeCompare(z.date + z.heure)); };
-    const masque = (x) => (x.type === "entretien" && !admin ? { ...x, titre: "", motif: undefined, compteRendu: undefined, notes: undefined } : x);
+    /* Présences : un·e admin (ou la personne qui a programmé la séance) voit le détail (retard, excusé·e, motif). Les autres participant·es voient seulement présent·e / absent·e pour les autres,
+       et leur propre statut (retard compris) sans le motif. */
+    const masque = (x) => {
+      if (x.type === "entretien" && !admin) return { ...x, titre: "", motif: undefined, compteRendu: undefined, notes: undefined };
+      if (x.statuts && !admin && x.creePar !== user) {
+        const s = Object.fromEntries(Object.entries(x.statuts).map(([n, v]) => [n, n === user ? { s: v.s, ...(v.min ? { min: v.min } : {}) } : { s: v.s === "retard" ? "present" : v.s === "excuse" ? "absent" : v.s }]));
+        return { ...x, statuts: s };
+      }
+      return x;
+    };
     if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); return J({ ok: true, items: l.map(masque) }); }
     const own = (x) => admin || x.creePar === user;
     if (b.action === "sup_delete") {
@@ -385,9 +395,19 @@ export default async (req) => {
       const x = await ss.get(String(b.id), { type: "json" }); if (!x) return J({ error: "Séance introuvable." }, 404);
       if (!own(x)) return J({ error: "Réservé à la personne qui a programmé la séance." }, 403);
       if (parisToUTC(x.date, x.heure) > Date.now()) return J({ error: "Cette séance n'a pas encore eu lieu." }, 400);
-      x.presents = (Array.isArray(b.presents) ? b.presents : []).filter((n) => (x.participants || []).includes(n));
-      if ("notes" in b) x.notes = clean(b.notes, 600); x.fait = true; x.maj = new Date().toISOString();
-      await ss.setJSON(x.id, x); return J({ ok: true, item: x });
+      /* Pointage : un statut par participant·e — present, retard (+ minutes), excuse (absent·e excusé·e), absent. « presents » (présent·es et en retard) est conservé pour le décompte des heures. */
+      const parts = x.participants || [], statuts = {};
+      if (b.statuts && typeof b.statuts === "object") {
+        for (const n of parts) {
+          const v = b.statuts[n] || {}, s = STATUTS_PRES.includes(v.s) ? v.s : "absent", e = { s };
+          if (s === "retard") { const m = Math.round(Number(v.min)); e.min = Number.isFinite(m) && m >= 1 && m <= 180 ? m : 5; }
+          const note = clean(v.note, 200).trim(); if (note && s !== "present") e.note = note;
+          statuts[n] = e;
+        }
+      } else { const p = Array.isArray(b.presents) ? b.presents : []; for (const n of parts) statuts[n] = { s: p.includes(n) ? "present" : "absent" }; }
+      x.statuts = statuts; x.presents = parts.filter((n) => statuts[n].s === "present" || statuts[n].s === "retard");
+      if ("notes" in b) x.notes = clean(b.notes, 600); x.fait = true; x.maj = new Date().toISOString(); x.pointePar = user; x.pointeLe = x.maj;
+      await ss.setJSON(x.id, x); return J({ ok: true, item: masque(x) });
     }
     // sup_save
     const roles = await rolesMap();
@@ -487,7 +507,30 @@ export default async (req) => {
     await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
   }
 
-  /* Règlement intérieur : texte modifiable par les admins (Gestion > Juridique), publié puis signé par chacun·e (nom saisi + case cochée).
+  /* Suivi RH : retards et absences hors séances programmées (rendez-vous patient manqué, permanence…), saisis à la main par les admins.
+     Les présences aux réunions et supervisions sont dans le store « supervisions » (champ « statuts »). Store « rh » : une clé « ev/<id> » par événement. */
+  if (["rh_events", "rh_event_save", "rh_event_delete"].includes(b.action)) {
+    if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
+    const rhs = getStore({ name: "rh", consistency: "strong" });
+    const lire = async () => { const { blobs } = await rhs.list({ prefix: "ev/" }); return (await Promise.all(blobs.map((x) => rhs.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => (z.date + (z.creeLe || "")).localeCompare(a.date + (a.creeLe || ""))); };
+    if (b.action === "rh_events") return J({ ok: true, events: await lire() });
+    const idOk = (v) => /^[a-f0-9-]{36}$/.test(String(v || ""));
+    if (b.action === "rh_event_delete") { if (!idOk(b.id)) return J({ error: "Événement introuvable." }, 404); await rhs.delete("ev/" + b.id); return J({ ok: true }); }
+    const roles = await rolesMap(), nom = String(b.nom || "").toLowerCase();
+    if (roles[nom] !== "etudiant" || TECH.includes(nom)) return J({ error: "Choisis un·e étudiant·e psy." }, 400);
+    const date = String(b.date || ""), auj = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(new Date());
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date + "T12:00:00Z"))) return J({ error: "Date invalide." }, 400);
+    if (date > auj) return J({ error: "Un retard ou une absence se saisit une fois passé : la date ne peut pas être dans le futur." }, 400);
+    if (!["retard", "excuse", "absent"].includes(b.type)) return J({ error: "Choisis retard, absence excusée ou absence." }, 400);
+    const contexte = ["consultation", "permanence", "autre"].includes(b.contexte) ? b.contexte : "autre", note = clean(b.note, 300).trim();
+    const min = b.type === "retard" ? Math.min(180, Math.max(1, Math.round(Number(b.min)) || 5)) : undefined;
+    let ex = null; if (b.id) { if (!idOk(b.id)) return J({ error: "Événement introuvable." }, 404); ex = await rhs.get("ev/" + b.id, { type: "json" }); if (!ex) return J({ error: "Événement introuvable." }, 404); }
+    const id = ex ? ex.id : randomUUID(), rec = { ...(ex || { creeLe: new Date().toISOString(), creePar: user }), id, nom, date, type: b.type, contexte, note, ...(min ? { min } : { min: undefined }), maj: new Date().toISOString(), par: user };
+    await rhs.setJSON("ev/" + id, rec);
+    return J({ ok: true, event: rec });
+  }
+
+  /* Règlement intérieur : texte modifiable par les admins (Gestion > RH > Règlement intérieur), publié puis signé par chacun·e (nom saisi + case cochée).
      Store « reglement » : « brouillon » (texte en cours de rédaction), « cur » (version publiée : numéro, empreinte, date, auteur), « meta » (dernier numéro de version, historique des publications),
      « t/<empreinte> » (texte exact de chaque version publiée, conservé pour retrouver ce qui a été signé), « s/<compte> » (dernière signature + historique). Texte de départ : netlify/lib/reglement.mjs. */
   const rgs = getStore({ name: "reglement", consistency: "strong" });

@@ -1,5 +1,5 @@
 /* Règlement intérieur de l'équipe : lecture (tout le monde), signature (étudiant·es psy uniquement), version imprimable.
-   - Le texte est rédigé, publié et suivi par les admins dans Gestion > Juridique (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
+   - Le texte est rédigé, publié et suivi par les admins dans Gestion > RH > Règlement intérieur (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
    - Où le trouver : bouton « Règlement intérieur » du profil, étape en tête du parcours d'accueil des étudiant·es (gestion-accueil.js). Les admins et le service technique peuvent le lire mais n'ont pas à le signer.
    - Expose window.regOpen (fenêtre de lecture / signature), regCorps (rendu du texte) et regPrint (version imprimable, avec ou sans mention de signature).
    Données : actions reglement_get, reglement_sign, reglement_copie de netlify/functions/gestion.mjs (store Netlify Blobs « reglement »).
@@ -61,7 +61,7 @@
       return C().modal(h, true);
     }
     h += '<p class="sub">CAPSULE' + (r.publie ? ' · version ' + e(r.version) + ' · publié le ' + e(dj(r.date)) : '') + '</p>';
-    if (r.apercu) h += '<div class="regbn warn"><span><b>Aperçu du brouillon.</b> Le règlement n’est pas encore publié : l’équipe ne le voit pas et personne ne peut le signer.</span><button type="button" class="btn s" data-rg="jur">Ouvrir Juridique</button></div>';
+    if (r.apercu) h += '<div class="regbn warn"><span><b>Aperçu du brouillon.</b> Le règlement n’est pas encore publié : l’équipe ne le voit pas et personne ne peut le signer.</span><button type="button" class="btn s" data-rg="jur">Ouvrir l’onglet Règlement</button></div>';
     if (r.publie && m && !m.aJour) h += '<div class="regbn"><span>Le règlement a changé depuis ta signature (version ' + e(m.version) + '). Relis-le et signe à nouveau.</span></div>';
     h += '<div class="regtxt" id="regtxt" tabindex="0" role="region" aria-label="Texte du règlement intérieur">' + corps(r) + '</div>';
     if (r.publie && m && m.aJour) {

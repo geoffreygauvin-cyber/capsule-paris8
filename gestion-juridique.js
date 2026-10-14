@@ -1,4 +1,4 @@
-/* Onglet « Juridique » de la page Gestion (admins) : le règlement intérieur de l'équipe.
+/* Onglet « Règlement intérieur » de Gestion > RH (admins) : le règlement intérieur de l'équipe.
    - Rédiger : éditeur du texte (introduction + articles), brouillon enregistré dans la base (le fichier netlify/lib/reglement.mjs ne sert que de texte de départ).
    - Publier : une version est visible et signable par l'équipe une fois publiée ; pour un changement de fond, tout le monde doit signer à nouveau (nouveau numéro de version) ; une correction mineure garde les signatures.
    - Suivre : registre des signatures (qui, quand, quel texte), exemplaire signé de chaque personne retrouvable et imprimable tel que signé, export CSV, historique des versions.
@@ -227,5 +227,7 @@
       if (confirm(msg)) api({ action: 'reglement_brouillon_reset' }).then(function (r) { if (r && r.ok) { toast(pubd ? 'Retour à la dernière version publiée.' : 'Texte de départ rétabli.'); load(function () { edit(); }); } });
     }
   });
+  /* exemplaire signé d'une personne, ouvert depuis son dossier (Gestion > RH) */
+  window.jurCopie = function (n) { css(); if (window.regCss) window.regCss(); copie(n); };
   window.addEventListener('beforeunload', function (ev) { if (dirty) { ev.preventDefault(); ev.returnValue = ''; } });
 })();
