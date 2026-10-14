@@ -106,5 +106,17 @@ Compte avec le statut spécial **Service technique** (aujourd'hui : `violette`, 
 - un interrupteur **Mode : Étudiant psy | Admin** en haut du menu (visible seulement pour ce compte : `list` renvoie `technique: true`). « Étudiant psy » affiche la plateforme comme la voit un·e étudiant·e psychologue (menu et pages réduits, « Mon activité »…), « Admin » la montre en entier. C'est un changement d'affichage côté navigateur (choix mémorisé dans le navigateur) : les droits réels restent ceux d'un admin. Sur téléphone, le bouton « Passer en mode… » est dans la barre du haut.
 Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minuscules) à `TECH`.
 
+## Page de connexion (/gestion)
+Page en deux volets (dans `gestion.html`, section `#login`, CSS « connexion » en haut du fichier) :
+- à gauche, un panneau dégradé bordeaux → violet avec trame de points, le logo (qui se dessine à l'ouverture), l'illustration `img/ruban.webp` dans une arche, trois pastilles (« Consultations gratuites », « Étudiant·es de Paris 8 », « Confidentiel ») et la phrase du site « Un temps pour vous, entre deux cours. » : ces textes se changent directement dans le HTML (classes `lgl-chip`, `lgl-tag`) ;
+- à droite, le formulaire (`#lform`, champs `#u` et `#p`, message d'erreur `#lerr`), œil pour afficher/masquer le code, indicateur d'attente sur le bouton, petite secousse si le code est faux, lien « Retour au site ».
+Sur téléphone, le panneau de gauche se réduit à un bandeau (logo + phrase) au-dessus du formulaire. Les animations sont coupées pour les personnes qui ont réglé « réduire les animations » sur leur appareil.
+
+## Menu latéral (ordinateur)
+Le menu est compacté pour que tout « Espace admin » reste visible sans défiler jusqu'à ~720 px de hauteur d'écran ; en dessous, il défile et un léger voile au-dessus du profil indique qu'il y a une suite (voir le CSS `aside`, `.nv`, `.grp`, `.me` et les deux `@media (max-height…)` en fin de feuille de style).
+
+## Photo de profil
+L'envoi de la photo affiche maintenant un message à chaque étape (trop lourde, format non reconnu, enregistrée, échec), et le stockage des profils (`profils`) est lu en cohérence forte (`consistency: "strong"` dans `gestion.mjs`) pour qu'une photo enregistrée soit visible tout de suite après rechargement.
+
 ## Vocabulaire
 L'espace de l'équipe étudiante s'appelle **Espace étudiant psychologue** (menu, mails d'accès, fiches PDF). Les autres espaces : Communication, Espace admin, et Service technique pour le compte concerné.
