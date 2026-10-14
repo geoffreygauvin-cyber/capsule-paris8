@@ -25,7 +25,7 @@
   function archivee(x) { if (x.archivee) return true; if (x.jusqua) return x.jusqua < today(); var t = new Date(x.debut || x.maj || x.le); return !isNaN(t) && (Date.now() - t.getTime()) / 864e5 > JOURS; }
   function enCours(x) { return !archivee(x) && !planned(x); }
 
-  function card(x, adm) {
+  function card(x, adm, ro) {
     var st = '';
     if (adm) {
       var el = eleves(), lus = (x.lus || []).filter(function (n) { return el.indexOf(n) > -1; });
@@ -34,7 +34,7 @@
     }
     return '<div class="ann' + (x.important ? ' imp' : '') + ((!adm && x.lu) || (adm && archivee(x)) ? ' lu' : '') + '"><div class="annh"><b>' + (x.important ? '<span class="annt">Important</span> ' : '') + e(x.titre) + '</b><small>' + e(nom(x.par)) + ' · ' + e(fr(x.le)) + '</small></div>' +
       (x.texte ? '<p>' + body(x.texte) + '</p>' : '') + (x.lien ? '<p><a href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">' + e(x.lien) + '</a></p>' : '') +
-      '<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">' + (adm ? '<button class="link" data-ae="' + e(x.id) + '">Modifier</button>' + (archivee(x) ? '<button class="link" data-au="' + e(x.id) + '">Remettre en avant</button>' : '<button class="link" data-aa="' + e(x.id) + '">Archiver</button>') + '<button class="link" data-ad="' + e(x.id) + '">Supprimer</button>' + st : (x.lu ? '' : '<button class="btn s" data-al="' + e(x.id) + '">C’est lu</button>')) + '</div></div>';
+      '<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">' + (ro ? '<small>Lu par ' + (x.lus || []).filter(function (n) { return eleves().indexOf(n) > -1; }).length + ' sur ' + eleves().length + ' étudiant·es</small>' : adm ? '<button class="link" data-ae="' + e(x.id) + '">Modifier</button>' + (archivee(x) ? '<button class="link" data-au="' + e(x.id) + '">Remettre en avant</button>' : '<button class="link" data-aa="' + e(x.id) + '">Archiver</button>') + '<button class="link" data-ad="' + e(x.id) + '">Supprimer</button>' + st : (x.lu ? '' : '<button class="btn s" data-al="' + e(x.id) + '">C’est lu</button>')) + '</div></div>';
   }
 
   /* ---------- bandeau étudiant·es, en tête de l'accueil ---------- */
@@ -43,8 +43,13 @@
     var adm = isAdm(), act = list.filter(enCours), nonLus = act.filter(function (x) { return !x.lu; }), lus = act.filter(function (x) { return x.lu; });
     var nv = document.querySelector('.nv[data-v="11"]');
     if (nv) { var bd = nv.querySelector('b'); if (bd) bd.remove(); if (!adm && nonLus.length) nv.insertAdjacentHTML('beforeend', '<b title="Annonces non lues">' + nonLus.length + '</b>'); }
-    if (adm || !act.length) { if (box) box.remove(); return; }
+    if (!act.length) { if (box) box.remove(); return; }
     if (!box) { head.insertAdjacentHTML('beforebegin', '<div class="annbox" id="hann"></div>'); box = $('hann'); }
+    if (adm) {
+      box.className = 'annbox';
+      box.innerHTML = '<h3>Annonces en ligne<span class="annok">ce que voient les étudiant·es</span><button class="btn s" id="an_gest" style="margin-left:auto;background:#fff;color:var(--rasp)">Gérer les annonces</button></h3>' + act.map(function (x) { return card(x, false, true); }).join('');
+      return;
+    }
     box.className = 'annbox' + (nonLus.length ? '' : ' calm');
     var open = box.querySelector('details') && box.querySelector('details').open;
     box.innerHTML = '<h3>Annonces de l’équipe' + (nonLus.length ? '<span class="annn">' + nonLus.length + (nonLus.length > 1 ? ' nouvelles' : ' nouvelle') + '</span>' : '<span class="annok">tout est lu</span>') + '</h3>' +
@@ -91,7 +96,8 @@
   document.addEventListener('change', function (ev) { if (ev.target && (ev.target.id === 'an_b' || ev.target.id === 'an_n')) hint(); });
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('#hann button, #gann button'); if (!b) return;
-    if (b.id === 'an_new') { editing = ''; formOpen = true; drawAdmin(); }
+    if (b.id === 'an_gest') window.CAPSULE.gest('ann');
+    else if (b.id === 'an_new') { editing = ''; formOpen = true; drawAdmin(); }
     else if (b.id === 'an_cancel') { editing = ''; formOpen = false; drawAdmin(); }
     else if (b.id === 'an_save') {
       var debut = $('an_b').value || today(), o = { action: 'annonce_save', id: editing, titre: ($('an_t').value || '').trim(), texte: $('an_x').value, lien: ($('an_l').value || '').trim(), debut: debut, jusqua: plus(debut, +$('an_n').value - 1), important: $('an_i').checked };

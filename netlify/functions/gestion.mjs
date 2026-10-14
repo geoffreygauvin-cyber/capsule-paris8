@@ -306,6 +306,8 @@ export default async (req) => {
     if (!admin && !participants.includes(user)) participants.push(user);
     if (!participants.length) return J({ error: "Choisissez au moins une personne." }, 400);
     const titre = type === "entretien" ? "" : clean(b.titre, 80).trim(), lieu = clean(b.lieu, 80).trim();
+    const lien = String(b.lien || "").trim().slice(0, 300);
+    if (lien && !/^https:\/\/[^\s]+$/i.test(lien)) return J({ error: "Le lien de visio doit commencer par https://." }, 400);
     const motif = type === "entretien" ? (["feedback", "recadrage", "point", "autre"].includes(b.motif) ? b.motif : "autre") : undefined, compteRendu = type === "entretien" ? clean(b.compteRendu, 1500) : undefined;
     const existantes = await toutes();
     const ex = b.id ? existantes.find((y) => y.id === String(b.id)) : null; if (b.id && !ex) return J({ error: "Séance introuvable." }, 404);
@@ -326,7 +328,7 @@ export default async (req) => {
     const out = [];
     for (const d of dates) {
       const id = ex ? ex.id : randomUUID();
-      const rec = { ...(ex || { creeLe: new Date().toISOString(), creePar: user }), id, serie, titre, type, date: d, heure, duree, lieu, superviseur, participants, ...(type === "entretien" ? { motif, compteRendu } : {}), maj: new Date().toISOString() };
+      const rec = { ...(ex || { creeLe: new Date().toISOString(), creePar: user }), id, serie, titre, type, date: d, heure, duree, lieu, lien, superviseur, participants, ...(type === "entretien" ? { motif, compteRendu } : {}), maj: new Date().toISOString() };
       await ss.setJSON(id, rec); out.push(rec);
     }
     return J({ ok: true, items: out });
