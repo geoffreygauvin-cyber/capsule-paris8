@@ -108,12 +108,12 @@ Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minusc
 
 ## Page de connexion (/gestion)
 Page en deux volets (dans `gestion.html`, section `#login`, CSS « connexion » en haut du fichier) :
-- à gauche, un panneau dégradé bordeaux → violet avec trame de points, le logo (qui se dessine à l'ouverture), l'illustration `img/ruban.webp` dans une arche, trois pastilles (« Consultations gratuites », « Étudiant·es de Paris 8 », « Confidentiel ») et la phrase du site « Un temps pour vous, entre deux cours. » : ces textes se changent directement dans le HTML (classes `lgl-chip`, `lgl-tag`) ;
+- à gauche, un panneau dégradé bordeaux → violet avec trame de points et le logo CAPSULE (qui se dessine à l'ouverture), volontairement sans texte ni illustration ;
 - à droite, le formulaire (`#lform`, champs `#u` et `#p`, message d'erreur `#lerr`), œil pour afficher/masquer le code, indicateur d'attente sur le bouton, petite secousse si le code est faux, lien « Retour au site ».
-Sur téléphone, le panneau de gauche se réduit à un bandeau (logo + phrase) au-dessus du formulaire. Les animations sont coupées pour les personnes qui ont réglé « réduire les animations » sur leur appareil.
+Sur téléphone, le panneau de gauche se réduit à un bandeau (logo + nom) au-dessus du formulaire. Les animations sont coupées pour les personnes qui ont réglé « réduire les animations » sur leur appareil.
 
 ## Menu latéral (ordinateur)
-Le menu est compacté pour que tout « Espace admin » reste visible sans défiler jusqu'à ~720 px de hauteur d'écran ; en dessous, il défile et un léger voile au-dessus du profil indique qu'il y a une suite (voir le CSS `aside`, `.nv`, `.grp`, `.me` et les deux `@media (max-height…)` en fin de feuille de style).
+Le menu est compacté par paliers de hauteur d'écran (≤ 900, 780, 680 et 620 px, `@media (max-height…)` en fin de feuille de style) pour que tout « Espace admin » reste visible sans défiler, même sur un petit écran ou avec le zoom du navigateur à 150 %. Sous 620 px, les titres de groupe deviennent de simples traits. Si l'écran est encore plus petit, le menu défile (barre de défilement visible) ; rien ne le recouvre.
 
 ## Photo de profil
 L'envoi de la photo affiche maintenant un message à chaque étape (trop lourde, format non reconnu, enregistrée, échec), et le stockage des profils (`profils`) est lu en cohérence forte (`consistency: "strong"` dans `gestion.mjs`) pour qu'une photo enregistrée soit visible tout de suite après rechargement.
