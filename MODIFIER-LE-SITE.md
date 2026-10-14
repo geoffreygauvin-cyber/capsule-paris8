@@ -21,6 +21,18 @@ Onglet « Calendrier » de `/gestion` : 3 salles (Salle 1 à 3), créneaux d'1 h
 Planifier = invitation par mail (fichier .ics, s'ajoute à l'agenda) + rappel automatique la veille (`netlify/functions/rappels.mjs`, tous les jours vers 17-18 h).
 Mails : variables Netlify `MAIL_USER` (capsule-contact@gmail.com) et `MAIL_PASS` (mot de passe d'application Google). Flux d'agenda général : `/api/calendrier.ics?k=<CAL_TOKEN>`.
 
+## Annuler ou reporter soi-même (lien dans les mails de rendez-vous)
+
+Les mails de confirmation, de déplacement et de rappel, ainsi que l'invitation d'agenda (champ « URL »), contiennent un lien personnel `…/rdv?t=…`. Il ouvre la page publique `rdv.html` (textes et couleurs dans ce fichier), servie à `/rdv` (`netlify.toml`, non indexée) :
+- **Demander un autre créneau** : la personne coche, si elle le souhaite, les jours qui lui conviennent (lundi, mardi, mercredi) et laisse un mot. Le créneau est libéré tout de suite, la fiche passe en « À recontacter » avec les jours indiqués ; l'équipe replanifie comme d'habitude (le mail de confirmation du nouveau rendez-vous porte un nouveau lien).
+- **Annuler** : le créneau est libéré, la fiche passe en « À recontacter » s'il n'y a pas d'autre rendez-vous.
+- Jusqu'à l'heure du rendez-vous. Moins de 24 h avant, l'annulation est marquée « dernière minute ».
+- **Pour la personne** : un mail de confirmation (modèles « Annulation par la personne » et « Demande de report reçue », modifiables dans Messages) avec annulation de l'événement dans son agenda.
+- **Pour l'équipe** : un mail d'alerte à la boîte `MAIL_USER` et à l'adresse perso de la·du thérapeute (profil), sans le message libre de la personne (il peut être sensible : il se lit seulement dans la fiche) ; un bandeau jaune sur la fiche (Demandes et fenêtre de fiche) et un bloc « Annulations et reports » en haut de l'Accueil (tout pour les admins, ses patient·es pour les étudiant·es). « C'est noté » retire le bandeau (champ `retours` de la fiche, action `update` avec `retoursVus`).
+- **Sécurité** : le lien est signé (HMAC avec `SESSION_SECRET`, `netlify/lib/lien.mjs`), sans rien stocker : il ne se devine pas, il identifie un seul rendez-vous et s'éteint de lui-même quand le rendez-vous disparaît. Ouvrir le lien (même par un antivirus de messagerie) ne modifie rien : seul un clic sur le bouton de confirmation agit (`netlify/functions/rdv-patient.mjs`, `/api/rdv`). **Changer `SESSION_SECRET` invalide tous les liens déjà envoyés** (les prochains mails portent de nouveaux liens).
+- Adresse du site dans les liens : variable `SITE_URL` si elle existe, sinon l'adresse principale de Netlify, sinon `https://www.capsule-paris8.fr`.
+- Variable de modèle `{{lien}}` : disponible dans Messages (message à la main compris) ; les trois mails automatiques reçoivent le lien même si leur texte a été modifié avant cette fonction.
+
 # Patients, séances et profils
 
 Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisée » ou « Absent·e ») : c'est ce qui alimente le décompte des séances par patient et par thérapeute. Onglet « Patients » : base des personnes accompagnées (fiche, historique, export CSV). Photo de profil : clic sur son nom en bas du menu. Les données sont dans Netlify Blobs (stores « demandes », « comptes », « profils »).

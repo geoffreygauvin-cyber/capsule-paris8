@@ -1,12 +1,16 @@
 import { getStore } from "@netlify/blobs";
 import { LIEU, jourLong, heureFr, cap } from "./rdv.mjs";
+import { lienRdv } from "./lien.mjs";
 
 export const VARIABLES = [
   ["prenom", "Prénom de la personne"], ["date", "Date du rendez-vous (ex. mardi 21 octobre)"], ["heure", "Heure (ex. 14 h)"],
   ["salle", "Salle"], ["therapeute", "Prénom du thérapeute"], ["lieu", "Adresse"], ["seances", "Séances déjà réalisées"], ["contact", "Mail de CAPSULE"],
+  ["lien", "Lien pour annuler ou changer de créneau (rendez-vous à venir)"],
 ];
 const FIN = "\n\nL'équipe CAPSULE, Université Paris 8";
-const EMP = "\n\nSi vous avez un empêchement, répondez simplement à ce mail." + FIN;
+const EMP = "\n\nUn empêchement ? Vous pouvez annuler ou demander un autre créneau en un clic : {{lien}}\nPour toute question, répondez simplement à ce mail." + FIN;
+// Les modèles qui s'envoient avec un rendez-vous reçoivent le lien même si l'équipe a modifié leur texte avant cette fonction.
+const AVEC_LIEN = ["invitation", "modification", "rappel"];
 
 // auto : envoyé automatiquement par la plateforme (avec invitation d'agenda)
 export const DEFAUTS = {
@@ -17,7 +21,11 @@ export const DEFAUTS = {
   rappel: { nom: "Rappel de la veille", auto: true, quand: "La veille du rendez-vous, vers 17-18 h", objet: "Rappel : rendez-vous CAPSULE demain à {{heure}}",
     corps: "Bonjour {{prenom}},\n\nPetit rappel : votre rendez-vous CAPSULE a lieu demain, {{date}} à {{heure}}.\nOù : {{salle}}, {{lieu}}\nAvec : {{therapeute}}" + EMP },
   annulation: { nom: "Annulation de rendez-vous", auto: true, quand: "Quand un rendez-vous est annulé", objet: "Rendez-vous CAPSULE annulé, {{date}} à {{heure}}",
-    corps: "Bonjour {{prenom}},\n\nVotre rendez-vous du {{date}} à {{heure}} est annulé. Nous reviendrons vers vous pour en fixer un nouveau." + EMP },
+    corps: "Bonjour {{prenom}},\n\nVotre rendez-vous du {{date}} à {{heure}} est annulé. Nous reviendrons vers vous pour en fixer un nouveau.\n\nPour toute question, répondez simplement à ce mail." + FIN },
+  annulation_patient: { nom: "Annulation par la personne", auto: true, quand: "Quand la personne annule depuis le lien de son mail", objet: "Annulation prise en compte, CAPSULE",
+    corps: "Bonjour {{prenom}},\n\nNous avons bien pris en compte l'annulation de votre rendez-vous du {{date}} à {{heure}}.\n\nSi vous souhaitez reprendre rendez-vous plus tard, répondez simplement à ce mail : nous reviendrons vers vous. Vous pouvez nous écrire à tout moment.\n\nSi vous traversez un moment difficile, le 3114 (24 h/24, gratuit) ou le 15 restent joignables." + FIN },
+  report_patient: { nom: "Demande de report reçue", auto: true, quand: "Quand la personne demande un autre créneau depuis le lien de son mail", objet: "Demande de report reçue, CAPSULE",
+    corps: "Bonjour {{prenom}},\n\nNous avons bien reçu votre demande : votre rendez-vous du {{date}} à {{heure}} est libéré.\n\nNous vous proposons un nouveau créneau dans les meilleurs délais, en tenant compte des jours que vous nous avez indiqués. Vous pouvez aussi répondre à ce mail pour nous préciser vos disponibilités." + FIN },
   premier_contact: { nom: "Réponse à une demande", auto: false, quand: "À envoyer à la main après une nouvelle demande", objet: "Votre demande auprès de CAPSULE",
     corps: "Bonjour {{prenom}},\n\nMerci d'avoir pris contact avec CAPSULE. Nous pouvons vous proposer un premier rendez-vous gratuit, d'une heure, à l'université (bâtiment C), du lundi au mercredi entre 9 h et 17 h.\n\nQuels jours et horaires vous conviendraient ? Répondez simplement à ce mail et nous fixons cela ensemble." + FIN },
   relance: { nom: "Relance", auto: false, quand: "Sans réponse après quelques jours", objet: "Votre demande auprès de CAPSULE",
@@ -42,11 +50,21 @@ export function variables(r, nbSeances) {
     prenom: r.prenom || "", date: r.rdvDate ? jourLong(r.rdvDate) : "", heure: r.rdvHeure ? heureFr(r.rdvHeure) : "", salle: r.salle || "",
     therapeute: cap(r.therapeute || r.assigne || ""), lieu: LIEU, seances: String(nbSeances ?? (r.seances || []).filter((s) => s.issue === "realisee").length),
     contact: process.env.MAIL_USER || "capsule-contact@gmail.com",
+    lien: r.id && r.rdvId ? lienRdv(r.id, r.rdvId) : "",
   };
 }
 export function rendre(txt, v) { return String(txt || "").replace(/\{\{(\w+)\}\}/g, (_, k) => (k in v ? v[k] : "")); }
 export function manquants(txt, v) { return [...new Set([...String(txt || "").matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))].filter((k) => k in v && !v[k]); }
+export function avecLien(id, corps, v) {
+  let c = String(corps || "");
+  if (v.lien && AVEC_LIEN.includes(id) && !c.includes("{{lien}}")) {
+    const add = "\n\nUn empêchement ? Vous pouvez annuler ou demander un autre créneau en un clic : {{lien}}";
+    c = c.endsWith(FIN) ? c.slice(0, -FIN.length) + add + FIN : c + add;
+  }
+  // sans lien disponible, les lignes qui le mentionnent sont retirées plutôt que laissées à moitié vides
+  return v.lien ? c : c.split("\n").filter((l) => !l.includes("{{lien}}")).join("\n");
+}
 export async function texte(id, r) {
   const m = (await chargerModeles())[id], v = variables(r);
-  return { subject: rendre(m.objet, v), text: rendre(m.corps, v) };
+  return { subject: rendre(m.objet, v), text: rendre(avecLien(id, m.corps, v), v) };
 }

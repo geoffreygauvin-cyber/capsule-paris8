@@ -1,4 +1,5 @@
 // Règles du planning et outils partagés (rendez-vous, calendrier, e-mails)
+import { lienRdv } from "./lien.mjs";
 export const SALLES = ["Salle 1", "Salle 2", "Salle 3"];
 export const HEURES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; // créneaux d'1 h, fin à 17 h
 export const JOURS = [1, 2, 3]; // lundi, mardi, mercredi
@@ -31,11 +32,13 @@ const stamp = (ms) => new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\
 function vevent(r, { method, summary, forPatient }) {
   const start = parisToUTC(r.rdvDate, r.rdvHeure), end = start + 3600e3;
   const org = process.env.MAIL_USER || "capsule-contact@gmail.com";
+  const lien = forPatient ? lienRdv(r.id, r.rdvId) : "";
   const desc = forPatient
-    ? `Consultation CAPSULE avec ${cap(r.therapeute)} (étudiant·e de M2 en psychologie).\nLieu : ${LIEU}, ${r.salle}.\nEn cas d'empêchement, répondez au mail d'invitation.`
+    ? `Consultation CAPSULE avec ${cap(r.therapeute)} (étudiant·e de M2 en psychologie).\nLieu : ${LIEU}, ${r.salle}.\n` + (lien ? `Un empêchement ? Annulez ou demandez un autre créneau : ${lien}` : "En cas d'empêchement, répondez au mail d'invitation.")
     : `${r.prenom} · ${r.salle} · ${cap(r.therapeute)}`;
   const L = ["BEGIN:VEVENT", `UID:${r.uid}@capsule-paris8`, `SEQUENCE:${r.seq || 0}`, `DTSTAMP:${stamp(Date.now())}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
     `SUMMARY:${esc(summary)}`, `LOCATION:${esc(LIEU + ", " + r.salle)}`, `DESCRIPTION:${esc(desc)}`, `STATUS:${method === "CANCEL" ? "CANCELLED" : "CONFIRMED"}`];
+  if (lien && method !== "CANCEL") L.push(`URL:${lien}`);
   if (forPatient) {
     L.push(`ORGANIZER;CN=CAPSULE Paris 8:mailto:${org}`, `ATTENDEE;CN=${esc(r.prenom)};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${r.email}`);
     if (method !== "CANCEL") L.push("BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:Rendez-vous CAPSULE demain", "END:VALARM");
@@ -65,7 +68,7 @@ export function norm(r) {
   return r;
 }
 // Fiche + un rendez-vous précis, pour les mails, les invitations .ics et les modèles de texte
-export const vue = (r, x) => (x ? { ...r, rdvDate: x.date, rdvHeure: x.heure, salle: x.salle, therapeute: x.therapeute, uid: x.uid, seq: x.seq || 0 } : r);
+export const vue = (r, x) => (x ? { ...r, rdvId: x.id, rdvDate: x.date, rdvHeure: x.heure, salle: x.salle, therapeute: x.therapeute, uid: x.uid, seq: x.seq || 0 } : r);
 export function lundi(date) { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); }
 
 export async function chargerTout(store) {

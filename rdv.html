@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Votre rendez-vous, CAPSULE Paris 8</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Page patient : annuler ou demander un autre créneau. Même charte que le site (framboise, violet, crème, Poppins), sans effets. */
+:root{--cream:#FDF5EB;--white:#fff;--ink:#1F1217;--muted:#5E4B55;--line:#E8D9D3;--rasp:#AE164E;--purple:#7B206B;--poppy:#E30F1B;--maroon:#75151F;--rose:#F9DEE5;--lilac:#EADCF0;--f:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--f);font-size:17px;line-height:1.65;padding:0 20px 56px}
+h1,p{margin:0}
+h1{font-size:clamp(26px,5.4vw,36px);font-weight:600;line-height:1.15;letter-spacing:-.02em;text-wrap:balance}
+h1:focus{outline:none}
+a{color:var(--rasp)}
+:focus-visible{outline:3px solid var(--purple);outline-offset:3px;border-radius:8px}
+.w{max-width:640px;margin:0 auto}
+.top{padding:26px 0 18px}
+.top a{text-decoration:none;color:inherit;display:inline-block}
+.wm{font-weight:700;font-size:20px;letter-spacing:.06em;line-height:1}
+.wm small{display:block;font-weight:500;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:7px;color:var(--muted)}
+.rule{display:flex;width:96px;height:6px;border-radius:3px;overflow:hidden;margin:0 0 22px}
+.rule i{display:block;height:100%}.rule i:nth-child(1){background:var(--purple);width:40%}.rule i:nth-child(2){background:var(--rasp);width:40%}.rule i:nth-child(3){background:var(--poppy);width:20%}
+.card{background:var(--white);border:1px solid var(--line);border-radius:28px;padding:34px 32px}
+.card>*+*{margin-top:18px}
+.rdv{background:var(--rose);border-radius:20px;padding:18px 22px}
+.rdv .d{font-weight:600;font-size:21px;line-height:1.3;color:var(--maroon)}
+.rdv .h{font-weight:600;color:var(--purple)}
+.rdv p+p{margin-top:4px}.rdv .s{font-size:15px;color:var(--muted)}
+.soft{color:var(--muted);font-size:15.5px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font:inherit;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;border:2px solid var(--rasp);background:var(--rasp);color:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--purple);border-color:var(--purple)}
+.btn.line{background:transparent;color:var(--rasp)}.btn.line:hover{background:var(--rasp);color:#fff;border-color:var(--rasp)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding-inline:12px;text-decoration:underline}
+.btn:disabled{opacity:.6;cursor:default}
+form>*+*{margin-top:16px}
+fieldset{border:0;padding:0;margin:0}legend{font-weight:500;font-size:15px;margin-bottom:8px;padding:0}
+.ck{display:inline-flex;gap:9px;align-items:center;margin:0 18px 6px 0;font-weight:400;font-size:16px}.ck input{width:20px;height:20px;accent-color:var(--rasp)}
+label.m{display:block;font-weight:500;font-size:15px}label.m small{color:var(--muted);font-weight:400}
+textarea{display:block;width:100%;margin-top:6px;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--cream);color:var(--ink);resize:vertical}
+textarea:focus{outline:2px solid var(--rasp);outline-offset:1px}
+.err{color:var(--poppy);font-weight:500;font-size:15px}.err:empty{display:none}
+.note{background:var(--lilac);border-radius:16px;padding:12px 16px;font-size:15px}
+.hide{display:none!important}
+.fine{margin-top:22px;font-size:13.5px;color:var(--muted);text-align:center}
+@media (max-width:520px){.card{padding:26px 22px;border-radius:24px}.btn{width:100%}.btns{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="w">
+  <header class="top"><a href="/" aria-label="CAPSULE, retour au site"><span class="wm">CAPSULE<small>Université Paris 8</small></span></a></header>
+  <div class="rule" aria-hidden="true"><i></i><i></i><i></i></div>
+  <main class="card" id="box" aria-live="polite"><p class="soft">Chargement de votre rendez-vous…</p></main>
+  <p class="fine">Consultations psychologiques gratuites pour les étudiant·es de Paris 8.<br><span id="urg">En cas d’urgence : 3114 (24 h/24, gratuit) ou 15.</span></p>
+</div>
+<noscript><p style="max-width:640px;margin:20px auto;padding:0 20px">Cette page nécessite JavaScript. Pour annuler ou changer votre rendez-vous, répondez simplement au mail de confirmation.</p></noscript>
+<script>
+(function () {
+  var t = new URLSearchParams(location.search).get('t') || '', box = document.getElementById('box'), info = null;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function call(body) {
+    var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ t: t }, body)) } : undefined;
+    return fetch('/api/rdv' + (body ? '' : '?t=' + encodeURIComponent(t)), o).then(function (r) { return r.json().catch(function () { return {}; }); });
+  }
+  function show(html) { box.innerHTML = html; var h = box.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
+  function mail(c) { var a = esc(c || 'capsule-contact@gmail.com'); return '<a href="mailto:' + a + '">' + a + '</a>'; }
+
+  function home() {
+    show('<h1>Bonjour ' + esc(info.prenom) + '</h1>' +
+      '<div class="rdv"><p class="d">' + esc(info.date) + '</p><p class="h">' + esc(info.heure) + ' · durée 1 h</p><p>' + esc(info.salle) + ', ' + esc(info.lieu) + '</p><p class="s">Avec ' + esc(info.therapeute) + ', étudiant·e de M2 en psychologie</p></div>' +
+      '<p>Vous venez ? Il n’y a rien à faire, à bientôt. Un empêchement ? Dites-le-nous ici, cela prend une minute et libère la place pour quelqu’un d’autre.</p>' +
+      (info.tardif ? '<p class="note">Le rendez-vous est très proche. Merci de nous prévenir, même au dernier moment : l’équipe est informée tout de suite.</p>' : '') +
+      '<div class="btns"><button class="btn" data-go="reporter">Demander un autre créneau</button><button class="btn line" data-go="annuler">Annuler le rendez-vous</button></div>');
+  }
+  function form(kind) {
+    var rep = kind === 'reporter';
+    show('<h1>' + (rep ? 'Demander un autre créneau' : 'Annuler le rendez-vous') + '</h1>' +
+      '<p class="soft">' + esc(info.date) + ', ' + esc(info.heure) + (rep ? '. Ce créneau sera libéré et nous vous proposerons un nouveau rendez-vous.' : '. Le créneau sera libéré. Vous pourrez reprendre rendez-vous plus tard si vous le souhaitez.') + '</p>' +
+      '<form id="f" novalidate>' +
+      (rep ? '<fieldset><legend>Quels jours vous conviendraient ? <small>(facultatif)</small></legend>' + info.jours.map(function (j) { return '<label class="ck"><input type="checkbox" name="j" value="' + esc(j) + '"> ' + esc(j) + '</label>'; }).join('') + '<p class="soft" style="margin-top:6px">Les rendez-vous ont lieu du lundi au mercredi, entre 9 h et 17 h.</p></fieldset>' : '') +
+      '<label class="m">Un mot pour l’équipe <small>(facultatif, inutile d’expliquer)</small><textarea id="msg" rows="3" maxlength="400" autocomplete="off"></textarea></label>' +
+      '<div class="err" id="err" role="alert"></div>' +
+      '<div class="btns"><button class="btn" id="go" type="submit">' + (rep ? 'Envoyer ma demande' : 'Confirmer l’annulation') + '</button><button class="btn quiet" type="button" data-back="1">Retour</button></div></form>');
+    var f = document.getElementById('f');
+    f.onsubmit = function (e) {
+      e.preventDefault();
+      var go = document.getElementById('go'), er = document.getElementById('err'); go.disabled = true; er.textContent = '';
+      var js = Array.prototype.map.call(f.querySelectorAll('input[name=j]:checked'), function (x) { return x.value; });
+      call({ action: kind, message: document.getElementById('msg').value, creneaux: js }).then(function (r) {
+        if (r.ok) return done(r);
+        if (r.etat) return gone(r.etat, r.contact);
+        go.disabled = false; er.textContent = r.error || 'Un problème est survenu. Réessayez dans un instant.';
+      }, function () { go.disabled = false; er.textContent = 'Le message n’a pas pu partir. Vérifiez votre connexion et réessayez, ou répondez à votre mail de confirmation.'; });
+    };
+  }
+  function done(r) {
+    var rep = r.type === 'reporter', u = document.getElementById('urg'); if (u) u.hidden = true;
+    show('<h1>' + (rep ? 'C’est noté, merci' : 'Votre rendez-vous est annulé') + '</h1>' +
+      '<p>' + (rep ? 'Votre rendez-vous du ' + esc(r.date.toLowerCase()) + ' à ' + esc(r.heure) + ' est libéré. Nous revenons vers vous dans les meilleurs délais avec un nouveau créneau.' : 'Votre rendez-vous du ' + esc(r.date.toLowerCase()) + ' à ' + esc(r.heure) + ' est annulé. Si vous souhaitez reprendre rendez-vous un jour, il suffit de nous écrire : ' + mail(info && info.contact) + '.') + '</p>' +
+      (r.mail === 'envoye' ? '<p class="soft">Un mail de confirmation vient de vous être envoyé, et le rendez-vous disparaît de votre agenda.</p>' : '') +
+      '<p class="note">Si vous traversez un moment difficile, le 3114 est joignable 24 h/24, gratuitement.</p>');
+  }
+  function gone(e, c) {
+    var T = {
+      invalide: ['Ce lien n’est pas valide', 'Copiez-le en entier depuis votre mail de confirmation, ou écrivez-nous pour que nous vous aidions : '],
+      passe: ['Ce rendez-vous est déjà passé', 'Pour en fixer un nouveau, écrivez-nous : '],
+      inactif: ['Ce rendez-vous n’est plus à venir', 'Il a peut-être déjà été annulé ou déplacé. Si besoin, écrivez-nous : ']
+    }[e] || ['Un problème est survenu', 'Écrivez-nous : '];
+    show('<h1>' + T[0] + '</h1><p>' + T[1] + mail(c) + '</p>');
+  }
+
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.go) form(b.dataset.go); else if (b.dataset.back) home();
+  });
+  if (!t) { gone('invalide'); return; }
+  call().then(function (d) { if (d.etat === 'ok') { info = d; home(); } else gone(d.etat || 'invalide', d.contact); }, function () { show('<h1>Page indisponible</h1><p>Réessayez dans un instant, ou répondez à votre mail de confirmation pour annuler ou changer votre rendez-vous.</p>'); });
+})();
+</script>
+</body>
+</html>

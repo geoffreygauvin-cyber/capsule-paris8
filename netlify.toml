@@ -7,6 +7,18 @@
   to = "/gestion.html"
   status = 200
 
+[[redirects]]
+  from = "/rdv"
+  to = "/rdv.html"
+  status = 200
+
+[[headers]]
+  for = "/rdv*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+
 [[headers]]
   for = "/gestion*"
   [headers.values]
