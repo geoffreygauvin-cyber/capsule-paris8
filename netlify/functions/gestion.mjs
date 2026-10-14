@@ -485,6 +485,28 @@ export default async (req) => {
     await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
   }
 
+  /* Parcours d'accueil des nouvelles recrues : 2 étapes constatées automatiquement (photo, présentation), 4 cochées par la personne.
+     Chacun·e ne voit et ne modifie que son parcours ; les admins voient l'avancement de tous les étudiant·es psy. Store « accueil » : une clé par compte. */
+  if (["accueil_get", "accueil_set"].includes(b.action)) {
+    const as = getStore("accueil"), MANUELS = ["charte", "modeles", "ressources", "equipe"];
+    const etat = async (n) => {
+      const pr = (await profils().get(n, { type: "json" })) || {}, m = (await as.get(n, { type: "json" })) || {};
+      return { photo: !!pr.photo, bio: !!(pr.bio && String(pr.bio).trim()), ...Object.fromEntries(MANUELS.map((k) => [k, m[k] || ""])) };
+    };
+    if (b.action === "accueil_set") {
+      const k = String(b.step || ""); if (!MANUELS.includes(k)) return J({ error: "Étape inconnue." }, 400);
+      const m = (await as.get(user, { type: "json" })) || {};
+      if (b.done) m[k] = new Date().toISOString(); else delete m[k];
+      await as.setJSON(user, m);
+      return J({ ok: true, moi: await etat(user) });
+    }
+    const out = { ok: true, moi: await etat(user) };
+    if (admin) {
+      const roles = await rolesMap(), noms = Object.keys(roles).filter((n) => roles[n] === "etudiant" && !TECH.includes(n));
+      out.equipe = Object.fromEntries(await Promise.all(noms.map(async (n) => [n, { ...(await etat(n)), depuis: NAME.test(n) ? ((await ac.get(n, { type: "json" }))?.creeLe || "") : "" }])));
+    }
+    return J(out);
+  }
   if (["annonce_list", "annonce_save", "annonce_del", "annonce_lu", "annonce_arch"].includes(b.action)) {
     const as = getStore("annonces"), cle = "liste";
     const liste = (await as.get(cle, { type: "json" })) || [];

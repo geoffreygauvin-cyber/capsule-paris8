@@ -846,6 +846,7 @@ function drawHome(){
  if(!$('hbody'))return;
  if(window.comRappels)setTimeout(window.comRappels,0);
  if(window.annLoad)setTimeout(window.annLoad,0);
+ if(window.accLoad)setTimeout(window.accLoad,0);
  var d=new Date(),t=iso(d),adm=isAdmin,ms=mesStats(moi),mine=function(x){return x.participants.indexOf(moi)>-1||x.superviseur===moi};
  $('hdate').textContent=JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()];
  $('hav').innerHTML=av(moi,'big');$('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent=techs.indexOf(moi)>-1?'Service technique':{admin:'Admin',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy'}[roles[moi]||role]||'Étudiant·e psy';
@@ -1100,4 +1101,4 @@ if(token)load();
 </script><script src="/gestion-com.js"></script>
 <script src="/gestion-annonces.js"></script>
 <script src="/gestion-charte.js"></script>
-<script src="/gestion-equipe.js"></script></body></html>
+<script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script></body></html>

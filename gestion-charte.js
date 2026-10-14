@@ -119,5 +119,6 @@
     var hx = b.getAttribute('data-hex'), ok = function () { if (window.CAPSULE) window.CAPSULE.toast('Couleur ' + hx + ' copiée.'); };
     try { navigator.clipboard.writeText(hx).then(ok, function () { if (window.CAPSULE) window.CAPSULE.toast(hx); }); } catch (x) { if (window.CAPSULE) window.CAPSULE.toast(hx); }
   });
+  window.charteTab = function (t) { tab = t === 'ppt' ? 'ppt' : 'charte'; };
   window.drawCharte = draw;
 })();

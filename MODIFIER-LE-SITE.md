@@ -106,6 +106,13 @@ Compte avec le statut spécial **Service technique** (aujourd'hui : `violette`, 
 - un interrupteur **Mode : Étudiant psy | Admin** en haut du menu (visible seulement pour ce compte : `list` renvoie `technique: true`). « Étudiant psy » affiche la plateforme comme la voit un·e étudiant·e psychologue (menu et pages réduits, « Mon activité »…), « Admin » la montre en entier. C'est un changement d'affichage côté navigateur (choix mémorisé dans le navigateur) : les droits réels restent ceux d'un admin. Sur téléphone, le bouton « Passer en mode… » est dans la barre du haut.
 Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minuscules) à `TECH`.
 
+## Parcours d'accueil des nouvelles recrues
+Fichier `gestion-accueil.js` (étapes dans la liste `STEPS` en tête de fichier) :
+- les **étudiant·es psy** voient en haut de l'Accueil une carte « Bienvenue dans l'équipe » avec la checklist et une barre d'avancement ; elle disparaît quand les 6 étapes sont faites (message de félicitations) ;
+- 2 étapes sont constatées automatiquement (photo de profil, présentation) ; les 4 autres (charte, modèles PowerPoint, ressources, équipe) sont cochées par la personne, chaque étape ayant un bouton qui ouvre la bonne page (« Voir les modèles » ouvre l'onglet PowerPoint de la charte) ;
+- les **admins** voient l'avancement de chaque étudiant·e en haut de l'onglet Équipe (étapes restantes, ancienneté du compte, barre de progression). Le compte Service technique et les admins n'ont pas de parcours ;
+- stockage : Netlify Blobs, store `accueil` (une clé par compte, dates des étapes cochées) ; actions `accueil_get` / `accueil_set` dans `netlify/functions/gestion.mjs` (chacun·e ne modifie que son parcours). Pour ajouter une étape cochée à la main, l'ajouter à `STEPS` et à la liste `MANUELS` du serveur.
+
 ## Page de connexion (/gestion)
 Page en deux volets (dans `gestion.html`, section `#login`, CSS « connexion » en haut du fichier) :
 - à gauche, un panneau dégradé bordeaux → violet avec trame de points et le logo CAPSULE (qui se dessine à l'ouverture), volontairement sans texte ni illustration ;

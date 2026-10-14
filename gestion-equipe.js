@@ -59,6 +59,7 @@
       h += '<div class="eqgrid">' + adm.concat(tech, stu).map(function (n) { return card(n, d, d.roles[n] === 'admin'); }).join('') + '</div>';
     }
     host.insertAdjacentHTML('beforeend', h + '</div>');
+    if (window.accAdmin) window.accAdmin();
   }
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('#v14 [data-eq]'); if (!b) return;
