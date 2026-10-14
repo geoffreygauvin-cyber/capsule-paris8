@@ -295,9 +295,10 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 <div class="ekp" id="skp"></div><div class="filters" id="stabs"></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div></section>
 <section id="v12" class="hide"><header class="ph0 pastel t2"><div class="tag">Communication</div><h1>Publications</h1><p class="sub">Créez un visuel pour les réseaux ou une fiche PDF à partir d’un modèle : choisissez, remplissez, téléchargez.</p></header></section>
 <section id="v13" class="hide"><header class="ph0 pastel t1"><div class="tag">Communication</div><h1>Charte graphique</h1><p class="sub">Logos, couleurs, police, trame de points et ton de CAPSULE : tout ce qu’il faut pour qu’une publication ressemble à CAPSULE.</p></header></section>
+<section id="v14" class="hide"><header class="ph0 pastel t2"><div class="tag">Vie d’équipe</div><h1>Équipe</h1><p class="sub">Qui fait quoi à CAPSULE : l’organigramme et le profil de chaque personne.</p></header></section>
 <section id="v7" class="hide"><header class="ph0 pastel t3"><div class="tag">Communication</div><h1>Messages</h1><p class="sub">Les mails envoyés aux personnes accompagnées : envoi à la main, modèles de texte et historique.</p></header>
 <div class="filters" id="mtabs"></div><div id="mbody"></div></section>
-<section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Comptes</div><h1>Équipe</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
+<section id="v3" class="hide"><header class="ph0 pastel t1"><div class="tag">Espace admin</div><h1>Comptes</h1><p class="sub">Un compte par étudiant·e : le prénom du compte apparaît comme thérapeute dans les invitations.</p></header>
 <div class="tm" id="tl"></div>
 <div class="newc"><b>Ajouter un compte</b><div class="g2"><label class="f">Prénom du compte<input id="tn" maxlength="30" placeholder="ex. camille" autocapitalize="none"></label><label class="f">Code (vide = généré)<input id="tc" placeholder="8 caractères minimum"></label><label class="f">Statut du compte<select id="tr"><option value="etudiant">Étudiant·e psy (thérapeute)</option><option value="admin">Admin</option></select></label></div>
 <div class="row"><button class="btn" id="tadd">Créer le compte</button></div><div id="tmsg"></div></div><div class="newc" id="exp" style="margin-top:16px"><b>Exporter les données</b><p class="sub" style="margin:4px 0 12px">Fichiers CSV (ouvrables dans Excel) ou sauvegarde complète. Données personnelles : à conserver et partager avec précaution.</p>
@@ -308,7 +309,7 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
 var SL={nouvelle:'Nouvelle',a_recontacter:'À recontacter',contactee:'Contactée',rdv_fixe:'RDV fixé',en_cours:'En cours',terminee:'Terminée',sans_suite:'Sans suite'};
-var role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},titres={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false;
+var role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},titres={},bios={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false;
 try{token=sessionStorage.getItem('cap_t')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -359,7 +360,7 @@ function logout(){token='';try{sessionStorage.clear()}catch(e){}$('app').classLi
 function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){toast(d.error||'Erreur');return}
- items=d.items;photos=d.photos||{};titres=d.titres||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
+ items=d.items;photos=d.photos||{};titres=d.titres||{};bios=d.bios||{};ress=d.ressources||[];equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
  role=d.role||(d.admin?'admin':'etudiant');isSup=role==='superviseur';roles=d.roles||{};superv=d.superviseurs||[];buildNav();$('radd').classList.toggle('hide',!isAdmin);Array.prototype.forEach.call(document.querySelectorAll('#v3 .newc'),function(x){x.classList.toggle('hide',!isAdmin)});
  $('login').classList.add('hide');$('app').classList.remove('hide');
  $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=whoLine();
@@ -480,7 +481,7 @@ $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
 function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=false;w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervisions & réunions</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
 document.addEventListener('click',function(e){var b=e.target.closest('.ssw .chip');if(b)nav(+b.dataset.g)});
-function nav(n){[1,2,3,4,5,6,7,8,10,11,12,13].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte()}
+function nav(n){[1,2,3,4,5,6,7,8,10,11,12,13,14].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',+b.dataset.v===n||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte();if(n===14&&window.drawEquipe)drawEquipe()}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -528,11 +529,12 @@ $('padd').onclick=addPerson;
 function csv(rows,name){var t=rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'}).join(';')}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download=name;a.click()}
 /* ---- profil ---- */
 function profil(){var ms=mesStats(moi);
- openM('<div class="prof">'+av(moi,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(cap(moi))+'</h3><label class="f" style="margin:2px 0 10px"><span class="sub" style="font-size:12px">Ton titre (affiché sous ton nom)</span><input id="pt" maxlength="40" value="'+esc(titres[moi]||'')+'" placeholder="'+esc(titre(moi))+'"></label><button class="btn l s" data-m="photo">'+(photos[moi]?'Changer la photo':'Ajouter une photo')+'</button> '+(photos[moi]?'<button class="link" data-m="nophoto" style="margin-left:6px">retirer</button>':'')+'<input type="file" id="pf" accept="image/*" class="hide"></div></div>'+
+ openM('<div class="prof">'+av(moi,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(cap(moi))+'</h3><label class="f" style="margin:2px 0 10px"><span class="sub" style="font-size:12px">Ton titre (affiché sous ton nom)</span><input id="pt" maxlength="40" value="'+esc(titres[moi]||'')+'" placeholder="'+esc(titre(moi))+'"></label><label class="f" style="margin:0 0 10px"><span class="sub" style="font-size:12px">Ta présentation (affichée dans l’onglet Équipe)</span><textarea id="pb" maxlength="240" rows="3" placeholder="Ex. Master 2 de psychologie clinique, j’accueille le jeudi et le vendredi.">'+esc(bios[moi]||'')+'</textarea></label><button class="btn l s" data-m="photo">'+(photos[moi]?'Changer la photo':'Ajouter une photo')+'</button> '+(photos[moi]?'<button class="link" data-m="nophoto" style="margin-left:6px">retirer</button>':'')+'<input type="file" id="pf" accept="image/*" class="hide"></div></div>'+
  '<div class="kpis"><div class="kpi pastel"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi pastel"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi pastel"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
  '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
  if(isAdmin||isSup){var kk=document.querySelector('.kpis'),rl=document.querySelector('[data-m="releve"]');if(kk)kk.remove();if(rl)rl.remove()}
  $('pt').onchange=function(){var el=this,v=el.value.trim();api({action:'profil_titre',titre:v}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.titre)titres[moi]=r.titre;else delete titres[moi];el.placeholder=titre(moi);$('whoc').textContent=whoLine();$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';toast(r.titre?'Titre enregistré.':'Titre par défaut rétabli.')})};
+ $('pb').onchange=function(){var v=this.value.trim();api({action:'profil_bio',bio:v}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.bio)bios[moi]=r.bio;else delete bios[moi];toast(r.bio?'Présentation enregistrée.':'Présentation retirée.')})};
  $('pf').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);savePhoto(c.toDataURL('image/jpeg',.82))};im.onerror=function(){toast('Image illisible.')};im.src=rd.result};rd.readAsDataURL(f)}}
 function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();drawHome();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
 $('meb').onclick=profil;$('whom').onclick=profil;
@@ -749,21 +751,21 @@ $('exp').onclick=function(e){var b=e.target.closest('[data-x]');if(!b||!isAdmin)
 };
 
 /* ---- navigation selon le statut du compte ---- */
-var NIC={13:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7.5" r="1.1"/><circle cx="14.5" cy="7.5" r="1.1"/>',12:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/>',11:'<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5M10 20v-5h4v5"/>',9:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>',10:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19c.5-3.4 2.7-5.2 5.5-5.2s5 1.8 5.5 5.2M14 18.5c.4-2.4 1.9-3.7 3.6-3.7 1.9 0 3.3 1.2 3.9 3.7"/>'};
+var NIC={14:'<circle cx="12" cy="6" r="2.6"/><circle cx="5.5" cy="18" r="2.4"/><circle cx="18.5" cy="18" r="2.4"/><path d="M12 8.6v4M5.5 15.6V13h13v2.6"/>',13:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7.5" r="1.1"/><circle cx="14.5" cy="7.5" r="1.1"/>',12:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/>',11:'<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5M10 20v-5h4v5"/>',9:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>',10:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19c.5-3.4 2.7-5.2 5.5-5.2s5 1.8 5.5 5.2M14 18.5c.4-2.4 1.9-3.7 3.6-3.7 1.9 0 3.3 1.2 3.9 3.7"/>'};
 function buildNav(){
  var as=document.querySelector('aside');
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
- var C={etudiant:[['Espace thérapeute',[11,1,2,4,10,5,6,7]],['Communication',[12,13]]],admin:[['Espace thérapeute',[11,1,2,4,6,7]],['Communication',[12,13]],['Espace admin',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
- var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',10:role==='admin'?'Gestion':'Supervisions & réunions'};
+ var C={etudiant:[['Espace thérapeute',[11,14,1,2,4,10,5,6,7]],['Communication',[12,13]]],admin:[['Espace thérapeute',[11,14,1,2,4,6,7]],['Communication',[12,13]],['Espace admin',[10,8,3]]],superviseur:[['Espace superviseur',[11,10,2,6]]]}[role];
+ var LB={1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Gestion':'Supervisions & réunions'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
    as.insertBefore(b,anchor)})});
- document.querySelector('#v5 h1').textContent=LB[5];document.querySelector('#v3 h1').textContent=isAdmin?'Équipe':'Équipe';
+ document.querySelector('#v5 h1').textContent=LB[5];document.querySelector('#v3 h1').textContent='Comptes';
  $('v10').querySelector('#sh1').textContent=LB[10];
  var first=11;var on=as.querySelector('.nv[data-v="'+first+'"]');
- var cv=[1,2,3,4,5,6,7,8,10,11,12,13].filter(function(k){return !$('v'+k).classList.contains('hide')})[0],cb2=as.querySelector('.nv[data-v="'+cv+'"]');if(cb2)cb2.classList.add('on');
+ var cv=[1,2,3,4,5,6,7,8,10,11,12,13,14].filter(function(k){return !$('v'+k).classList.contains('hide')})[0],cb2=as.querySelector('.nv[data-v="'+cv+'"]');if(cb2)cb2.classList.add('on');
  if(firstLoad){firstLoad=false;setTimeout(function(){nav(first)},0)}}
 
 
@@ -1020,9 +1022,10 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-window.CAPSULE={gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe}}};
+window.CAPSULE={profil:function(){profil()},gest:function(t){gtab=t;nav(10)},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,titre:titre}}};
 if(token)load();
 })();
 </script><script src="/gestion-com.js"></script>
 <script src="/gestion-annonces.js"></script>
-<script src="/gestion-charte.js"></script></body></html>
+<script src="/gestion-charte.js"></script>
+<script src="/gestion-equipe.js"></script></body></html>
