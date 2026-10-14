@@ -123,6 +123,8 @@ export default async (req) => {
     return J({ ok: true, token: makeToken(u, "membre", a.hash.slice(0, 10)), compte: u });
   }
 
+  // Profils (photo, titre, présentation, contact) : lecture « forte » pour qu'un enregistrement soit relu tel quel juste après.
+  const profils = () => getStore({ name: "profils", consistency: "strong" });
   const rls = getStore("roles"), SEED = { violette: "etudiant" };
   // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
   const TECH = ["violette"];
@@ -197,7 +199,7 @@ export default async (req) => {
       if (b.action === "compte_create" && b.role && !ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.action === "compte_create" && await ac.get(n, { type: "json" })) return J({ error: "Ce compte existe déjà." }, 400);
       if (b.action !== "compte_create" && !(await ac.get(n, { type: "json" }))) return J({ error: "Compte introuvable." }, 404);
-      if (b.action === "compte_delete") { await ac.delete(n); await getStore("profils").delete(n); }
+      if (b.action === "compte_delete") { await ac.delete(n); await profils().delete(n); }
       else if (b.action === "compte_role") {
         if (!ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
         const old = await ac.get(n, { type: "json" }); await ac.setJSON(n, { ...old, role: b.role });
@@ -225,7 +227,7 @@ export default async (req) => {
     const { blobs: cb } = await ac.list();
     const rs = getStore("ressources"); const { blobs: rb } = await rs.list({ prefix: "m/" });
     const ressources = (await Promise.all(rb.map((x) => rs.get(x.key, { type: "json" })))).filter(Boolean).sort((a, z) => z.le.localeCompare(a.le));
-    const ps = getStore("profils"); const { blobs: pb } = await ps.list();
+    const ps = profils(); const { blobs: pb } = await ps.list();
     const profs = await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" })) || {}]));
     const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
     const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre])); for (const n of TECH) titres[n] = "Service technique";
@@ -290,7 +292,7 @@ export default async (req) => {
   }
 
   if (b.action === "profil_photo") {
-    const ps = getStore("profils"), ph = String(b.photo || "");
+    const ps = profils(), ph = String(b.photo || "");
     const prev = (await ps.get(user, { type: "json" })) || {};
     if (!ph) { const { photo: _p, ...rest } = prev; if (Object.keys(rest).length) await ps.setJSON(user, rest); else await ps.delete(user); return J({ ok: true, photo: "" }); }
     if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ph) || ph.length > 70000) return J({ error: "Image invalide ou trop lourde." }, 400);
@@ -298,21 +300,21 @@ export default async (req) => {
   }
   if (b.action === "profil_titre") {
     if (TECH.includes(user)) return J({ error: "Ton titre est lié au statut Service technique : il ne se change pas." }, 400);
-    const ps = getStore("profils"), t = clean(b.titre, 40).replace(/\s+/g, " ").trim();
+    const ps = profils(), t = clean(b.titre, 40).replace(/\s+/g, " ").trim();
     const prev = (await ps.get(user, { type: "json" })) || {};
     const next = { ...prev }; if (t) next.titre = t; else delete next.titre;
     if (Object.keys(next).length) await ps.setJSON(user, next); else await ps.delete(user);
     return J({ ok: true, titre: t });
   }
   if (b.action === "profil_bio") {
-    const ps = getStore("profils"), t = clean(b.bio, 240).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    const ps = profils(), t = clean(b.bio, 240).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
     const prev = (await ps.get(user, { type: "json" })) || {};
     const next = { ...prev }; if (t) next.bio = t; else delete next.bio;
     if (Object.keys(next).length) await ps.setJSON(user, next); else await ps.delete(user);
     return J({ ok: true, bio: t });
   }
   if (b.action === "profil_contact") {
-    const ps = getStore("profils"), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).replace(/[^0-9+().\s-]/g, "").replace(/\s+/g, " ").trim();
+    const ps = profils(), email = clean(b.email, 120).trim().toLowerCase(), tel = clean(b.tel, 25).replace(/[^0-9+().\s-]/g, "").replace(/\s+/g, " ").trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse mail invalide." }, 400);
     if (tel && tel.replace(/\D/g, "").length < 6) return J({ error: "Numéro de téléphone invalide." }, 400);
     const prev = (await ps.get(user, { type: "json" })) || {};
