@@ -206,7 +206,7 @@
         '<div class="t"><span class="rhp ' + SC[r.s] + '">' + SL[r.s] + (r.s === 'retard' && r.min ? ' · ' + r.min + ' min' : '') + '</span></div><div class="x"><b>' + e(r.label) + '</b>' + (r.note ? '<small>' + e(r.note) + '</small>' : '') + '</div>' +
         '<div class="a">' + (r.src === 's' ? '<button type="button" class="link" data-rh="pointer" data-id="' + e(r.sid) + '">Modifier le pointage</button>' : '<button type="button" class="link" data-rh="evedit" data-id="' + e(r.eid) + '">Modifier</button><button type="button" class="link" data-rh="evdel" data-id="' + e(r.eid) + '">Supprimer</button>') + '</div></div>';
     }).join('');
-    el.innerHTML = '<div class="gbar">' + perChips() + '<div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn l" data-rh="csv">Exporter (CSV)</button><button type="button" class="btn" data-rh="evnew">+ Signaler un retard ou une absence</button></div></div>' +
+    el.innerHTML = '<div class="gbar">' + perChips() + '<div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" data-rh="evnew">+ Signaler un retard ou une absence</button></div></div>' +
       kp + pt + '<h3 class="rh3">Par étudiant·e<small>' + perLabel() + '</small></h3>' +
       (E.length ? '<div class="tbl">' + rows + '</div>' : '<div class="empty"><b>Aucun·e étudiant·e psy</b>Créez les comptes dans l’onglet Comptes.</div>') +
       '<p class="rhcap">Le taux de présence porte sur les réunions et supervisions pointées. Les retards et absences saisis à la main (rendez-vous patient, permanence) comptent dans les retards et absences, pas dans le taux. « À voir » : ' + SEUIL.abs + ' absences non excusées ou ' + SEUIL.retard + ' retards sur la période.</p>' +
@@ -264,16 +264,6 @@
   function a0(x) { return x.date + (x.heure || ''); }
 
   /* ---------- export ---------- */
-  function exporter() {
-    var L = entries(), f = from(), E = etu();
-    var rows = [['Date', 'Heure', 'Étudiant·e', 'Type', 'Intitulé', 'Statut', 'Retard (min)', 'Motif']];
-    L.filter(function (r) { return !f || r.date >= f; }).sort(function (a, z) { return a0(a).localeCompare(a0(z)); }).forEach(function (r) {
-      rows.push([r.date, r.heure || '', nom(r.nom), r.src === 's' ? 'Réunion ou supervision' : 'Saisi à la main', r.label, SL[r.s], r.s === 'retard' ? r.min : '', r.note]);
-    });
-    if (rows.length < 2) { toast('Rien à exporter sur cette période.'); return; }
-    C().csv(rows, 'presences-' + iso(new Date()) + '.csv');
-  }
-
   /* ---------- clics ---------- */
   function clic(ev0) { traite(ev0); }
   function chg(ev0) { var t = ev0.target; if (t && t.id === 'rhwho') { who = t.value; jmax = 30; drawPre(); } }
@@ -287,7 +277,6 @@
     else if (k === 'evedit') evForm(id);
     else if (k === 'evdel') { if (!confirm('Supprimer ce retard ou cette absence ?')) return; api({ action: 'rh_event_delete', id: id }).then(function (r) { if (r && r.ok) { ev = ev.filter(function (v) { return v.id !== id; }); at = 0; redraw(); toast('Supprimé.'); } else toast((r && r.error) || 'Erreur'); }); }
     else if (k === 'plus') { jmax += 30; drawPre(); }
-    else if (k === 'csv') exporter();
     else if (k === 'topre') C().gest('pre');
     else if (k === 'tojur') C().gest('jur');
     else if (k === 'toeq') { var c = document.querySelector('#geq .rhg'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
