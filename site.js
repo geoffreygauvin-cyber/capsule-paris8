@@ -97,19 +97,15 @@
     var fi = C.final;
     h += '<section style="padding-top:24px"><div class="final"><div><h2>' + E('final.titre', fi.titre) + '</h2><p>' + E('final.texte', fi.texte) + '</p><div class="actions">' + rdvBtn(C.boutonRendezVous, 'boutonRendezVous') + '</div></div><div class="lw" data-logo="170" data-mono="#FFFFFF"></div></div></section>';
     var PART = [
-      { id: 'cvec', nom: 'CVEC', long: 'Contribution de vie étudiante et de campus', url: 'https://cvec.etudiant.gouv.fr' },
-      { id: 'ars', nom: 'ARS Île-de-France', long: 'Agence régionale de santé', url: 'https://www.iledefrance.ars.sante.fr' }
-    ], LABS = [
-      { id: 'lapps', nom: 'LAPPS', long: '' },
-      { id: 'lppc', nom: 'LPPC', long: '' },
-      { id: 'dysco', nom: 'DYSCO', long: '' }
+      { id: 'cvec', nom: 'Financé par la CVEC · Crous Paris', cls: 'cv', url: 'https://www.crous-paris.fr/sortir-bouger-creer/soutiens-aux-projets-etudiants/projets-cvec/' },
+      { id: 'ars', nom: 'ARS Île-de-France', cls: 'ar', url: 'https://www.iledefrance.ars.sante.fr' },
+      { id: 'paris8', nom: 'Université Paris 8', cls: 'p8', url: 'https://www.univ-paris8.fr' }
     ];
-    function pLogo(x, c) {
+    function pLogo(x) {
       var inner = '<img src="img/partenaires/' + x.id + '.png" alt="' + esc(x.nom) + '" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;pt&quot;>' + esc(x.nom) + '</span>\'">';
-      return '<li class="' + c + '" ' + (x.long ? 'title="' + esc(x.long) + '"' : '') + '>' + (x.url ? '<a href="' + x.url + '" target="_blank" rel="noopener">' + inner + '</a>' : inner) + '</li>';
+      return '<li class="' + x.cls + '"><a href="' + x.url + '" target="_blank" rel="noopener">' + inner + '</a></li>';
     }
-    h += '<section id="partenaires" class="parts" aria-label="Partenaires"><h2>Avec le soutien de</h2><ul class="pl">' + PART.map(function (x) { return pLogo(x, 'big'); }).join('') + '</ul>' +
-      '<h3>Dispositif porté par les laboratoires</h3><ul class="pl">' + LABS.map(function (x) { return pLogo(x, 'sm'); }).join('') + '</ul></section>';
+    h += '<section id="partenaires" class="parts" aria-label="Partenaires"><h2>Avec le soutien de</h2><ul class="pl">' + PART.map(pLogo).join('') + '</ul></section>';
     h += '<footer><a class="brand" href="#top"><span data-logo="40"></span><span class="wm" style="font-size:15px">' + f(m.nom) + '<small>' + f(m.sousTitre) + '</small></span></a><span>' + E('basDePage', C.basDePage) + '</span></footer>';
     app.innerHTML = h;
     drawLogos();

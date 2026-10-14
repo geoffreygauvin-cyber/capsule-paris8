@@ -55,4 +55,4 @@ Onglet « Emploi du temps » : la semaine d'une personne (rendez-vous patients +
 - Les comptes « principaux » (variable Netlify GESTION_COMPTES) ne sont pas supprimables depuis le site. Seul geoffrey y figure désormais ; les autres comptes se créent dans Équipe.
 
 ## Logos des partenaires
-Bandeau en bas du site : déposer les fichiers dans `img/partenaires/` sous les noms `cvec.png`, `ars.png`, `lapps.png`, `lppc.png`, `dysco.png` (PNG fond transparent de préférence). Tant qu'un fichier manque, le nom s'affiche en texte. Liste et liens : variables `PART` et `LABS` dans `site.js`.
+Bandeau en bas du site : déposer les fichiers dans `img/partenaires/` sous les noms `cvec.png` (bloc complet Crous/CVEC, non modifié), `ars.png`, `paris8.png` (PNG fond transparent de préférence). Tant qu'un fichier manque, le nom s'affiche en texte. Liste et liens : variable `PART` dans `site.js`.
