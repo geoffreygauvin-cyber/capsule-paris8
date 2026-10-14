@@ -175,6 +175,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 @media (max-width:860px){.pr.hi{grid-template-columns:1fr auto}}
 
 /* finitions */
+.ann{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:0 0 10px}.ann.imp{border-color:var(--rasp);background:#FDF0F3}.ann.lu{opacity:.65}.ann .annh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}.ann p{margin:6px 0 8px;font-size:14px;line-height:1.5}.ann small{color:var(--muted)}.annt{display:inline-block;background:var(--rasp);color:#fff;border-radius:999px;font-size:11px;padding:1px 8px;font-weight:600;vertical-align:middle}
 .lkg{display:grid;gap:10px}.lkc{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 16px;flex-wrap:wrap}.lkb{flex:none;width:44px;height:44px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}.lkt{flex:1;min-width:180px;display:grid;gap:2px}.lkt a{color:var(--rasp);font-size:13.5px;word-break:break-all}.lkt small{color:var(--muted)}.lka{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lka .link{margin:0}.lka a.btn{text-decoration:none}.lkc.late{border-color:var(--poppy);background:#FFF3F1}.pst{font-size:13px;color:var(--muted)}.pst i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:1px}
 .cmw{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:24px;align-items:start}.cmf textarea,.cmf input:not([type=checkbox]),.cmf select{width:100%}.cmf textarea{resize:vertical;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.cmg{display:grid;gap:12px;margin-top:10px}.cmck{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink)}.cmth{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}.sw.on{box-shadow:0 0 0 3px var(--ink)}.cmc{background:#EFE7E0;border-radius:18px;padding:16px;display:flex;justify-content:center}.cmc canvas{width:100%;height:auto;max-height:78vh;object-fit:contain;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.14);background:#fff}.cmp{position:sticky;top:12px}.cmmsg{min-height:20px;font-size:13px;color:var(--rasp);margin-top:8px}.cmd{display:inline-flex;align-items:center;margin:0 6px 6px 0;background:var(--paper);border:1px solid var(--line);border-radius:999px}.cmd .link{margin:0 10px 0 0}
 @media(max-width:900px){.cmw{grid-template-columns:minmax(0,1fr)}.cmp{position:static;order:-1}}
@@ -727,6 +728,7 @@ function buildNav(){
 function drawHome(){
  if(!$('hbody'))return;
  if(window.comRappels)setTimeout(window.comRappels,0);
+ if(window.annLoad)setTimeout(window.annLoad,0);
  var d=new Date(),t=iso(d),adm=isAdmin,ms=mesStats(moi),mine=function(x){return x.participants.indexOf(moi)>-1||x.superviseur===moi};
  $('hdate').textContent=JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()];
  $('hav').innerHTML=av(moi,'big');$('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent={admin:'Admin',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy'}[roles[moi]||role]||'Étudiant·e psy';
@@ -932,7 +934,8 @@ $('list').onclick=function(e){
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
   if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
-window.CAPSULE={nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles}}};
+window.CAPSULE={nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe}}};
 if(token)load();
 })();
-</script><script src="/gestion-com.js"></script></body></html>
+</script><script src="/gestion-com.js"></script>
+<script src="/gestion-annonces.js"></script></body></html>
