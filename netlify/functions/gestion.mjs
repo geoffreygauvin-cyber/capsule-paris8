@@ -351,6 +351,36 @@ export default async (req) => {
     await ls.setJSON(cle, liste); return J({ ok: true, liens: liste });
   }
 
+  if (["pub_list", "pub_save", "pub_del"].includes(b.action)) {
+    const ps = getStore("publis"), cle = "liste", RES = ["site", "instagram", "linkedin", "facebook", "tiktok", "youtube", "x", "mail", "autre"], STS = ["idee", "attente", "programmee", "publiee"];
+    const liste = (await ps.get(cle, { type: "json" })) || [];
+    if (b.action === "pub_list") return J({ ok: true, publis: liste });
+    if (b.action === "pub_del") {
+      const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Publication introuvable." }, 404);
+      if (!admin && cur.par !== user) return J({ error: "Seul·e l'auteur·e ou un admin peut supprimer cette publication." }, 403);
+      const reste = liste.filter((x) => x.id !== cur.id); await ps.setJSON(cle, reste); return J({ ok: true, publis: reste });
+    }
+    const titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 3000).trim(), reseau = RES.includes(b.reseau) ? b.reseau : "autre", statut = STS.includes(b.statut) ? b.statut : "idee";
+    const date = String(b.date || "").trim(), heure = String(b.heure || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
+    if (!titre) return J({ error: "Donnez un titre à la publication." }, 400);
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return J({ error: "Date invalide." }, 400);
+    if (heure && !/^\d{2}:\d{2}$/.test(heure)) return J({ error: "Heure invalide." }, 400);
+    if (statut === "programmee" && !date) return J({ error: "Choisissez une date pour programmer la publication." }, 400);
+    if (lien && !/^https?:\/\/[^\s]+$/i.test(lien)) return J({ error: "Le lien de la publication doit commencer par https://." }, 400);
+    let visuel = null;
+    if (b.visuel && typeof b.visuel === "object") { const v = JSON.stringify(b.visuel); if (v.length > 6000) return J({ error: "Visuel trop volumineux." }, 413); visuel = JSON.parse(v); }
+    const now = new Date().toISOString();
+    if (b.id) {
+      const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Publication introuvable." }, 404);
+      if (!admin && cur.par !== user) return J({ error: "Seul·e l'auteur·e ou un admin peut modifier cette publication." }, 403);
+      Object.assign(cur, { titre, texte, reseau, statut, date, heure, lien, visuel, maj: now, majPar: user });
+    } else {
+      if (liste.length >= 300) return J({ error: "Trop de publications (300 maximum) : supprimez les plus anciennes." }, 400);
+      liste.push({ id: randomUUID(), titre, texte, reseau, statut, date, heure, lien, visuel, par: user, le: now });
+    }
+    await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
+  }
+
   if (b.action === "res_get") {
     const rs = getStore("ressources"), m = await rs.get("m/" + String(b.id), { type: "json" });
     if (!m || m.type !== "fichier") return J({ error: "Fichier introuvable." }, 404);

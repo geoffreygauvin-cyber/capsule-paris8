@@ -344,7 +344,7 @@
     $('cm_pdf').textContent = 'Télécharger en PDF';
   }
   function build() {
-    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="pages">Nos pages</button><button class="chip" data-tab="chiffres">Chiffres clés</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
+    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="planning">Planning</button><button class="chip" data-tab="pages">Nos pages</button><button class="chip" data-tab="chiffres">Chiffres clés</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
       '<div class="newc"><b>1 · Format</b><div class="filters" id="cmfm" style="margin:10px 0 4px">' + Object.keys(FM).map(function (k) { return '<button class="chip" data-f="' + k + '">' + FM[k].lb + '</button>'; }).join('') + '</div><small id="cmsub" style="color:var(--muted)"></small></div>' +
       '<div class="newc" style="margin-top:14px"><b>2 · Modèle</b><label class="f" style="margin-top:8px">Point de départ<select id="cm_pre">' + Object.keys(PRE).map(function (k) { return '<option value="' + k + '">' + PRE[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<small style="color:var(--muted);display:block;margin-top:6px">Changer de modèle remplace les textes ci-dessous.</small>' +
@@ -365,9 +365,9 @@
       '<div class="cmp"><div class="cmc"><canvas id="cmcv" aria-label="Aperçu du visuel"></canvas></div><div id="cmmsg" class="cmmsg"></div>' +
       '<div class="row" style="flex-wrap:wrap;margin-top:12px"><button class="btn" id="cm_png">Télécharger en PNG</button><button class="btn l" id="cm_pdf">Télécharger en PDF</button><button class="btn l" id="cm_ppt">Télécharger en PowerPoint</button></div><small style="color:var(--muted);display:block;margin-top:8px">Le PowerPoint se modifie élément par élément (textes, formes, images). Pour un rendu identique à l’aperçu, installez la police Poppins (gratuite, sur Google Fonts).</small>' +
       '<div class="newc" style="margin-top:16px"><b>Légende pour le post</b><p class="sub" style="margin:4px 0 8px">À coller sous l’image sur Instagram, LinkedIn…</p><textarea id="cm_legende" rows="6" style="width:100%"></textarea>' +
-      '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div><div class="row" style="margin-top:12px"><button class="btn" id="cm_plan">Enregistrer dans le planning</button></div></div>' +
       '<div class="newc" style="margin-top:16px"><b>Brouillons</b><p class="sub" style="margin:4px 0 8px">Enregistrés sur cet appareil, dans ce navigateur.</p><div class="row"><input id="cm_dn" placeholder="Nom du brouillon" maxlength="40" style="flex:1"><button class="btn l s" id="cm_ds">Enregistrer</button></div><div id="cmdl" style="margin-top:10px"></div></div>' +
-      '</div></div></div><div id="cmpages" class="hide"></div><div id="cmchiffres" class="hide"></div>';
+      '</div></div></div><div id="cmplan" class="hide"></div><div id="cmpages" class="hide"></div><div id="cmchiffres" class="hide"></div>';
     $('v12').insertAdjacentHTML('beforeend', h);
     canvas = $('cmcv');
     var root = $('v12');
@@ -393,12 +393,14 @@
       else if (b.id === 'cm_ppt') toPptx();
       else if (b.id === 'cm_leg') { st.legende = legende(); $('cm_legende').value = st.legende; }
       else if (b.id === 'cm_cp') { var t = $('cm_legende'); if (!t.value) { st.legende = legende(); t.value = st.legende; } t.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (x) { } if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(function () { note('Légende copiée.'); }, function () { note(ok ? 'Légende copiée.' : 'Copie impossible : sélectionnez le texte à la main.'); }); else note(ok ? 'Légende copiée.' : 'Copie impossible : sélectionnez le texte à la main.'); }
+      else if (b.id === 'cm_plan') toPlan();
       else if (b.id === 'cm_ds') { var n = ($('cm_dn').value || '').trim(); if (!n) return note('Donnez un nom au brouillon.'); var d = drafts(); d[n] = Object.assign({}, st); if (putDrafts(d)) { $('cm_dn').value = ''; drawDrafts(); note('Brouillon enregistré.'); } }
       else if (b.dataset.o) { var d2 = drafts(); if (d2[b.dataset.o]) { st = Object.assign(newState('libre'), d2[b.dataset.o]); fields(); later(); } }
       else if (b.dataset.x) { var d3 = drafts(); delete d3[b.dataset.x]; putDrafts(d3); drawDrafts(); }
     });
     bindLiens();
     bindChiffres();
+    bindPubs();
     built = true;
   }
 
@@ -413,8 +415,8 @@
   function api2(b) { return window.CAPSULE ? window.CAPSULE.api(b) : Promise.resolve({ error: 'Indisponible' }); }
   function tab(t) {
     Array.prototype.forEach.call(document.querySelectorAll('#cmtabs .chip'), function (x) { x.classList.toggle('on', x.dataset.tab === t); });
-    $('cmcreer').classList.toggle('hide', t !== 'creer'); $('cmpages').classList.toggle('hide', t !== 'pages'); $('cmchiffres').classList.toggle('hide', t !== 'chiffres');
-    if (t === 'pages') loadLiens(); else if (t === 'chiffres') drawChiffres(); else later();
+    $('cmcreer').classList.toggle('hide', t !== 'creer'); $('cmpages').classList.toggle('hide', t !== 'pages'); $('cmplan').classList.toggle('hide', t !== 'planning'); $('cmchiffres').classList.toggle('hide', t !== 'chiffres');
+    if (t === 'pages') loadLiens(); else if (t === 'planning') loadPubs(); else if (t === 'chiffres') drawChiffres(); else later();
   }
   function loadLiens() {
     if (liens === null) $('cmpages').innerHTML = '<p class="sub">Chargement…</p>';
@@ -534,6 +536,108 @@
         var f = st.fmt, lg = st.logos; st = newState('libre'); st.fmt = f; st.logos = lg; st.theme = 'framboise'; st.kicker = 'Bilan'; st.titre = 'CAPSULE en chiffres'; st.texte = 'Des consultations psychologiques gratuites, par des étudiant·es de Master de psychologie, pour les étudiant·es de Paris 8.'; st.points = chPoints().join('\n'); st.cta = 'Prendre rendez-vous : capsule-paris8.fr'; st.illu = 'ruban';
         tab('creer'); fields(); later();
       }
+    });
+  }
+
+
+  /* ---------- onglet « Planning » : publications par réseau, en attente, programmées ---------- */
+  var SS = [['idee', 'Idée', '#6B5861'], ['attente', 'En attente de validation', '#7B206B'], ['programmee', 'Programmée', '#AE164E'], ['publiee', 'Publiée', '#2F7D4F']];
+  var noKeep = false, pubs = null, pEdit = '', pVis = null, pFilt = 'tous', pSt = 'tous', draftP = null;
+  function sLb(k) { var r = SS.filter(function (x) { return x[0] === k; })[0]; return r ? r[1] : k; }
+  function tdy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function frDate(d, h) { if (!d) return 'Sans date'; var x = new Date(d + 'T12:00:00'), J = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']; return J[x.getDay()] + ' ' + x.getDate() + ' ' + MS[x.getMonth()] + (h ? ' · ' + h.replace(':', ' h ') : ''); }
+  function loadPubs() {
+    if (pubs === null) $('cmplan').innerHTML = '<p class="sub">Chargement…</p>';
+    api2({ action: 'pub_list' }).then(function (d) { if (d && d.ok) { pubs = d.publis || []; drawPubs(); } else $('cmplan').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger le planning.') + '</p>'; });
+  }
+  function toPlan() {
+    if (!st.legende) st.legende = legende();
+    var vis = Object.assign({}, st); delete vis.legende;
+    draftP = { reseau: 'linkedin', titre: st.titre || '', texte: st.legende, statut: 'idee', date: '', heure: '', lien: '', visuel: vis };
+    tab('planning');
+  }
+  function pForm(p) {
+    p = p || { reseau: 'linkedin', statut: 'idee', titre: '', texte: '', date: '', heure: '', lien: '' };
+    pVis = p.visuel || null;
+    return '<div class="newc"><b id="pf_t">' + (pEdit ? 'Modifier la publication' : 'Nouvelle publication') + '</b>' +
+      '<div class="g2" style="margin-top:10px"><label class="f">Réseau<select id="pf_r">' + Object.keys(RS).filter(function (k) { return k !== 'mail'; }).map(function (k) { return '<option value="' + k + '"' + (p.reseau === k ? ' selected' : '') + '>' + RS[k].lb + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Statut<select id="pf_s">' + SS.map(function (x) { return '<option value="' + x[0] + '"' + (p.statut === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div>' +
+      '<label class="f" style="margin-top:10px">Titre (pour s’y retrouver)<input id="pf_n" maxlength="120" value="' + e(p.titre) + '" placeholder="ex. Annonce de l’atelier sommeil"></label>' +
+      '<label class="f" style="margin-top:10px">Texte de la publication<textarea id="pf_x" rows="6" maxlength="3000" style="width:100%">' + e(p.texte) + '</textarea></label>' +
+      '<div class="g2" style="margin-top:10px"><label class="f">Date de publication<input type="date" id="pf_d" value="' + e(p.date) + '"></label><label class="f">Heure<input type="time" id="pf_h" value="' + e(p.heure) + '"></label></div>' +
+      '<label class="f" style="margin-top:10px">Lien de la publication (une fois en ligne)<input id="pf_l" maxlength="500" value="' + e(p.lien) + '" placeholder="https://www.linkedin.com/posts/…"></label>' +
+      (pVis ? '<p class="sub" style="margin:10px 0 0">✓ Un visuel est rattaché à cette publication (« ' + e(pVis.titre || '') + ' »).</p>' : '') +
+      '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l hide" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
+  }
+  function pCard(x, me, adm) {
+    var mine = adm || x.par === me, r = RS[x.reseau] || RS.autre, late = x.statut === 'programmee' && x.date && x.date < tdy(), now = x.statut === 'programmee' && x.date === tdy();
+    var sc = (SS.filter(function (z) { return z[0] === x.statut; })[0] || SS[0])[2];
+    return '<div class="lkc' + (late ? ' late' : '') + '"><span class="lkb" style="background:' + r.c + '">' + e(r.b) + '</span><div class="lkt"><b>' + e(x.titre) + '</b>' +
+      '<span class="pst"><i style="background:' + sc + '"></i>' + e(sLb(x.statut)) + (x.date ? ' · ' + e(frDate(x.date, x.heure)) : '') + (late ? ' · <b style="color:var(--poppy)">à publier (en retard)</b>' : now ? ' · <b style="color:var(--rasp)">à publier aujourd’hui</b>' : '') + '</span>' +
+      (x.texte ? '<small>' + e(x.texte.length > 140 ? x.texte.slice(0, 140) + '…' : x.texte) + '</small>' : '') + '<small>par ' + e(x.par ? x.par.charAt(0).toUpperCase() + x.par.slice(1) : '') + '</small></div>' +
+      '<div class="lka">' + (x.lien ? '<a class="btn l s" href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">Voir en ligne</a>' : '') + (x.visuel ? '<button class="btn l s" data-pv="' + e(x.id) + '">Ouvrir le visuel</button>' : '') +
+      '<button class="btn l s" data-pc="' + e(x.id) + '">Copier le texte</button>' + (x.date && x.statut !== 'publiee' ? '<button class="btn l s" data-pi="' + e(x.id) + '">Agenda</button>' : '') +
+      (mine ? (x.statut !== 'publiee' ? '<button class="btn l s" data-pn="' + e(x.id) + '">' + (x.statut === 'idee' ? 'Mettre en attente' : x.statut === 'attente' ? 'Programmer' : 'Marquer publiée') + '</button>' : '') + '<button class="link" data-pe="' + e(x.id) + '">Modifier</button><button class="link" data-pr="' + e(x.id) + '">Supprimer</button>' : '') + '</div></div>';
+  }
+  function drawPubs() {
+    var me = who(), adm = !!(window.CAPSULE && window.CAPSULE.admin()), keep = pubs.filter(function (x) { return (pFilt === 'tous' || x.reseau === pFilt) && (pSt === 'tous' || x.statut === pSt); });
+    var nets = Object.keys(RS).filter(function (k) { return pubs.some(function (x) { return x.reseau === k; }); });
+    if (!draftP && !pEdit && !noKeep && $('pf_n')) { var cur = pRead(); if (cur.titre || cur.texte || cur.lien) draftP = cur; }
+    noKeep = false; var h = pForm(draftP); draftP = null;
+    var cnt = function (k) { return pubs.filter(function (x) { return x.statut === k; }).length; };
+    h += '<div class="row" style="margin:18px 0 8px;flex-wrap:wrap;justify-content:space-between"><div class="filters" style="margin:0" id="pf_st"><button class="chip' + (pSt === 'tous' ? ' on' : '') + '" data-ps="tous">Tout<i>' + pubs.length + '</i></button>' + SS.map(function (x) { return '<button class="chip' + (pSt === x[0] ? ' on' : '') + '" data-ps="' + x[0] + '">' + x[1].replace(' de validation', '') + (cnt(x[0]) ? '<i>' + cnt(x[0]) + '</i>' : '') + '</button>'; }).join('') + '</div>' +
+      '<button class="btn l s" id="pf_ics">Exporter les publications programmées (agenda)</button></div>';
+    if (nets.length > 1) h += '<div class="filters" id="pf_net"><button class="chip' + (pFilt === 'tous' ? ' on' : '') + '" data-pn2="tous">Tous les réseaux</button>' + nets.map(function (k) { return '<button class="chip' + (pFilt === k ? ' on' : '') + '" data-pn2="' + k + '">' + RS[k].lb + '</button>'; }).join('') + '</div>';
+    var groups = [['À publier', function (x) { return x.statut === 'programmee' && x.date && x.date <= tdy(); }], ['Programmées', function (x) { return x.statut === 'programmee' && !(x.date && x.date <= tdy()); }], ['En attente de validation', function (x) { return x.statut === 'attente'; }], ['Idées', function (x) { return x.statut === 'idee'; }], ['Publiées', function (x) { return x.statut === 'publiee'; }]];
+    var any = false;
+    groups.forEach(function (g) {
+      var l = keep.filter(g[1]).sort(function (a, z) { return g[0] === 'Publiées' ? (z.date || '').localeCompare(a.date || '') : ((a.date || '9') + (a.heure || '')).localeCompare((z.date || '9') + (z.heure || '')); });
+      if (!l.length) return; any = true;
+      h += '<h3 style="margin:18px 0 8px;font-size:15px">' + g[0] + ' <span style="color:var(--muted);font-weight:500">· ' + l.length + '</span></h3><div class="lkg">' + l.map(function (x) { return pCard(x, me, adm); }).join('') + '</div>';
+    });
+    if (!any) h += '<div class="empty" style="margin-top:16px"><b>' + (pubs.length ? 'Rien dans cette sélection' : 'Aucune publication pour le moment') + '</b>' + (pubs.length ? 'Changez de réseau ou de statut.' : 'Ajoutez une idée ci-dessus, ou créez un visuel puis « Enregistrer dans le planning ». Pour chaque publication : idée, en attente de validation, programmée (avec date et heure), puis publiée avec son lien.') + '</div>';
+    h += '<p class="cap" style="margin-top:16px">Le planning garde les publications et rappelle ce qui est à publier : il ne publie pas tout seul sur les réseaux. Utilisez « Copier le texte » puis publiez, ou ajoutez la date à votre agenda.</p>';
+    $('cmplan').innerHTML = h; var d = $('pf_d'); if (pEdit === '' && d) { /* rien */ }
+  }
+  function pMsg(t) { var m = $('pf_m'); if (m) m.textContent = t || ''; }
+  function pRead() {
+    var u = ($('pf_l').value || '').trim(); if (u && !/^https?:/i.test(u)) u = 'https://' + u;
+    return { id: pEdit, reseau: $('pf_r').value, statut: $('pf_s').value, titre: ($('pf_n').value || '').trim(), texte: $('pf_x').value, date: $('pf_d').value, heure: $('pf_h').value, lien: u, visuel: pVis };
+  }
+  function pPush(o, ok) {
+    pMsg('Enregistrement…');
+    api2(Object.assign({ action: 'pub_save' }, o)).then(function (d) { if (d && d.ok) { pubs = d.publis; pEdit = ''; noKeep = true; drawPubs(); note(ok); } else { pMsg((d && d.error) || 'Échec de l’enregistrement.'); note((d && d.error) || 'Échec de l’enregistrement.'); } });
+  }
+  function ics(list) {
+    var pad = function (n) { return ('0' + n).slice(-2); }, esc2 = function (t) { return String(t || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, function (c) { return '\\' + c; }); };
+    var out = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CAPSULE//Planning//FR', 'CALSCALE:GREGORIAN'];
+    list.forEach(function (x) {
+      var d = x.date.replace(/-/g, ''), h = (x.heure || '09:00').replace(':', '') + '00', end = new Date(x.date + 'T' + (x.heure || '09:00') + ':00'); end.setMinutes(end.getMinutes() + 30);
+      out.push('BEGIN:VEVENT', 'UID:' + x.id + '@capsule-paris8', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''), 'DTSTART:' + d + 'T' + h, 'DTEND:' + end.getFullYear() + pad(end.getMonth() + 1) + pad(end.getDate()) + 'T' + pad(end.getHours()) + pad(end.getMinutes()) + '00',
+        'SUMMARY:' + esc2('Publier sur ' + (RS[x.reseau] || RS.autre).lb + ' : ' + x.titre), 'DESCRIPTION:' + esc2(x.texte), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Publication CAPSULE', 'TRIGGER:-PT15M', 'END:VALARM', 'END:VEVENT');
+    });
+    out.push('END:VCALENDAR'); return out.join('\r\n');
+  }
+  function bindPubs() {
+    var R = $('cmplan');
+    R.addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      var g = function (k) { return pubs.filter(function (x) { return x.id === b.dataset[k]; })[0]; };
+      if (b.id === 'pf_save') pPush(pRead(), pEdit ? 'Publication modifiée.' : 'Ajoutée au planning.');
+      else if (b.id === 'pf_cancel') { pEdit = ''; drawPubs(); }
+      else if (b.dataset.ps) { pSt = b.dataset.ps; drawPubs(); }
+      else if (b.dataset.pn2) { pFilt = b.dataset.pn2; drawPubs(); }
+      else if (b.id === 'pf_ics') { var l = pubs.filter(function (x) { return x.statut === 'programmee' && x.date; }); if (!l.length) return note('Aucune publication programmée.'); save(new Blob([ics(l)], { type: 'text/calendar' }), 'capsule-planning.ics'); }
+      else if (b.dataset.pi) { var x1 = g('pi'); if (x1) save(new Blob([ics([x1])], { type: 'text/calendar' }), 'capsule-publication.ics'); }
+      else if (b.dataset.pc) { var x2 = g('pc'); if (x2) copyText(x2.texte || x2.titre, 'Texte copié.'); }
+      else if (b.dataset.pv) { var x3 = g('pv'); if (x3 && x3.visuel) { st = Object.assign(newState('libre'), x3.visuel); tab('creer'); fields(); later(); } }
+      else if (b.dataset.pn) {
+        var x4 = g('pn'); if (!x4) return; var nx = x4.statut === 'idee' ? 'attente' : x4.statut === 'attente' ? 'programmee' : 'publiee';
+        if (nx === 'programmee' && !x4.date) { pEdit = x4.id; $('cmplan').innerHTML = pForm(x4) + ''; $('pf_s').value = 'programmee'; $('pf_cancel').classList.remove('hide'); $('pf_d').focus(); pMsg('Choisissez la date (et l’heure) de publication.'); window.scrollTo(0, 0); return; }
+        var o = Object.assign({}, x4, { statut: nx }); if (nx === 'publiee' && !o.date) o.date = tdy(); pPush(o, nx === 'publiee' ? 'Marquée comme publiée.' : 'Statut mis à jour.');
+      }
+      else if (b.dataset.pe) { var x5 = g('pe'); if (x5) { pEdit = x5.id; $('cmplan').innerHTML = pForm(x5) + ''; $('pf_cancel').classList.remove('hide'); window.scrollTo(0, 0); } }
+      else if (b.dataset.pr) { if (!confirm('Supprimer cette publication du planning ?')) return; api2({ action: 'pub_del', id: b.dataset.pr }).then(function (d) { if (d && d.ok) { pubs = d.publis; drawPubs(); } else note((d && d.error) || 'Suppression impossible.'); }); }
     });
   }
 
