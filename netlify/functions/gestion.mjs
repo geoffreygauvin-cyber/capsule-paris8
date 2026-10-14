@@ -80,11 +80,11 @@ export default async (req) => {
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace thérapeute), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
-  if (sup && !["list", "profil_photo", "res_get", "comptes_list", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
+  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(Object.keys(comptes()).map((k) => [k, "admin"])); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role"].includes(b.action)) {
-    if (!admin && !(sup && b.action === "comptes_list")) return J({ error: "Réservé aux administrateurs." }, 403);
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = String(b.nom || "").trim().toLowerCase();
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);

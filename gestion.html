@@ -652,7 +652,7 @@ function buildNav(){
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var anchor=as.querySelector('.uni')||as.querySelector('.me');
- var C={etudiant:[['Espace thérapeute',[1,2,4,9,10,5,6,7]]],admin:[['Espace thérapeute',[1,2,4,9,6,7]],['Espace gestion',[10,5,8,3]]],superviseur:[['Espace gestion',[9,2,10,5,8,3,6]]]}[role];
+ var C={etudiant:[['Espace thérapeute',[1,2,4,9,10,5,6,7]]],admin:[['Espace thérapeute',[1,2,4,9,6,7]],['Espace gestion',[10,5,8,3]]],superviseur:[['Espace superviseur',[9,10,2,6]]]}[role];
  var LB={1:'Demandes',2:'Calendrier',3:'Équipe',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Messages',8:'Efficacité',9:'Emploi du temps',10:role==='etudiant'?'Mes supervisions':'Supervision'};
  C.forEach(function(g){var h=document.createElement('div');h.className='grp';h.textContent=g[0];as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
