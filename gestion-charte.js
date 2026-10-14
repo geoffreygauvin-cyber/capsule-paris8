@@ -35,11 +35,23 @@
       '.chban{border-radius:14px;border:1px solid var(--line);overflow:hidden;margin-top:6px}.chban img{width:100%;display:block}' +
       '.cha{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}@media(max-width:760px){.cha{grid-template-columns:1fr 1fr}.cha>.chc:first-child{grid-column:1/-1}}' +
       '.cha video{width:100%;display:block;border-radius:12px;background:#FDF5EB;margin-bottom:10px}.cha .chc{padding:12px}.cha .chd{margin-top:4px}' +
-      '.chx .chb{margin-top:10px}.chx .chb .btn{font-size:13px;padding:8px 14px}';
+      '.chx .chb{margin-top:10px}.chx .chb .btn{font-size:13px;padding:8px 14px}' +
+      '.chtabs{margin:6px 0 4px}.chp2 .pt{display:block;font-size:18px;margin-bottom:4px}.chp2 .pv{display:block;margin:12px 0 2px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#FDF5EB}.chp2 .pv img{width:100%;display:block}';
     document.head.appendChild(s);
   }
   function tile(src, cls, bg, nm, dl) {
     return '<div class="chc"><div class="chl ' + cls + '" style="background:' + bg + '"><img src="' + D + 'svg/' + src + '" alt="' + e(nm) + '"></div><b>' + e(nm) + '</b><div class="chd" style="margin-top:4px">' + dl + '</div></div>';
+  }
+  var tab = 'charte';
+  function pcard(cls, k, titre, desc, base, img) {
+    return '<div class="chx pastel ' + cls + ' chp2"><b class="k">' + k + '</b><b class="pt">' + titre + '</b>' + desc +
+      '<a class="pv" href="' + D + base + '.pptx" download tabindex="-1" aria-hidden="true"><img src="' + D + 'apercus/' + img + '.jpg" alt="" loading="lazy"></a>' +
+      '<div class="chb"><a class="btn" href="' + D + base + '-vierge.pptx" download>Texte à remplir</a><a class="btn l" href="' + D + base + '.pptx" download>Avec exemple</a></div></div>';
+  }
+  function pptPanel() {
+    return '<section class="chs" style="margin-top:18px"><h2>Modèles de présentation PowerPoint</h2><p class="sub">Deux modèles aux couleurs de CAPSULE, avec la police Poppins (à installer sur l’ordinateur, sinon PowerPoint la remplace). Chaque modèle existe en deux versions : <b>texte à remplir</b>, avec des textes guides du type « Titre de la diapositive » à remplacer, et <b>avec exemple</b>, rédigé comme une vraie présentation. Pour ajouter une diapositive : Accueil, Nouvelle diapositive, puis choisir la mise en page.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))">' +
+      pcard('t1', 'Étudiant·es', 'Présentation aux étudiant·es', '10 diapositives : le dispositif, prendre rendez-vous, questions fréquentes, infos pratiques, urgences.', 'CAPSULE-modele-etudiants', 'ppt-etudiants') +
+      pcard('t2', 'Directions et partenaires', 'Présentation à la direction', '13 diapositives : en bref, organisation, chiffres, graphique, besoins et apports, calendrier, partenaires.', 'CAPSULE-modele-directions', 'ppt-directions') + '</div></section>';
   }
   function avid(f, nm, use, ext) {
     return '<div class="chc"><video src="' + D + f + '.mp4" poster="' + D + 'apercus/' + f.replace('capsule-logo-', '') + '.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Logo CAPSULE animé, ' + e(nm) + '"></video><b>' + e(nm) + '</b><div style="font-size:12px;color:var(--muted)">' + e(use) + '</div><div class="chd"><a href="' + D + f + '.mp4" download>Télécharger (' + ext + ')</a></div></div>';
@@ -47,7 +59,9 @@
   function draw() {
     var host = document.getElementById('v13'); if (!host) return; css();
     var old = document.getElementById('chbody'); if (old) old.remove();
-    var h = '<div id="chbody">';
+    var h = '<div id="chbody"><div class="filters chtabs" role="tablist">' +
+      [['charte', 'Charte graphique'], ['ppt', 'Modèles PowerPoint']].map(function (t) { return '<button type="button" role="tab" class="chip' + (tab === t[0] ? ' on' : '') + '" data-ct="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="chpan' + (tab === 'charte' ? '' : ' hide') + '" data-p="charte">';
     h += '<div class="chb"><a class="btn" href="' + D + 'Charte-graphique-CAPSULE.pdf" target="_blank" rel="noopener" download>Télécharger la charte (PDF)</a><a class="btn l" href="' + D + 'Logos-CAPSULE.zip" download>Tous les logos (ZIP)</a><a class="btn l" href="' + D + 'banniere-linkedin-capsule.png" download>Bannière LinkedIn</a></div>';
     // principe
     h += '<section class="chs"><h2>Le principe</h2><p class="sub">Une page à plat, sans ombres ni effets, en écho à la charte de l’Université Paris 8. Peu de couleurs, une seule police, beaucoup de crème, et une trame de petits points pour donner du relief. Une seule identité : pas de mode sombre.</p></section>';
@@ -87,17 +101,20 @@
       '<div class="chx"><b class="k">Plateforme interne</b>Tutoiement.<q>Voici tes accès à la plateforme CAPSULE.</q></div>' +
       '<div class="chx"><b class="k">Mots</b>À privilégier : consultation, étudiant·e, gratuit, confidentiel, équipe. À éviter sur les supports publics : « patient », « prise en charge », « cas ».</div></div>' +
       '<div class="chq"><small>Accroche de référence</small>Consultations psychologiques gratuites pour les étudiant·es de Paris 8</div></section>';
-    // modèles PowerPoint
-    h += '<section class="chs"><h2>Modèles PowerPoint</h2><p class="sub">Deux modèles aux couleurs de CAPSULE (police Poppins à installer si besoin). Chaque modèle existe en deux versions : <b>à remplir</b>, avec des textes guides du type « Titre de la diapositive » à remplacer, et <b>avec exemple</b>, rédigé comme une vraie présentation. Dupliquez une diapositive pour garder la mise en page.</p><div class="chg" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">' +
-      '<div class="chx pastel t1"><b class="k">Étudiant·es</b>10 diapositives : le dispositif, prendre rendez-vous, questions, infos pratiques, urgences.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-etudiants-vierge.pptx" download>Texte à remplir</a><a class="btn l" href="' + D + 'CAPSULE-modele-etudiants.pptx" download>Avec exemple</a></div></div>' +
-      '<div class="chx pastel t2"><b class="k">Directions et partenaires</b>13 diapositives : en bref, organisation, chiffres, graphique, besoins, calendrier, partenaires.<div class="chb"><a class="btn" href="' + D + 'CAPSULE-modele-directions-vierge.pptx" download>Texte à remplir</a><a class="btn l" href="' + D + 'CAPSULE-modele-directions.pptx" download>Avec exemple</a></div></div></div></section>';
     // applications
     h += '<section class="chs"><h2>Réseaux</h2><p class="sub">Bannière LinkedIn (1584 × 396 px) : texte décalé à droite du logo rond de la page. Photo de profil en 400 × 400 px, avec le nom.</p><div class="chban"><img src="' + D + 'banniere-linkedin-capsule.png" alt="Bannière LinkedIn"></div>' +
       '<div class="chb"><a class="btn l" href="' + D + 'banniere-linkedin-capsule.png" download>Bannière (PNG)</a><a class="btn l" href="' + D + 'capsule-profil-nom-1000px.png" download>Photo de profil (PNG)</a></div></section>';
-    h += '</div>';
+    h += '</div><div class="chpan' + (tab === 'ppt' ? '' : ' hide') + '" data-p="ppt">' + pptPanel() + '</div></div>';
     host.insertAdjacentHTML('beforeend', h);
   }
   document.addEventListener('click', function (ev) {
+    var ct = ev.target.closest && ev.target.closest('#v13 [data-ct]');
+    if (ct) {
+      tab = ct.getAttribute('data-ct');
+      Array.prototype.forEach.call(document.querySelectorAll('#v13 [data-ct]'), function (x) { var on = x.getAttribute('data-ct') === tab; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+      Array.prototype.forEach.call(document.querySelectorAll('#v13 .chpan'), function (x) { x.classList.toggle('hide', x.getAttribute('data-p') !== tab); });
+      return;
+    }
     var b = ev.target.closest && ev.target.closest('#v13 [data-hex]'); if (!b) return;
     var hx = b.getAttribute('data-hex'), ok = function () { if (window.CAPSULE) window.CAPSULE.toast('Couleur ' + hx + ' copiée.'); };
     try { navigator.clipboard.writeText(hx).then(ok, function () { if (window.CAPSULE) window.CAPSULE.toast(hx); }); } catch (x) { if (window.CAPSULE) window.CAPSULE.toast(hx); }

@@ -5,7 +5,7 @@
 (function () {
   'use strict';
   var SRC = {
-    ther: { nom: 'Espace thérapeute', url: '/gestion?embed=ther', open: '/gestion' },
+    ther: { nom: 'Espace étudiant psychologue', url: '/gestion?embed=ther', open: '/gestion' },
     admin: { nom: 'Espace admin', url: '/gestion?embed=admin', open: '/gestion' },
     full: { nom: 'Plateforme complète', url: '/gestion?embed=full', open: '/gestion' },
     site: { nom: 'Site public', url: '/', open: '/' }
