@@ -228,6 +228,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 #v11 .ecard .edays{gap:10px}#v11 .ecard .eday{background:var(--cream);border:0}#v11 .ecard .eday.today{background:#fff;box-shadow:0 0 0 2px var(--rasp)}
 #v11 .ecard .ev{box-shadow:none}#v11 .eday h4 em{display:none}#v11 .eday{min-height:0}#v11 #ewho{max-width:320px;margin-left:auto}
 #v11 #hbody .hh{margin:0 0 10px}#v11 #hbody>.hh:not(:first-child){margin-top:28px}
+#v11 .hhd{display:flex;align-items:center;gap:20px}#v11 .hhd>div{min-width:0}#v11 .av.big{width:84px;height:84px;font-size:32px;border:3px solid #fff;box-shadow:0 4px 14px rgba(117,21,31,.18)}@media (max-width:600px){#v11 .av.big{width:60px;height:60px;font-size:24px}#v11 .hhd{gap:14px}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login"><form class="lbox" id="lform"><div class="brand" style="padding:0;margin:0"><span data-logo="64"></span><span class="wm" style="color:var(--maroon);font-size:22px">CAPSULE<small style="color:var(--muted)">Consultations étudiantes</small></span></div>
@@ -275,7 +276,7 @@ button.hrow{cursor:pointer}button.hrow:hover{box-shadow:0 4px 14px rgba(117,21,3
 <div class="tools"><input id="rq" type="search" placeholder="Rechercher un document…" aria-label="Rechercher une ressource"><button class="btn s hide" id="radd">+ Ajouter une ressource</button></div>
 <div class="rgrid" id="rlist"></div></section>
 <section id="v8" class="hide"><header class="ph0 pastel t2"><div class="tag">Évaluation</div><h1>Étude d’efficacité</h1><p class="sub">Bien-être, satisfaction et changement perçu par les personnes accompagnées, séance après séance. Données anonymes et agrégées. À terme, le questionnaire en ligne alimentera cet onglet ; en attendant, les notes se saisissent à la main après chaque séance.</p></header><div id="efbody"></div></section>
-<section id="v11" class="hide"><header class="ph0 pastel t1"><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
+<section id="v11" class="hide"><header class="ph0 pastel t1 hhd"><span id="hav"></span><div><div class="tag" id="hdate"></div><h1 id="hhi">Bonjour</h1><p class="sub" id="hsub"></p></div></header><div class="stats" id="hstats"></div><div class="ecard"><div class="ehd"><h3 class="hh" id="htt">Mon emploi du temps</h3><div id="ekp" class="ekp2"></div></div><div class="wk"><button class="ib" id="ewp" aria-label="Semaine précédente">‹</button><div class="t" id="ewt"></div><button class="ib" id="ewn" aria-label="Semaine suivante">›</button><button class="btn l s" id="ewt0">Aujourd’hui</button><select id="ewho" class="mv hide" style="max-width:none" aria-label="Voir l’emploi du temps de"></select></div>
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
 <div class="row" style="margin:0 0 14px"><button class="btn" id="sadd">+ Programmer une supervision</button></div>
@@ -471,7 +472,7 @@ function issue(id,iss,rid){api({action:'seance_issue',id:id,rdvId:rid,issue:iss}
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
  if(iss==='realisee'){mesureForm(id,r.item.seances.length-1,true);return;var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
  else toast('Absence enregistrée. La personne repasse « à recontacter ».')})}
-function refreshMe(){$('whoc').textContent=whoLine()}
+function refreshMe(){$('whoc').textContent=whoLine();drawHome()}
 /* ---- patients ---- */
 var pf='suivi';
 function base(){return items.filter(function(i){return i.statut!=='nouvelle'||nS(i)||nS(i,'absence')})}
@@ -512,7 +513,7 @@ function profil(){var ms=mesStats(moi);
  '<div class="kpis"><div class="kpi pastel"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi pastel"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi pastel"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
  '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
  $('pf').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);savePhoto(c.toDataURL('image/jpeg',.82))};im.onerror=function(){toast('Image illisible.')};im.src=rd.result};rd.readAsDataURL(f)}}
-function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
+function savePhoto(d){api({action:'profil_photo',photo:d}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.photo)photos[moi]=r.photo;else delete photos[moi];$('av').outerHTML=av(moi,'','av');profil();draw();drawCal();drawHome();toast(r.photo?'Photo enregistrée.':'Photo retirée.')})}
 $('meb').onclick=profil;$('whom').onclick=profil;
 
 
@@ -682,7 +683,7 @@ function drawHome(){
  if(!$('hbody'))return;
  var d=new Date(),t=iso(d),adm=isAdmin,ms=mesStats(moi),mine=function(x){return x.participants.indexOf(moi)>-1||x.superviseur===moi};
  $('hdate').textContent=JN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()];
- $('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent=titre(moi);
+ $('hav').innerHTML=av(moi,'big');$('hhi').textContent='Bonjour '+cap(moi);$('hsub').textContent=titre(moi);
  var oc=occs(),conf=oc.filter(function(o){return aConfirmer(o)&&(adm||o.therapeute===moi)}),
   upS=supItems.filter(function(x){return !past(x.date,x.heure)&&mine(x)}),pres=supItems.filter(function(x){return past(x.date,x.heure)&&!x.fait&&(adm||isSup)}).length,nx=upS[0];
  var tile=function(cls,k,num,lab){return '<button class="stat pastel '+cls+'" data-h="'+k+'"><b>'+num+'</b><span>'+lab+'</span></button>'};
