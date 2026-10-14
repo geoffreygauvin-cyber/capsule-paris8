@@ -1,7 +1,7 @@
 /* Règlement intérieur de l'équipe : lecture (tout le monde), signature (étudiant·es psy uniquement), version imprimable.
    - Le texte est rédigé, publié et suivi par les admins dans Gestion RH > Règlement intérieur (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
    - Où le trouver : bouton « Règlement intérieur » du profil, étape en tête du parcours d'accueil des étudiant·es (gestion-accueil.js). Les admins et le service technique peuvent le lire mais n'ont pas à le signer.
-   - Expose window.regOpen (fenêtre de lecture / signature), regCorps (rendu du texte) et regPrint (version imprimable, avec ou sans mention de signature).
+   - Expose window.regOpen (fenêtre de lecture / signature), regCorps (rendu du texte), regPrint (version imprimable, avec ou sans mention de signature) et regRappel (bandeau de rappel aux admins sur l'Accueil tant que le règlement n'est pas publié ; événement « cap-reglement » après publication ou retrait).
    Données : actions reglement_get, reglement_sign, reglement_copie de netlify/functions/gestion.mjs (store Netlify Blobs « reglement »).
    Utilise window.CAPSULE (exposé par gestion.html). */
 (function () {
@@ -135,6 +135,26 @@
   }
 
   window.regOpen = open;
+
+  /* ---------- rappel pour les admins : règlement pas encore publié ---------- */
+  // Petit bandeau sous le titre de l'Accueil, tant que le règlement est un brouillon. Il disparaît tout seul à la publication.
+  var pub = null, pubT = 0;
+  function rappel(force) {
+    var c = C(); if (!c) return;
+    var head = document.querySelector('#v11 > header'), box = $('hreg');
+    if (!head || !c.admin()) { if (box) box.remove(); return; }
+    function draw() {
+      var b = $('hreg');
+      if (pub) { if (b) b.remove(); return; }
+      if (b) return;
+      css();
+      head.insertAdjacentHTML('afterend', '<div class="regbn warn" id="hreg" role="note" style="margin:12px 0 16px"><span><b>Règlement intérieur : à valider et à publier prochainement.</b> Il est encore un brouillon : l’équipe ne peut ni le lire ni le signer tant qu’il n’est pas publié.</span><button type="button" class="btn s" data-rg="jur">Ouvrir le règlement</button></div>');
+    }
+    if (!force && pub !== null && Date.now() - pubT < 30000) { draw(); return; }
+    api({ action: 'reglement_get', texte: false }).then(function (r) { if (r && r.ok) { pub = !!r.publie; pubT = Date.now(); draw(); } });
+  }
+  window.regRappel = rappel;
+  document.addEventListener('cap-reglement', function () { rappel(true); });
 
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-rg]'); if (!b || !C()) return;

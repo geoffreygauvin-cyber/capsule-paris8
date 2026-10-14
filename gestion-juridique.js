@@ -200,7 +200,7 @@
     else if (a === 'pub') publier();
     else if (a === 'pubgo') publierGo(b);
     else if (a === 'pubfromedit') { if (dirty) save(publier); else publier(); }
-    else if (a === 'unpub') { if (confirm('Retirer la publication ? L’équipe ne pourra plus lire ni signer le règlement. Les signatures déjà faites sont conservées.')) api({ action: 'reglement_pub', publie: false }).then(function (r) { if (r && r.ok) { toast('Publication retirée.'); load(); } else toast((r && r.error) || 'Action impossible.'); }); }
+    else if (a === 'unpub') { if (confirm('Retirer la publication ? L’équipe ne pourra plus lire ni signer le règlement. Les signatures déjà faites sont conservées.')) api({ action: 'reglement_pub', publie: false }).then(function (r) { if (r && r.ok) { toast('Publication retirée.'); load(); document.dispatchEvent(new CustomEvent('cap-reglement')); } else toast((r && r.error) || 'Action impossible.'); }); }
     else if (a === 'copie') copie(b.getAttribute('data-n'));
     else if (a === 'ver') version(b);
     else if (a === 'back') { if (!dirty || confirm('Quitter sans enregistrer les modifications ?')) leave(); }
