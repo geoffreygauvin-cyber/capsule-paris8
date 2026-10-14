@@ -100,13 +100,13 @@
       { id: 'cvec', nom: 'CVEC', long: 'Contribution de vie étudiante et de campus', url: 'https://cvec.etudiant.gouv.fr' },
       { id: 'ars', nom: 'ARS Île-de-France', long: 'Agence régionale de santé', url: 'https://www.iledefrance.ars.sante.fr' }
     ], LABS = [
-      { id: 'lapps', nom: 'LAPPS', long: 'Laboratoire de psychopathologie et processus de santé' },
-      { id: 'lppc', nom: 'LPPC', long: 'Laboratoire de psychologie de la perception et de la cognition' },
-      { id: 'dysco', nom: 'DYSCO', long: 'Dynamiques sociales et cognitives' }
+      { id: 'lapps', nom: 'LAPPS', long: '' },
+      { id: 'lppc', nom: 'LPPC', long: '' },
+      { id: 'dysco', nom: 'DYSCO', long: '' }
     ];
     function pLogo(x, c) {
       var inner = '<img src="img/partenaires/' + x.id + '.png" alt="' + esc(x.nom) + '" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;pt&quot;>' + esc(x.nom) + '</span>\'">';
-      return '<li class="' + c + '" title="' + esc(x.long) + '">' + (x.url ? '<a href="' + x.url + '" target="_blank" rel="noopener">' + inner + '</a>' : inner) + '</li>';
+      return '<li class="' + c + '" ' + (x.long ? 'title="' + esc(x.long) + '"' : '') + '>' + (x.url ? '<a href="' + x.url + '" target="_blank" rel="noopener">' + inner + '</a>' : inner) + '</li>';
     }
     h += '<section id="partenaires" class="parts" aria-label="Partenaires"><h2>Avec le soutien de</h2><ul class="pl">' + PART.map(function (x) { return pLogo(x, 'big'); }).join('') + '</ul>' +
       '<h3>Dispositif porté par les laboratoires</h3><ul class="pl">' + LABS.map(function (x) { return pLogo(x, 'sm'); }).join('') + '</ul></section>';
