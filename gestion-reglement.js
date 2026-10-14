@@ -1,5 +1,5 @@
 /* Règlement intérieur de l'équipe : lecture (tout le monde), signature (étudiant·es psy uniquement), version imprimable.
-   - Le texte est rédigé, publié et suivi par les admins dans Gestion > RH > Règlement intérieur (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
+   - Le texte est rédigé, publié et suivi par les admins dans RH > Règlement intérieur (gestion-juridique.js) ; ici, la personne le lit, fait défiler jusqu'en bas, coche, saisit son nom et signe.
    - Où le trouver : bouton « Règlement intérieur » du profil, étape en tête du parcours d'accueil des étudiant·es (gestion-accueil.js). Les admins et le service technique peuvent le lire mais n'ont pas à le signer.
    - Expose window.regOpen (fenêtre de lecture / signature), regCorps (rendu du texte) et regPrint (version imprimable, avec ou sans mention de signature).
    Données : actions reglement_get, reglement_sign, reglement_copie de netlify/functions/gestion.mjs (store Netlify Blobs « reglement »).
