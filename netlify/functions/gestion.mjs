@@ -74,7 +74,7 @@ export default async (req) => {
   }
 
   const rls = getStore("roles"), SEED = { violette: "etudiant" };
-  const prinRole = async (n) => { const v = await rls.get(n, { type: "json" }); return ROLES.includes(v?.role) ? v.role : SEED[n] || "admin"; };
+  const prinRole = async (n) => { const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
   const user = tk.u; let role = "admin";
@@ -106,7 +106,7 @@ export default async (req) => {
       return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" })), principaux: Object.keys(c) });
     }
     if (b.action === "compte_role" && n in c) {
-      if (!ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
+      if (!["admin", "etudiant"].includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
       await rls.setJSON(n, { role: b.role });
       const { blobs } = await ac.list();
