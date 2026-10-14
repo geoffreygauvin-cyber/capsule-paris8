@@ -68,10 +68,12 @@ export default async (req) => {
     return J({ ok: true, token: makeToken(u, "membre", a.hash.slice(0, 10)), compte: u });
   }
 
+  const rls = getStore("roles"), SEED = { violette: "etudiant" };
+  const prinRole = async (n) => { const v = await rls.get(n, { type: "json" }); return ROLES.includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
   const user = tk.u; let role = "admin";
-  if (tk.r === "admin") { if (!(user in comptes()) || bind(comptes()[user]) !== tk.k) return J({ error: "Session expirée, reconnectez-vous." }, 401); }
+  if (tk.r === "admin") { if (!(user in comptes()) || bind(comptes()[user]) !== tk.k) return J({ error: "Session expirée, reconnectez-vous." }, 401); role = await prinRole(user); }
   else {
     const acc = await ac.get(user, { type: "json" });
     if (!(acc?.hash || "").startsWith(tk.k || "!")) return J({ error: "Session expirée, reconnectez-vous." }, 401);
@@ -81,11 +83,19 @@ export default async (req) => {
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace thérapeute), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(Object.keys(comptes()).map((k) => [k, "admin"])); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } return m; };
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = String(b.nom || "").trim().toLowerCase();
+    const prin = async () => Object.fromEntries(await Promise.all(Object.keys(c).map(async (k) => [k, await prinRole(k)])));
+    if (b.action === "compte_role" && n in c) {
+      if (!ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
+      if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
+      await rls.setJSON(n, { role: b.role });
+      const { blobs } = await ac.list();
+      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" })), principaux: Object.keys(c) });
+    }
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
       if (b.action === "compte_create" && await ac.get(n, { type: "json" })) return J({ error: "Ce compte existe déjà." }, 400);
@@ -107,7 +117,7 @@ export default async (req) => {
     }
     const { blobs } = await ac.list();
     const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ROLES.includes(v.role) ? v.role : "etudiant" }));
-    return J({ ok: true, membres, principaux: Object.keys(c) });
+    return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
   }
 
   if (b.action === "list") {
