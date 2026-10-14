@@ -107,11 +107,21 @@ Compte avec le statut spécial **Service technique** (aujourd'hui : `violette`, 
 Pour donner ce statut à quelqu'un d'autre, ajouter son nom de compte (en minuscules) à `TECH`.
 
 ## Parcours d'accueil des nouvelles recrues
-Fichier `gestion-accueil.js` (étapes dans la liste `STEPS` en tête de fichier) :
-- les **étudiant·es psy** voient en haut de l'Accueil une carte « Bienvenue dans l'équipe » avec la checklist et une barre d'avancement ; elle disparaît quand les 6 étapes sont faites (message de félicitations) ;
+Fichier `gestion-accueil.js` (étapes dans la liste `BASE` en tête de fichier ; l'étape « règlement » s'y ajoute toute seule dès que le règlement est publié) :
+- les **étudiant·es psy** voient en haut de l'Accueil une carte « Bienvenue dans l'équipe » avec la checklist et une barre d'avancement ; elle disparaît quand toutes les étapes sont faites (6, ou 7 avec le règlement) (message de félicitations) ;
 - 2 étapes sont constatées automatiquement (photo de profil, présentation) ; les 4 autres (charte, modèles PowerPoint, ressources, équipe) sont cochées par la personne, chaque étape ayant un bouton qui ouvre la bonne page (« Voir les modèles » ouvre l'onglet PowerPoint de la charte) ;
 - les **admins** voient l'avancement de chaque étudiant·e en haut de l'onglet Équipe (étapes restantes, ancienneté du compte, barre de progression). Le compte Service technique et les admins n'ont pas de parcours ;
-- stockage : Netlify Blobs, store `accueil` (une clé par compte, dates des étapes cochées) ; actions `accueil_get` / `accueil_set` dans `netlify/functions/gestion.mjs` (chacun·e ne modifie que son parcours). Pour ajouter une étape cochée à la main, l'ajouter à `STEPS` et à la liste `MANUELS` du serveur.
+- stockage : Netlify Blobs, store `accueil` (une clé par compte, dates des étapes cochées) ; actions `accueil_get` / `accueil_set` dans `netlify/functions/gestion.mjs` (chacun·e ne modifie que son parcours). Pour ajouter une étape cochée à la main, l'ajouter à `BASE` et à la liste `MANUELS` du serveur.
+
+## Règlement intérieur (lire, signer, suivre les signatures)
+- **Le texte** est dans `netlify/lib/reglement.mjs` (introduction + 13 articles). C'est un **projet à faire valider** par la coordination et les laboratoires avant de le publier. Une ligne qui commence par `- ` devient une puce.
+  - Correction mineure (faute, reformulation) : modifier le texte sans toucher à `VERSION` ; les signatures restent valables.
+  - Changement de fond : changer `VERSION` (ex. `"1.1"`) et `DATE`. Tout le monde doit alors relire et re-signer, et un·e admin doit re-publier.
+- **Publication** : tant qu'un·e admin n'a pas cliqué sur « Publier » (onglet Équipe, ligne « Règlement intérieur »), le texte reste en brouillon : seul·es les admins le voient, personne ne peut signer, et l'étape n'apparaît pas dans le parcours d'accueil. « Retirer la publication » (dans la fenêtre du règlement) remet en brouillon sans effacer les signatures.
+- **Signature** (fichier `gestion-reglement.js`) : la personne fait défiler le texte jusqu'en bas (la case ne se débloque qu'à ce moment), coche « J'ai lu… », saisit son prénom et son nom, puis signe. La plateforme enregistre le nom saisi, la date, l'heure, la version et l'empreinte (SHA-256) du texte exact. C'est une signature électronique **simple** (preuve d'acceptation interne), pas une signature qualifiée. « Imprimer / PDF » donne une version propre, avec la mention de signature si elle est faite, ou des lignes à remplir à la main sinon.
+- **Où le trouver** : bouton « Règlement intérieur » dans le profil, ligne « Règlement intérieur » en haut de l'onglet Équipe (pour tout le monde, dès la publication), et étape en tête du parcours d'accueil des étudiant·es psy (« Lire et signer le règlement intérieur »). Les admins et le service technique, qui n'ont pas de parcours, voient un rappel sur l'Accueil tant qu'ils n'ont pas signé.
+- **Suivi (admins)** : « Signatures » dans l'onglet Équipe liste tous les comptes (signé le…, à re-signer, pas encore signé) avec export CSV ; l'avancement du parcours d'accueil compte aussi l'étape règlement.
+- **Stockage** : Netlify Blobs, store `reglement` (`pub` = publication de la version en cours, `s/<compte>` = dernière signature + historique). Actions `reglement_get`, `reglement_sign`, `reglement_pub` dans `netlify/functions/gestion.mjs`.
 
 ## Page de connexion (/gestion)
 Page en deux volets (dans `gestion.html`, section `#login`, CSS « connexion » en haut du fichier) :

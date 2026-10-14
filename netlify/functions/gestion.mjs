@@ -5,6 +5,7 @@ import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, 
 import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
+import * as REG from "../lib/reglement.mjs";
 
 export const config = { path: "/api/gestion" };
 
@@ -485,13 +486,51 @@ export default async (req) => {
     await ps.setJSON(cle, liste); return J({ ok: true, publis: liste });
   }
 
+  /* Règlement intérieur : texte versionné dans netlify/lib/reglement.mjs. Un·e admin le publie ; chacun·e le signe (nom saisi + case cochée).
+     Store « reglement » : « pub » (publication de la version en cours) et « s/<compte> » (dernière signature + historique). */
+  const rgs = getStore({ name: "reglement", consistency: "strong" });
+  const rgPub = async () => { const p = await rgs.get("pub", { type: "json" }); return p && p.version === REG.VERSION ? p : null; };
+  const rgVue = (s) => (s ? { version: s.version, le: s.le, nom: s.nom, aJour: s.version === REG.VERSION } : null);
+  if (["reglement_get", "reglement_sign", "reglement_pub"].includes(b.action)) {
+    const pub = await rgPub();
+    if (b.action === "reglement_pub") {
+      if (!admin) return J({ error: "Réservé aux comptes admin." }, 403);
+      if (b.publie) await rgs.setJSON("pub", { version: REG.VERSION, par: user, le: new Date().toISOString() }); else await rgs.delete("pub");
+      return J({ ok: true, publie: !!b.publie });
+    }
+    if (b.action === "reglement_sign") {
+      if (!pub) return J({ error: "Le règlement n'est pas encore publié." }, 409);
+      if (String(b.version) !== REG.VERSION) return J({ error: "Le règlement a changé : recharge la page pour lire la dernière version." }, 409);
+      const nom = clean(b.nom, 80).replace(/\s+/g, " ").trim();
+      if (nom.length < 3) return J({ error: "Écris ton prénom et ton nom pour signer." }, 400);
+      if (b.accepte !== true) return J({ error: "Coche la case pour confirmer que tu as lu le règlement et que tu l'acceptes." }, 400);
+      const prev = await rgs.get("s/" + user, { type: "json" });
+      if (prev && prev.version === REG.VERSION) return J({ ok: true, moi: rgVue(prev) });
+      const hist = [...(prev?.hist || []), ...(prev ? [{ version: prev.version, le: prev.le, nom: prev.nom }] : [])].slice(-10);
+      const rec = { version: REG.VERSION, hash: REG.EMPREINTE, nom, le: new Date().toISOString(), hist };
+      await rgs.setJSON("s/" + user, rec);
+      return J({ ok: true, moi: rgVue(rec) });
+    }
+    const out = { ok: true, version: REG.VERSION, date: REG.DATE, titre: REG.TITRE, empreinte: REG.EMPREINTE, publie: !!pub, moi: rgVue(await rgs.get("s/" + user, { type: "json" })) };
+    if (b.texte !== false && (pub || admin)) { out.intro = REG.INTRO; out.articles = REG.ARTICLES; }
+    if (admin) {
+      out.pub = pub ? { par: pub.par, le: pub.le } : null;
+      const roles = await rolesMap();
+      out.signatures = await Promise.all(Object.keys(roles).sort().map(async (n) => {
+        const s = await rgs.get("s/" + n, { type: "json" });
+        return { nom: n, role: TECH.includes(n) ? "technique" : roles[n], ...(s ? { version: s.version, le: s.le, signeNom: s.nom, aJour: s.version === REG.VERSION } : {}) };
+      }));
+    }
+    return J(out);
+  }
+
   /* Parcours d'accueil des nouvelles recrues : 2 étapes constatées automatiquement (photo, présentation), 4 cochées par la personne.
      Chacun·e ne voit et ne modifie que son parcours ; les admins voient l'avancement de tous les étudiant·es psy. Store « accueil » : une clé par compte. */
   if (["accueil_get", "accueil_set"].includes(b.action)) {
     const as = getStore("accueil"), MANUELS = ["charte", "modeles", "ressources", "equipe"];
     const etat = async (n) => {
-      const pr = (await profils().get(n, { type: "json" })) || {}, m = (await as.get(n, { type: "json" })) || {};
-      return { photo: !!pr.photo, bio: !!(pr.bio && String(pr.bio).trim()), ...Object.fromEntries(MANUELS.map((k) => [k, m[k] || ""])) };
+      const pr = (await profils().get(n, { type: "json" })) || {}, m = (await as.get(n, { type: "json" })) || {}, sg = await rgs.get("s/" + n, { type: "json" });
+      return { photo: !!pr.photo, bio: !!(pr.bio && String(pr.bio).trim()), reglement: sg && sg.version === REG.VERSION ? sg.le : "", ...Object.fromEntries(MANUELS.map((k) => [k, m[k] || ""])) };
     };
     if (b.action === "accueil_set") {
       const k = String(b.step || ""); if (!MANUELS.includes(k)) return J({ error: "Étape inconnue." }, 400);
@@ -500,7 +539,7 @@ export default async (req) => {
       await as.setJSON(user, m);
       return J({ ok: true, moi: await etat(user) });
     }
-    const out = { ok: true, moi: await etat(user) };
+    const out = { ok: true, moi: await etat(user), reg: { publie: !!(await rgPub()), version: REG.VERSION } };
     if (admin) {
       const roles = await rolesMap(), noms = Object.keys(roles).filter((n) => roles[n] === "etudiant" && !TECH.includes(n));
       out.equipe = Object.fromEntries(await Promise.all(noms.map(async (n) => [n, { ...(await etat(n)), depuis: NAME.test(n) ? ((await ac.get(n, { type: "json" }))?.creeLe || "") : "" }])));

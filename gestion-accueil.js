@@ -2,11 +2,11 @@
    - Étudiant·es psy : carte en tête de l'Accueil (checklist + avancement), tant que le parcours n'est pas terminé.
    - Admins : avancement de chaque étudiant·e en haut de l'onglet Équipe.
    Étapes « photo » et « présentation » : constatées automatiquement ; les autres sont cochées par la personne.
-   Pour changer les étapes : modifier STEPS ci-dessous (et MANUELS côté serveur, netlify/functions/gestion.mjs, si une étape cochée à la main est ajoutée).
+   Pour changer les étapes : modifier BASE ci-dessous (et MANUELS côté serveur, netlify/functions/gestion.mjs, si une étape cochée à la main est ajoutée).
    Utilise window.CAPSULE (exposé par gestion.html). Données : store Netlify Blobs « accueil » (actions accueil_get / accueil_set). */
 (function () {
   'use strict';
-  var STEPS = [
+  var BASE = [
     { id: 'photo', auto: true, t: 'Choisir ta photo de profil', d: 'Pour que l’équipe te reconnaisse.', go: 'Ajouter ma photo', short: 'photo' },
     { id: 'bio', auto: true, t: 'Écrire ta présentation', d: 'Deux lignes sur toi, visibles dans l’onglet Équipe.', go: 'Écrire', short: 'présentation' },
     { id: 'charte', t: 'Lire la charte graphique', d: 'Logos, couleurs et ton de CAPSULE.', go: 'Ouvrir la charte', short: 'charte' },
@@ -14,6 +14,10 @@
     { id: 'ressources', t: 'Parcourir les ressources', d: 'Les documents partagés par l’équipe.', go: 'Ouvrir', short: 'ressources' },
     { id: 'equipe', t: 'Découvrir l’équipe', d: 'L’organigramme et le profil de chacun·e.', go: 'Ouvrir', short: 'équipe' }
   ];
+  /* étape « règlement » : signée dans la fenêtre du règlement (gestion-reglement.js) ; elle n'apparaît qu'une fois le texte publié par un·e admin */
+  var REGSTEP = { id: 'reglement', auto: true, sign: true, t: 'Lire et signer le règlement intérieur', d: 'Les règles de l’équipe, à commencer par la confidentialité.', go: 'Lire et signer', short: 'règlement' };
+  var regPub = false;
+  function steps() { return regPub ? [REGSTEP].concat(BASE) : BASE; }
   var mine = null, team = null, fetching = false;
   function $(i) { return document.getElementById(i); }
   function e(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -22,7 +26,7 @@
   function api(b) { return C() ? C().api(b) : Promise.resolve({ error: 'Indisponible' }); }
   function isStu() { var c = C(); if (!c) return false; var d = c.data(); return !c.admin() && (d.roles || {})[c.moi()] === 'etudiant'; }
   function done(st, k) { return !!(st && st[k]); }
-  function count(st) { return STEPS.filter(function (s) { return done(st, s.id); }).length; }
+  function count(st) { return steps().filter(function (s) { return done(st, s.id); }).length; }
   /* photo et présentation : lues dans les données déjà chargées par la page, pour que la carte se mette à jour tout de suite après l'enregistrement du profil */
   function live() {
     var c = C(), d = c.data(), m = c.moi(), st = {};
@@ -61,20 +65,20 @@
   /* ---------- carte étudiant·e (Accueil) ---------- */
   function drawMine() {
     var head = document.querySelector('#v11 > header'), box = $('hacc'); if (!head || !C()) return;
-    if (!isStu() || !mine) { if (box) box.remove(); return; }
+    if (!isStu() || !mine) { if (box && !box.classList.contains('accreg')) box.remove(); return; }
     var st = live(), n = count(st);
-    if (n === STEPS.length) { if (box) box.remove(); return; }
+    if (n === steps().length) { if (box) box.remove(); return; }
     css();
     if (!box) { head.insertAdjacentHTML('afterend', '<div class="accbox" id="hacc"></div>'); box = $('hacc'); }
-    box.innerHTML = '<div class="acch"><div><span class="acck">Parcours d’accueil</span><h3>Bienvenue dans l’équipe</h3></div><b class="accn">' + n + ' / ' + STEPS.length + '</b></div>' +
-      '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + STEPS.length + '" aria-valuenow="' + n + '"><i style="width:' + Math.round(100 * n / STEPS.length) + '%"></i></div>' +
-      '<ul class="accl">' + STEPS.map(function (s) {
+    box.innerHTML = '<div class="acch"><div><span class="acck">Parcours d’accueil</span><h3>Bienvenue dans l’équipe</h3></div><b class="accn">' + n + ' / ' + steps().length + '</b></div>' +
+      '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + steps().length + '" aria-valuenow="' + n + '"><i style="width:' + Math.round(100 * n / steps().length) + '%"></i></div>' +
+      '<ul class="accl">' + steps().map(function (s) {
         var ok = done(st, s.id);
         return '<li class="' + (ok ? 'ok' : 'todo') + '">' +
           (s.auto ? '<span class="accck auto" role="img" aria-label="' + (ok ? 'Fait' : 'À faire') + '" aria-pressed="' + ok + '">' + CHK + '</span>'
             : '<button type="button" class="accck" data-as="' + s.id + '" aria-pressed="' + ok + '" aria-label="' + e(s.t) + ' : ' + (ok ? 'fait, cliquer pour décocher' : 'marquer comme fait') + '">' + CHK + '</button>') +
           '<div><b>' + e(s.t) + '</b><small>' + e(s.d) + '</small></div>' +
-          (ok && s.auto ? '' : '<button type="button" class="btn l s" data-ag="' + s.id + '">' + e(s.go) + '</button>') + '</li>';
+          (ok && s.auto && !s.sign ? '' : '<button type="button" class="btn l s" data-ag="' + s.id + '">' + e(ok ? 'Relire' : s.go) + '</button>') + '</li>';
       }).join('') + '</ul>';
   }
 
@@ -91,20 +95,20 @@
     css();
     var d = C().data(), names = Object.keys(team);
     names.sort(function (a, b) {
-      var fa = count(team[a]) === STEPS.length, fb = count(team[b]) === STEPS.length;
+      var fa = count(team[a]) === steps().length, fb = count(team[b]) === steps().length;
       if (fa !== fb) return fa ? 1 : -1;
       return String(team[b].depuis || '').localeCompare(String(team[a].depuis || '')) || a.localeCompare(b, 'fr');
     });
-    var fin = names.filter(function (n) { return count(team[n]) === STEPS.length; }).length;
+    var fin = names.filter(function (n) { return count(team[n]) === steps().length; }).length;
     var wasOpen = box ? box.open : (names.length > fin || !names.length);
     var h = '<summary>Parcours d’accueil<small>' + (names.length ? fin + ' sur ' + names.length + ' étudiant·e' + (names.length > 1 ? 's' : '') + ' ont terminé' : 'aucun·e étudiant·e pour l’instant') + '</small></summary>';
     h += names.map(function (n) {
-      var st = team[n], k = count(st), ph = (d.photos || {})[n], miss = STEPS.filter(function (s) { return !done(st, s.id); }).map(function (s) { return s.short; });
+      var st = team[n], k = count(st), ph = (d.photos || {})[n], miss = steps().filter(function (s) { return !done(st, s.id); }).map(function (s) { return s.short; });
       return '<div class="acr"><span class="aca" style="background-color:var(--rose,#F9DEE5);color:var(--maroon,#75151F)' + (ph ? ';background-image:url(' + e(ph) + ')' : '') + '">' + (ph ? '' : e(nom(n).charAt(0))) + '</span>' +
         '<div><b>' + e(nom(n)) + '</b><small>' + (miss.length ? 'Reste : <span class="acf">' + e(miss.join(', ')) + '</span>' : 'Parcours terminé') + (depuis(st.depuis) ? ' · ' + e(depuis(st.depuis)) : '') + '</small></div>' +
-        '<div class="acp"><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + STEPS.length + '" aria-valuenow="' + k + '"><i style="width:' + Math.round(100 * k / STEPS.length) + '%"></i></div><span>' + k + '/' + STEPS.length + '</span></div></div>';
+        '<div class="acp"><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + steps().length + '" aria-valuenow="' + k + '"><i style="width:' + Math.round(100 * k / steps().length) + '%"></i></div><span>' + k + '/' + steps().length + '</span></div></div>';
     }).join('');
-    if (!box) { head.insertAdjacentHTML('afterend', '<details class="eqacc" id="eqacc"></details>'); box = $('eqacc'); }
+    if (!box) { ($('eqreg') || head).insertAdjacentHTML('afterend', '<details class="eqacc" id="eqacc"></details>'); box = $('eqacc'); }
     box.innerHTML = h; box.open = wasOpen;
   }
 
@@ -114,7 +118,7 @@
     api({ action: 'accueil_get' }).then(function (r) {
       fetching = false;
       if (!r || !r.ok) return;
-      mine = r.moi || {}; team = r.equipe || null;
+      mine = r.moi || {}; team = r.equipe || null; regPub = !!(r.reg && r.reg.publie);
       drawMine(); drawTeam(); if (cb) cb();
     }, function () { fetching = false; });
   }
@@ -127,7 +131,7 @@
       var k = t.getAttribute('data-as'), prev = mine && mine[k] || '', on = !prev;
       mine = mine || {}; mine[k] = on ? new Date().toISOString() : ''; drawMine();
       api({ action: 'accueil_set', step: k, done: on }).then(function (r) {
-        if (r && r.ok) { put(r); drawMine(); if (on && count(live()) === STEPS.length) c.toast('Parcours d’accueil terminé : bienvenue dans l’équipe !'); }
+        if (r && r.ok) { put(r); drawMine(); if (on && count(live()) === steps().length) c.toast('Parcours d’accueil terminé : bienvenue dans l’équipe !'); }
         else { mine[k] = prev; drawMine(); c.toast((r && r.error) || 'Enregistrement impossible, réessaie.'); }
       }, function () { mine[k] = prev; drawMine(); c.toast('Enregistrement impossible, réessaie.'); });
       return;
@@ -139,8 +143,14 @@
     else if (s === 'modeles') { if (window.charteTab) window.charteTab('ppt'); c.nav(13); }
     else if (s === 'ressources') c.nav(6);
     else if (s === 'equipe') c.nav(14);
+    else if (s === 'reglement') { if (window.regOpen) window.regOpen(); }
   });
+  /* le règlement vient d'être signé ou publié : on relit l'avancement */
+  document.addEventListener('cap-reglement', function () { var c = C(); if (c && (isStu() || c.admin())) load(); });
 
-  window.accLoad = function () { if (isStu()) load(); else { var b = $('hacc'); if (b) b.remove(); } };
-  window.accAdmin = function () { if (C() && C().admin()) { if (team) drawTeam(); load(); } else { var b = $('eqacc'); if (b) b.remove(); } };
+  window.accLoad = function () { if (isStu()) load(); else if (window.regHome) window.regHome(); };
+  window.accAdmin = function () {
+    if (window.regBar) window.regBar();
+    if (C() && C().admin()) { if (team) drawTeam(); load(); } else { var b = $('eqacc'); if (b) b.remove(); }
+  };
 })();
