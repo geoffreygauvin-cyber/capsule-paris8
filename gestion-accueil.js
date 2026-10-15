@@ -69,7 +69,7 @@
     var st = live(), n = count(st);
     if (n === steps().length) { if (box) box.remove(); return; }
     css();
-    if (!box) { head.insertAdjacentHTML('afterend', '<div class="accbox" id="hacc"></div>'); box = $('hacc'); }
+    if (!box) { ($('hsav') || head).insertAdjacentHTML('afterend', '<div class="accbox" id="hacc"></div>'); box = $('hacc'); }
     box.innerHTML = '<div class="acch"><div><span class="acck">Parcours d’accueil</span><h3>Bienvenue dans l’équipe</h3></div><b class="accn">' + n + ' / ' + steps().length + '</b></div>' +
       '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + steps().length + '" aria-valuenow="' + n + '"><i style="width:' + Math.round(100 * n / steps().length) + '%"></i></div>' +
       '<ul class="accl">' + steps().map(function (s) {
@@ -108,7 +108,7 @@
         '<div><b>' + e(nom(n)) + '</b><small>' + (miss.length ? 'Reste : <span class="acf">' + e(miss.join(', ')) + '</span>' : 'Parcours terminé') + (depuis(st.depuis) ? ' · ' + e(depuis(st.depuis)) : '') + '</small></div>' +
         '<div class="acp"><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + steps().length + '" aria-valuenow="' + k + '"><i style="width:' + Math.round(100 * k / steps().length) + '%"></i></div><span>' + k + '/' + steps().length + '</span></div></div>';
     }).join('');
-    if (!box) { head.insertAdjacentHTML('afterend', '<details class="eqacc" id="eqacc"></details>'); box = $('eqacc'); }
+    if (!box) { ($('hsav') || head).insertAdjacentHTML('afterend', '<details class="eqacc" id="eqacc"></details>'); box = $('eqacc'); }
     box.innerHTML = h; box.open = wasOpen;
   }
 

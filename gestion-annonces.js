@@ -42,23 +42,35 @@
       '<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">' + (ro ? '<small>Pour ' + e(PL[aud(x)]) + ' · lu par ' + (x.lus || []).filter(function (n) { return membres(x).indexOf(n) > -1; }).length + ' sur ' + membres(x).length + '</small>' : adm ? '<button class="link" data-ae="' + e(x.id) + '">Modifier</button>' + (archivee(x) ? '<button class="link" data-au="' + e(x.id) + '">Remettre en avant</button>' : '<button class="link" data-aa="' + e(x.id) + '">Archiver</button>') + '<button class="link" data-ad="' + e(x.id) + '">Supprimer</button>' + st : (x.lu ? '' : '<button class="btn s" data-al="' + e(x.id) + '">C’est lu</button>')) + '</div></div>';
   }
 
-  /* ---------- bandeau étudiant·es, en tête de l'accueil ---------- */
+  /* ---------- liste « à savoir » en tête de l'Accueil : une ligne par annonce (le texte complet s'ouvre dans une fenêtre) ---------- */
+  var tous = false;
+  function sav() {
+    var head = document.querySelector('#v11 > header'); if (!head) return null;
+    var s0 = $('hsav'); if (!s0) { head.insertAdjacentHTML('afterend', '<div class="atb" id="hsav"><div id="hann"></div><div id="hreg"></div></div>'); s0 = $('hsav'); }
+    return s0;
+  }
+  function ligne(x, adm) {
+    var meta = adm ? 'Pour ' + PL[aud(x)] + ' · ' + (x.lus || []).filter(function (n) { return membres(x).indexOf(n) > -1; }).length + '/' + membres(x).length + ' lu' : (x.important ? 'Important · ' : '') + fr(x.le);
+    return '<div class="r ' + (x.important ? 'i' : '') + (!adm && x.lu ? ' lu' : '') + '"><i class="ic">' + (x.important ? '!' : 'i') + '</i><div class="t"><b>' + e(x.titre) + '</b><span>' + e(meta) + '</span></div><button type="button" class="rbt" data-aw="' + e(x.id) + '">Lire</button></div>';
+  }
   function drawBanner() {
-    var head = document.querySelector('#v11 > header'), box = $('hann'); if (!head || list === null) return;
-    var adm = isAdm(), act = list.filter(enCours).filter(function (x) { return adm || pourMoi(x); }), nonLus = act.filter(function (x) { return !x.lu; }), lus = act.filter(function (x) { return x.lu; });
+    if (list === null || !sav()) return;
+    var box = $('hann'), adm = isAdm(), act = list.filter(enCours).filter(function (x) { return adm || pourMoi(x); }).sort(function (a, z) { return (a.lu ? 1 : 0) - (z.lu ? 1 : 0) || (z.important ? 1 : 0) - (a.important ? 1 : 0); });
+    var nonLus = act.filter(function (x) { return !x.lu; });
     var nv = document.querySelector('.nv[data-v="11"]');
     if (nv) { var bd = nv.querySelector('b'); if (bd) bd.remove(); if (!adm && nonLus.length) nv.insertAdjacentHTML('beforeend', '<b title="Annonces non lues">' + nonLus.length + '</b>'); }
-    if (!act.length) { if (box) box.remove(); return; }
-    if (!box) { head.insertAdjacentHTML('beforebegin', '<div class="annbox" id="hann"></div>'); box = $('hann'); }
-    if (adm) {
-      box.className = 'annbox';
-      box.innerHTML = '<h3>Annonces en ligne<span class="annok">ce que voient les équipes</span><button class="btn s" id="an_gest" style="margin-left:auto;background:#fff;color:var(--rasp)">Gérer les annonces</button></h3>' + act.map(function (x) { return card(x, false, true); }).join('');
-      return;
-    }
-    box.className = 'annbox' + (nonLus.length ? '' : ' calm');
-    var open = box.querySelector('details') && box.querySelector('details').open;
-    box.innerHTML = '<h3>Annonces de l’équipe' + (nonLus.length ? '<span class="annn">' + nonLus.length + (nonLus.length > 1 ? ' nouvelles' : ' nouvelle') + '</span>' : '<span class="annok">tout est lu</span>') + '</h3>' +
-      nonLus.map(function (x) { return card(x, false); }).join('') + (lus.length ? '<details' + (open || !nonLus.length ? ' open' : '') + '><summary>Déjà lues (' + lus.length + ')</summary>' + lus.map(function (x) { return card(x, false); }).join('') + '</details>' : '');
+    var vis = tous ? act : act.slice(0, 3);
+    box.innerHTML = act.length ? vis.map(function (x) { return ligne(x, adm); }).join('') +
+      (act.length > 3 ? '<button type="button" class="more" id="an_more">' + (tous ? 'Réduire' : 'Voir les ' + (act.length - 3) + ' autre' + (act.length - 3 > 1 ? 's' : '')) + '</button>' : '') +
+      (adm ? '<button type="button" class="more" id="an_gest">Gérer les annonces ›</button>' : '') : '';
+  }
+  function lire(id) {
+    var x = list.filter(function (y) { return y.id === id; })[0]; if (!x) return;
+    var adm = isAdm();
+    window.CAPSULE.modal('<h3>' + (x.important ? '<span class="annt">Important</span> ' : '') + e(x.titre) + '</h3><p class="sub">' + e(nom(x.par)) + ' · ' + e(fr(x.le)) + (adm ? ' · pour ' + e(PL[aud(x)]) : '') + '</p>' +
+      (x.texte ? '<p style="font-size:15px;line-height:1.55">' + body(x.texte) + '</p>' : '') + (x.lien ? '<p><a href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">' + e(x.lien) + '</a></p>' : '') +
+      '<div class="row" style="margin-top:14px">' + (!adm && !x.lu ? '<button class="btn" id="an_lu" data-al="' + e(x.id) + '">Marquer comme lu</button>' : '') + '<button class="btn l" data-m="x">Fermer</button></div>');
+    var b = $('an_lu'); if (b) b.onclick = function () { api({ action: 'annonce_lu', id: x.id }).then(function (d) { if (d && d.ok) { put(d); window.CAPSULE.closeM(); } }); };
   }
 
   /* ---------- onglet admin « Annonces » (page Gestion) ---------- */
@@ -102,7 +114,9 @@
   document.addEventListener('change', function (ev) { if (ev.target && (ev.target.id === 'an_b' || ev.target.id === 'an_n')) hint(); });
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('#hann button, #gann button'); if (!b) return;
-    if (b.id === 'an_gest') window.CAPSULE.gest('ann');
+    if (b.dataset.aw) lire(b.dataset.aw);
+    else if (b.id === 'an_more') { tous = !tous; drawBanner(); }
+    else if (b.id === 'an_gest') window.CAPSULE.gest('ann');
     else if (b.id === 'an_new') { editing = ''; formOpen = true; drawAdmin(); }
     else if (b.id === 'an_cancel') { editing = ''; formOpen = false; drawAdmin(); }
     else if (b.id === 'an_save') {

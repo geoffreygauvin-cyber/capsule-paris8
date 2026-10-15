@@ -142,13 +142,13 @@
   function rappel(force) {
     var c = C(); if (!c) return;
     var head = document.querySelector('#v11 > header'), box = $('hreg');
-    if (!head || !c.admin()) { if (box) box.remove(); return; }
+    if (!head || !c.admin()) { if (box) box.innerHTML = ''; return; }
     function draw() {
+      if (!$('hsav')) head.insertAdjacentHTML('afterend', '<div class="atb" id="hsav"><div id="hann"></div><div id="hreg"></div></div>');
       var b = $('hreg');
-      if (pub) { if (b) b.remove(); return; }
-      if (b) return;
-      css();
-      head.insertAdjacentHTML('afterend', '<div class="regbn warn" id="hreg" role="note" style="margin:12px 0 16px"><span><b>Règlement intérieur : à valider et à publier prochainement.</b> Il est encore un brouillon : l’équipe ne peut ni le lire ni le signer tant qu’il n’est pas publié.</span><button type="button" class="btn s" data-rg="jur">Ouvrir le règlement</button></div>');
+      if (pub) { b.innerHTML = ''; return; }
+      if (b.firstChild) return;
+      b.innerHTML = '<div class="r w" role="note"><i class="ic">⏳</i><div class="t"><b>Règlement intérieur à valider et à publier</b><span>encore un brouillon : l’équipe ne peut ni le lire ni le signer</span></div><button type="button" class="rbt" data-rg="jur">Ouvrir</button></div>';
     }
     if (!force && pub !== null && Date.now() - pubT < 30000) { draw(); return; }
     api({ action: 'reglement_get', texte: false }).then(function (r) { if (r && r.ok) { pub = !!r.publie; pubT = Date.now(); draw(); } });

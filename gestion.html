@@ -327,6 +327,21 @@ section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
 .sc2 h3{grid-column:2;grid-row:1;margin:0;font-size:16px}.sc2 p{grid-column:2;grid-row:2;margin:0}.sc2 .pp{grid-column:2;grid-row:3;margin:4px 0 0}
 .sc2 .row{grid-column:3;grid-row:1/4;margin:0!important}
 @media (max-width:700px){.sc2.pastel{grid-template-columns:1fr;padding:14px 16px}.sc2 .sh{grid-column:1;grid-row:auto;flex-direction:row;gap:10px;align-items:baseline;justify-self:start;padding:8px 14px}.sc2 h3,.sc2 p,.sc2 .pp,.sc2 .row{grid-column:1;grid-row:auto}.sc2 .row{margin-top:8px!important}}
+/* Accueil : liste « à savoir » (annonces, rappels) et bandeau d'accueil sans cadre */
+#v11 .hhd,#v11 .hhd.pastel{background:none!important;padding:4px 2px 0!important;margin-bottom:14px!important;border-radius:0}#v11 .hhd::before{display:none!important}
+#v11 .hhd h1{font-size:26px;margin:0}#v11 .hhd .sub{font-size:13.5px}#v11 .hhd .tag{font-size:11px}
+#v11 .av.big{width:52px;height:52px;font-size:20px;border-width:2px}
+.atb{display:grid;gap:8px;margin:0 0 22px}.atb:not(:has(.r)){display:none}.atb>div{display:contents}
+.atb .r{display:flex;align-items:center;gap:14px;padding:10px 16px;font-size:14px;border-radius:16px;background:var(--lilac);position:relative;overflow:hidden;isolation:isolate}
+.atb .r.i{background:var(--rose)}.atb .r.w{background:#FBEFD0}.atb .r.lu{background:#fff;border:1px solid var(--line);opacity:.8}
+.atb .r::before{content:"";position:absolute;inset:0;z-index:-1;background-image:radial-gradient(rgba(123,32,107,.3) 1.3px,transparent 1.7px);background-size:9px 9px;-webkit-mask-image:linear-gradient(270deg,#000,transparent 30%);mask-image:linear-gradient(270deg,#000,transparent 30%)}
+.atb .r.i::before{background-image:radial-gradient(rgba(174,22,78,.35) 1.3px,transparent 1.7px)}.atb .r.w::before{background-image:radial-gradient(rgba(200,150,20,.4) 1.3px,transparent 1.7px)}.atb .r.lu::before{display:none}
+.atb .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--purple);flex:none;font-size:14px;font-weight:700;font-style:normal}
+.atb .r.i .ic{color:var(--rasp)}.atb .r.w .ic{color:#B7800F}
+.atb .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.atb .t b{font-weight:600}.atb .t span{color:#5E4B55;margin-left:8px;font-size:13px}
+.atb .rbt{background:#fff;color:var(--rasp);font:600 13px Poppins,sans-serif;border:0;padding:5px 14px;border-radius:99px;cursor:pointer;white-space:nowrap}.atb .rbt:hover{background:var(--ink);color:#fff}
+.atb .more{justify-self:start;background:none;border:0;color:var(--rasp);font:600 13px Poppins,sans-serif;cursor:pointer;padding:2px 6px}.atb .more:hover{text-decoration:underline}
+@media (max-width:700px){.atb .t span{display:none}.atb .r{padding:9px 12px;gap:10px}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
