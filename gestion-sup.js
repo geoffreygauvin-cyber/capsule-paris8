@@ -2,7 +2,6 @@
    - Calendrier mensuel de mes séances (supervisions et réunions) avec la liste du mois.
    - Compteurs : séances à venir, heures réalisées, heures du mois, présences à saisir.
    - Récap mensuel des heures (pour établir la facture) avec export Excel.
-   - Statut de mon dossier administratif (pièces, validation) : « sans pièces en ligne, pas de paiement ».
    Données : window.CAPSULE.sup() (séances), CAPSULE.dos() (dossier, renvoyé par l'action list). Point d'entrée : window.supMe(élément). */
 (function () {
   'use strict';
@@ -40,14 +39,7 @@
   function dur(x) { return (x.duree || 0) / 60; }
   function estSup(x) { return x.type === 'groupe' || x.type === 'individuelle'; }
 
-  function dossier() {
-    var d = C().dos && C().dos();
-    if (!d) return '';
-    var pieces = '<div class="smp">' + d.pieces.map(function (p) { return '<span class="' + (p.ok ? 'y' : '') + '">' + (p.ok ? '✓ ' : '') + e(p.label) + '</span>'; }).join('') + '</div>';
-    return d.complet
-      ? '<div class="smd ok"><span aria-hidden="true">✓</span><div><b>Votre dossier administratif est complet' + (d.valide ? ' et validé' : '') + '</b><small>Vos paiements peuvent être traités.</small>' + pieces + '</div></div>'
-      : '<div class="smd ko"><span aria-hidden="true">!</span><div><b>Il manque : ' + e(d.manquantes.join(', ')) + '</b><small>Sans pièces déposées en ligne, nous ne pouvons pas procéder au paiement. Répondez au mail de la coordination ou contactez-la pour les transmettre.</small>' + pieces + '</div></div>';
-  }
+  function dossier() { return ''; } // l'état du dossier, les pièces et les honoraires sont dans « Mon dossier » (gestion-dossier.js)
 
   function tuiles(L) {
     var now = new Date(), m0 = isoD(now).slice(0, 7), C0 = C();

@@ -160,8 +160,12 @@ export default async (req) => {
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
-  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of ADMIN_FIXE) if (t in m) m[t] = "admin"; return m; };
+  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
+  // Intervenant·e : tant que son dossier n'est pas validé par l'équipe, seul « Mon dossier » (dépôt des pièces) est accessible.
+  let verrou = false;
+  if (sup) { const a0 = await ac.get(user, { type: "json" }), r0 = a0?.intervenant ? await IV.charger(a0.intervenant).catch(() => null) : null; verrou = !r0?.valide; }
+  if (sup && verrou && !["list", "dossier_up", "dossier_del", "profil_photo"].includes(b.action)) return J({ error: "Complétez d'abord votre dossier (rubrique Mon dossier) : le reste de la plateforme s'ouvre après validation par la coordination." }, 403);
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif && (!v.intervenant || (await IV.charger(v.intervenant).catch(() => null))?.valide)) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of ADMIN_FIXE) if (t in m) m[t] = "admin"; return m; };
 
   if (b.action === "compte_alias") {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
@@ -254,12 +258,64 @@ export default async (req) => {
     const r = await BU.action(b, user), { _s, ...o } = r; return J(o, _s || 200);
   }
 
+  // Dossier de l'intervenant·e connecté·e : pièces, séances de supervision, honoraires et règlements (budget).
+  const monDossier = async (nom) => {
+    try {
+      const a = await ac.get(nom, { type: "json" }), r = a?.intervenant ? await IV.charger(a.intervenant) : null; if (!r) return null;
+      const pieces = await IV.chargerPieces(), pr = IV.progression(r, pieces), vp = IV.vuePieces(r, pieces);
+      const noms = new Set([nom, nrm(r.nom)]), ss = getStore("supervisions"), bs = getStore({ name: "budget", consistency: "strong" });
+      const cfgB = (await bs.get("cfg", { type: "json" })) || BU.cfgDefaut(), deb = cfgB.debut + "-01", fin = cfgB.fin + "-31";
+      const { blobs } = await ss.list();
+      const mes = (await Promise.all(blobs.map((x) => ss.get(x.key, { type: "json" })))).filter((x) => x && x.type !== "entretien" && noms.has(nrm(x.superviseur)));
+      const maint = Date.now(), sv = mes.filter((x) => x.type !== "reunion" && x.date >= deb && x.date <= fin);
+      const faites = sv.filter((x) => parisToUTC(x.date, x.heure) <= maint), avenir = sv.filter((x) => parisToUTC(x.date, x.heure) > maint);
+      const h = (l) => Math.round(l.reduce((t, x) => t + (x.duree || 60), 0) / 60 * 100) / 100;
+      const tarif = [nom, String(r.nom).toLowerCase()].map((k) => cfgB.tarifs?.[k]).find((v) => v != null) ?? r.tarif ?? null;
+      const { blobs: le } = await bs.list({ prefix: "e/" });
+      const dep = (await Promise.all(le.map((x) => bs.get(x.key, { type: "json" })))).filter((d) => d && d.poste === "supervision" && noms.has(nrm(d.beneficiaire))).sort((x, y) => String(y.date).localeCompare(x.date));
+      const paye = dep.filter((d) => d.statut === "payee").reduce((t, d) => t + d.montant, 0), aPayer = dep.filter((d) => d.statut !== "payee").reduce((t, d) => t + d.montant, 0);
+      const du = tarif == null ? null : Math.round(h(faites) * tarif * 100) / 100;
+      return { nom: r.nom, complet: pr.complet, manquantes: pr.manquantes, valide: r.valide?.le || null, tarif, pieces: vp,
+        seances: { faites: faites.length, avenir: avenir.length, heures: h(faites), heuresAvenir: h(avenir), debut: cfgB.debut, fin: cfgB.fin },
+        argent: { tarif, du, paye: Math.round(paye * 100) / 100, aPayer: Math.round(aPayer * 100) / 100, reste: du == null ? null : Math.round((du - paye) * 100) / 100 },
+        reglements: dep.slice(0, 30).map((d) => ({ date: d.date, libelle: d.libelle, montant: d.montant, statut: d.statut })) };
+    } catch (e) { console.error("monDossier", e); return null; }
+  };
+  // Création du compte de connexion d'une personne ajoutée dans Gestion RH › Intervenant·es (accès limité à « Mon dossier » jusqu'à validation).
+  const ouvrirCompte = async (r) => {
+    let a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; if (a) return r;
+    const c = comptes(), base = nrm(r.nom).replace(/[^a-z0-9._-]/g, "").slice(0, 26) || "intervenant"; let nom = base;
+    for (let k = 2; (nom in c || await ac.get(nom, { type: "json" }) || !NAME.test(nom)) && k < 50; k++) nom = base.slice(0, 26) + "-" + k;
+    const code = genCode(), salt = randomBytes(16).toString("hex");
+    await ac.setJSON(nom, { nom, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: new Date().toISOString(), creePar: user, role: "superviseur", actif: true, intervenant: r.id });
+    r.compte = nom; await IV.stores().iv.setJSON("i/" + r.id, r); return r;
+  };
+  // Dépôt / retrait de pièces par l'intervenant·e lui·elle-même.
+  if (b.action === "dossier_up" || b.action === "dossier_del") {
+    if (!sup) return J({ error: "Réservé aux intervenant·es." }, 403);
+    const a1 = await ac.get(user, { type: "json" }), r = a1?.intervenant ? await IV.charger(a1.intervenant) : null; if (!r) return J({ error: "Dossier introuvable." }, 404);
+    const { iv, pc } = IV.stores(), pieces = await IV.chargerPieces(), p = pieces.find((x) => x.id === String(b.piece)); if (!p) return J({ error: "Pièce inconnue." }, 400);
+    if (b.action === "dossier_del") {
+      if (r.valide) return J({ error: "Le dossier est validé : contactez la coordination pour retirer une pièce (vous pouvez la remplacer)." }, 403);
+      if (r.docs?.[p.id]) { delete r.docs[p.id]; await pc.delete(r.id + "/" + p.id); r.notifie = false; await iv.setJSON("i/" + r.id, r); }
+      return J({ ok: true, monDossier: await monDossier(user) });
+    }
+    const nom = clean(b.nom, 120).replace(/[\\/]/g, "_") || "piece", ext = nom.split(".").pop().toLowerCase();
+    if (!IV.EXT_PIECE[ext]) return J({ error: "Format non accepté : PDF, image (JPG, PNG) ou Word." }, 400);
+    if (typeof b.data !== "string" || !/^[A-Za-z0-9+/=]+$/.test(b.data)) return J({ error: "Fichier invalide." }, 400);
+    const buf = Buffer.from(b.data, "base64"); if (!buf.length || buf.length > IV.MAX_PIECE) return J({ error: "Fichier vide ou trop lourd (4 Mo maximum)." }, 400);
+    await pc.set(r.id + "/" + p.id, buf, { metadata: { mime: IV.EXT_PIECE[ext] } });
+    r.docs = { ...(r.docs || {}), [p.id]: { nom, mime: IV.EXT_PIECE[ext], taille: buf.length, le: new Date().toISOString(), par: user } };
+    await iv.setJSON("i/" + r.id, r); await IV.notifierComplet(r, pieces, envoyer, mailReady);
+    return J({ ok: true, monDossier: await monDossier(user) });
+  }
+
   // ---- Dossier des intervenant·es : pièces à déposer, validation, ouverture de l'accès (rôle « superviseur », actif seulement après validation) ----
   if (String(b.action || "").startsWith("interv_")) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const { iv, pc } = IV.stores(), pieces = await IV.chargerPieces();
-    const vueI = async (r) => { const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; return { id: r.id, nom: r.nom, email: r.email || "", fonction: r.fonction || "", tarif: r.tarif ?? null, note: r.note || "", creeLe: r.creeLe, docs: r.docs || {}, prog: IV.progression(r, pieces), valide: r.valide || null, relance: r.relance || null, envoye: r.envoye || null, compte: a && a.actif ? r.compte : "", lien: IV.lienDossier(r.id) }; };
-    const sortie = async (x = {}) => ({ ok: true, pieces: await IV.chargerPieces(), mail: mailReady(), relanceCfg: await IV.cfgRelance(), items: await Promise.all((await IV.lister()).map(vueI)), ...x });
+    const vueI = async (r) => { const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; return { id: r.id, nom: r.nom, email: r.email || "", fonction: r.fonction || "", tarif: r.tarif ?? null, note: r.note || "", creeLe: r.creeLe, docs: r.docs || {}, prog: IV.progression(r, pieces), valide: r.valide || null, relance: r.relance || null, envoye: r.envoye || null, compte: a ? r.compte : "" }; };
+    const sortie = async (x = {}) => ({ ok: true, pieces: await IV.chargerPieces(), mail: mailReady(), relanceCfg: await IV.cfgRelance(), items: await Promise.all((await IV.lister()).map(async (r) => vueI(r.compte ? r : await ouvrirCompte(r)))), ...x });
     if (b.action === "interv_list") return J(await sortie());
     if (b.action === "interv_cfg") {
       const src = Array.isArray(b.pieces) ? b.pieces.slice(0, 25) : [], vus = new Set(), out = [];
@@ -321,38 +377,25 @@ export default async (req) => {
     }
     if (b.action === "interv_mail") {
       if (!r.email) return J({ error: "Ajoutez d'abord l'adresse e-mail de la personne." }, 400);
-      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré : copiez le lien et envoyez-le vous-même." }, 400);
+      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré : transmettez-lui l'identifiant et le code (bouton « Voir les accès »)." }, 400);
+      await ouvrirCompte(r); const a = await ac.get(r.compte, { type: "json" }), code = a?.enc ? decCode(a.enc) : null; if (!code) return J({ error: "Code introuvable : changez-le dans Comptes." }, 400);
       const liste = pieces.filter((p) => p.obl).map((p) => "- " + p.label + (p.aide ? " (" + p.aide + ")" : "")), fac = pieces.filter((p) => !p.obl).map((p) => "- " + p.label);
-      const text = [`Bonjour ${r.nom},`, "", "Pour finaliser votre intervention auprès de CAPSULE (consultations psychologiques gratuites des étudiant·es de Paris 8), merci de déposer vos pièces administratives sur ce lien personnel :", IV.lienDossier(r.id), "", "Pièces à fournir :", ...liste, ...(fac.length ? ["", "Facultatif :", ...fac] : []), "", "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.", "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. Dès que le dossier est complet et vérifié, nous vous ouvrons l'accès à la plateforme de l'équipe.", "", "Ce lien est personnel : ne le transmettez pas. Pour toute question, répondez à ce mail.", "", "L'équipe CAPSULE"].join("\n");
-      try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre dossier administratif, CAPSULE Paris 8", text }, null, { modele: "Dossier intervenant·e", par: user, type: "manuel" }); }
+      const text = [`Bonjour ${r.nom},`, "", "Pour finaliser votre intervention auprès de CAPSULE (consultations psychologiques gratuites des étudiant·es de Paris 8), voici votre accès à la plateforme de l'équipe :", "", `Adresse : ${new URL(req.url).origin}/gestion`, `Identifiant : ${r.compte}`, `Code : ${code}`, "", "À votre première connexion, vous arrivez sur « Mon dossier » : merci d'y déposer vos pièces administratives :", ...liste, ...(fac.length ? ["", "Facultatif :", ...fac] : []), "", "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.", "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. Dès que le dossier est complet et vérifié, le reste de la plateforme (supervisions, calendrier, ressources) s'ouvre pour vous.", "", "Gardez ce message pour vous, ne partagez jamais votre code (supprimez le mail après lecture). Pour toute question, répondez à ce mail.", "", "L'équipe CAPSULE"].join("\n");
+      try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre accès CAPSULE et votre dossier administratif", text }, null, { modele: "Accès intervenant·e", par: user, type: "manuel" }); }
       catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
       r.envoye = new Date().toISOString(); await iv.setJSON("i/" + id, r); return J(await sortie());
     }
     if (b.action === "interv_valider") {
       const pr = IV.progression(r, pieces); if (!pr.complet) return J({ error: "Il manque : " + pr.manquantes.join(", ") + "." }, 400);
-      const c = comptes(); let nom = r.compte, a = nom ? await ac.get(nom, { type: "json" }) : null, code;
-      if (!a) {
-        const base = (nrm(r.nom).replace(/[^a-z0-9._-]/g, "").slice(0, 26) || "intervenant"); nom = base;
-        for (let k = 2; (nom in c || await ac.get(nom, { type: "json" }) || !NAME.test(nom)) && k < 50; k++) nom = base.slice(0, 26) + "-" + k;
-        code = genCode(); const salt = randomBytes(16).toString("hex");
-        await ac.setJSON(nom, { nom, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: new Date().toISOString(), creePar: user, role: "superviseur", actif: true, intervenant: r.id });
-      } else {
-        code = a.enc ? decCode(a.enc) : null;
-        if (!code) { code = genCode(); const salt = randomBytes(16).toString("hex"); a = { ...a, salt, hash: hashCode(code, salt), enc: encCode(code) }; }
-        await ac.setJSON(nom, { ...a, actif: true });
-      }
-      r.valide = { par: user, le: new Date().toISOString() }; r.compte = nom; await iv.setJSON("i/" + id, r);
+      await ouvrirCompte(r); r.valide = { par: user, le: new Date().toISOString() }; await iv.setJSON("i/" + id, r);
       let mailEnvoye = false;
       if (b.envoyer && r.email && mailReady()) {
-        const text = [`Bonjour ${r.nom},`, "", "Votre dossier est complet et validé : votre accès à la plateforme CAPSULE est ouvert.", "", `Adresse : ${new URL(req.url).origin}/gestion`, `Identifiant : ${nom}`, `Code : ${code}`, "", "Vous y retrouvez l'accueil, les supervisions et réunions, le calendrier et les ressources de l'équipe. Gardez ce message pour vous et ne partagez jamais votre code (supprimez le mail après lecture). La session dure 8 h, puis il faut se reconnecter.", "", "L'équipe CAPSULE"].join("\n");
-        try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre accès à la plateforme CAPSULE", text }, null, { modele: "Accès intervenant·e", par: user, type: "manuel" }); mailEnvoye = true; } catch (e) { console.error(e); }
+        const text = [`Bonjour ${r.nom},`, "", "Votre dossier est complet et validé : l'ensemble de la plateforme CAPSULE est maintenant ouvert pour vous.", "", `Adresse : ${new URL(req.url).origin}/gestion`, `Identifiant : ${r.compte}`, "", "Vous y retrouvez l'accueil, vos supervisions et réunions, le calendrier, vos chiffres (séances, honoraires) dans « Mon récap » et « Mon dossier », et les ressources de l'équipe. Votre code est celui du premier mail.", "", "L'équipe CAPSULE"].join("\n");
+        try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre accès à la plateforme CAPSULE est ouvert", text }, null, { modele: "Accès intervenant·e ouvert", par: user, type: "manuel" }); mailEnvoye = true; } catch (e) { console.error(e); }
       }
-      return J(await sortie({ compte: nom, code, mailEnvoye }));
+      return J(await sortie({ compte: r.compte, mailEnvoye }));
     }
-    if (b.action === "interv_revoquer") {
-      const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; if (a) await ac.setJSON(r.compte, { ...a, actif: false });
-      r.valide = null; await iv.setJSON("i/" + id, r); return J(await sortie());
-    }
+    if (b.action === "interv_revoquer") { r.valide = null; r.notifie = false; await iv.setJSON("i/" + id, r); return J(await sortie()); } // referme l'accès : la personne retombe sur « Mon dossier » seulement
     if (b.action === "interv_delete") {
       const { blobs } = await pc.list({ prefix: id + "/" }); await Promise.all(blobs.map((x) => pc.delete(x.key)));
       if (r.compte) { await ac.delete(r.compte); await profils().delete(r.compte); }
@@ -361,14 +404,8 @@ export default async (req) => {
     return J({ error: "Action inconnue." }, 400);
   }
 
-  const monDossier = async (nom) => {
-    try {
-      const a = await ac.get(nom, { type: "json" }), r = a?.intervenant ? await IV.charger(a.intervenant) : null; if (!r) return null;
-      const pieces = await IV.chargerPieces(), pr = IV.progression(r, pieces);
-      return { nom: r.nom, complet: pr.complet, manquantes: pr.manquantes, valide: r.valide?.le || null, tarif: r.tarif ?? null, pieces: IV.vuePieces(r, pieces).map((p) => ({ label: p.label, obl: p.obl, ok: !!p.doc })) };
-    } catch { return null; }
-  };
   if (b.action === "list") {
+    if (sup && verrou) return J({ ok: true, locked: true, items: [], capacite: null, compte: user, alias: await aliasMap(), admin: false, role, roles: { [user]: "superviseur" }, technique: false, techniques: TECH, photos: {}, titres: {}, bios: {}, contacts: {}, ressources: [], intervAttente: 0, equipe: [], superviseurs: [], monDossier: await monDossier(user) });
     const { blobs } = await store.list({ prefix: "d/" });
     let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
     const capacite = sup ? null : CP.calcul(items, await CP.etudiants(), await CP.chargerCfg());

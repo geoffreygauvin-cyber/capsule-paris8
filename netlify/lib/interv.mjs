@@ -59,11 +59,18 @@ export function texteRelance(rec, pieces) {
   const text = [`Bonjour ${rec.nom},`, "",
     `Votre dossier administratif CAPSULE n'est pas encore complet : il manque ${pr.manquantes.length > 1 ? "ces pièces" : "cette pièce"} :`,
     ...pr.manquantes.map((m) => "- " + m), "",
-    "Merci de les déposer sur votre lien personnel :", lienDossier(rec.id), "",
-    "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. L'accès à la plateforme de l'équipe s'ouvre aussi une fois le dossier complet et vérifié.", "",
+    `Merci de les déposer en vous connectant à la plateforme : ${siteUrl()}/gestion${rec.compte ? " (identifiant : " + rec.compte + ")" : ""}, rubrique « Mon dossier ». Si vous avez perdu votre code, répondez à ce mail.`, "",
+    "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. Le reste de la plateforme (supervisions, calendrier, ressources) s'ouvre une fois le dossier complet et vérifié.", "",
     "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Si vous avez déjà tout envoyé par un autre canal, répondez simplement à ce mail.", "",
     "L'équipe CAPSULE"].join("\n");
   return { subject: "Dossier administratif incomplet : pièces à déposer, CAPSULE Paris 8", text };
+}
+// Prévient l'équipe (une seule fois) quand toutes les pièces obligatoires sont déposées.
+export async function notifierComplet(rec, pieces, envoyer, mailReady) {
+  if (!progression(rec, pieces).complet || rec.notifie || rec.valide) return;
+  rec.notifie = true; await stores().iv.setJSON("i/" + rec.id, rec);
+  if (!mailReady() || !process.env.MAIL_USER) return;
+  try { await envoyer({ email: process.env.MAIL_USER, prenom: "CAPSULE", id: "" }, { subject: `Dossier complet : ${rec.nom}`, text: `${rec.nom} a déposé toutes les pièces obligatoires de son dossier.\n\nÀ vérifier puis à valider dans Gestion RH › Intervenant·es : ${siteUrl()}/gestion` }, null, { modele: "Dossier complet", par: "système", type: "auto" }); } catch (e) { console.error(e); }
 }
 // Envoie la relance et note la date. `envoyer` est la fonction de mail ; lève l'erreur d'envoi.
 export async function relancer(rec, pieces, envoyer, par, type) {

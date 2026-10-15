@@ -1,7 +1,7 @@
 /* Gestion RH › Intervenant·es (admins) : dossier administratif des superviseur·es et autres intervenant·es.
-   - Chaque personne reçoit un lien personnel (page /dossier) pour déposer ses pièces (devis, RIB, Kbis, pièce d'identité…).
+   - Chaque personne a un compte créé dès son ajout et dépose ses pièces dans « Mon dossier » (devis, RIB, Kbis, pièce d'identité…).
    - La liste des pièces demandées est modifiable (« Pièces demandées ») : obligatoires ou facultatives.
-   - L'accès à la plateforme (compte « superviseur ») n'est ouvert qu'après dossier complet ET validation par un admin (« Valider et ouvrir l'accès »). « Retirer l'accès » le referme.
+   - Le compte « superviseur » est créé dès l'ajout de la personne : elle se connecte et ne voit que « Mon dossier » (dépôt des pièces). Le reste de la plateforme s'ouvre après dossier complet ET validation par un admin (« Valider et ouvrir l'accès »). « Retirer l'accès » la remet en « Mon dossier » seulement.
    - Données : stores Blobs « intervenants » (fiches) et « pieces » (fichiers) ; actions interv_* de netlify/functions/gestion.mjs ; dépôt côté intervenant·e : netlify/functions/dossier.mjs.
    Utilise window.CAPSULE. Point d'entrée : window.intvAdmin(élément), appelé par drawRH() de gestion.html. */
 (function () {
@@ -16,7 +16,7 @@
   function plur(n, a, b) { return n + ' ' + (n > 1 ? b : a); }
   function taille(n) { return n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' Ko' : (n / 1048576).toFixed(1).replace('.', ',') + ' Mo'; }
   function jour(s) { var t = new Date(s); return isNaN(t) ? '' : t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
-  function attente() { return D ? D.items.filter(function (r) { return !r.compte && r.prog.complet; }).length : 0; }
+  function attente() { return D ? D.items.filter(function (r) { return !r.valide && r.prog.complet; }).length : 0; }
   function ping() { try { window.dispatchEvent(new CustomEvent('intv', { detail: attente() })); } catch (x) { } }
 
   function css() {
@@ -49,7 +49,7 @@
   function set(d) { if (d && d.ok) { D = d; draw(); ping(); } else toast((d && d.error) || 'Erreur'); }
 
   function card(r) {
-    var p = r.prog, done = !!r.compte, wait = !done && p.complet, pct = p.total ? Math.round(100 * p.ok / p.total) : 100;
+    var p = r.prog, done = !!r.valide, wait = !done && p.complet, pct = p.total ? Math.round(100 * p.ok / p.total) : 100;
     var st = done ? ['ok', 'Accès ouvert'] : wait ? ['lt', 'Complet : à valider'] : ['', p.ok + '/' + p.total + ' pièces'];
     var lines = D.pieces.map(function (pc) {
       var d = r.docs[pc.id];
@@ -64,11 +64,11 @@
       (r.note ? '<small style="color:var(--muted,#6B5861)">' + e(r.note) + '</small>' : '') +
       (!done && r.relance ? '<small style="color:var(--muted,#6B5861)">Relancé·e le ' + e(jour(r.relance.dernier)) + (r.relance.n > 1 ? ' (' + r.relance.n + ' fois)' : '') + '</small>' : '') +
       '<div class="ivf">' +
-      (done ? '<button class="btn l s" data-k="rev" data-id="' + e(r.id) + '">Retirer l’accès</button><span class="hint">Identifiant : <b>' + e(r.compte) + '</b> (le code se retrouve dans Comptes › Voir le code).</span>'
+      (done ? '<button class="btn l s" data-k="rev" data-id="' + e(r.id) + '">Retirer l’accès</button><span class="hint">Accès complet à la plateforme depuis le ' + e(jour(r.valide.le)) + '.</span>'
         : wait ? '<button class="btn s" data-k="val" data-id="' + e(r.id) + '">Valider et ouvrir l’accès</button>'
-          : '<span class="hint">L’accès pourra être ouvert quand il ne manquera plus : ' + e(p.manquantes.join(', ')) + '.</span>') +
+          : '<span class="hint">Elle ne voit que « Mon dossier » ; le reste s’ouvrira quand il ne manquera plus : ' + e(p.manquantes.join(', ')) + '.</span>') +
       (!done && !wait && r.email ? '<button class="btn l s" data-k="rel" data-id="' + e(r.id) + '">Relancer</button>' : '') +
-      '<button class="btn l s" data-k="mail" data-id="' + e(r.id) + '">Envoyer le lien</button><button class="link" data-k="copy" data-id="' + e(r.id) + '">Copier le lien</button><button class="link" data-k="edit" data-id="' + e(r.id) + '">Modifier</button></div></article>';
+      '<button class="btn l s" data-k="mail" data-id="' + e(r.id) + '">Envoyer les accès</button><button class="link" data-k="codes" data-id="' + e(r.id) + '">Voir les accès</button><button class="link" data-k="edit" data-id="' + e(r.id) + '">Modifier</button></div></article>';
   }
 
   function draw() {
@@ -78,7 +78,7 @@
       (D.relanceCfg && D.relanceCfg.actif && inc ? '<p class="sub" style="margin:-6px 0 14px">Un mail part le lundi matin aux personnes dont le dossier est incomplet : « sans pièces en ligne, pas de paiement ».</p>' : '') +
       (n ? '<div class="ivsum"><span><b>' + w + '</b> à valider</span><span><b>' + inc + '</b> dossier' + (inc > 1 ? 's' : '') + ' incomplet' + (inc > 1 ? 's' : '') + '</span><span><b>' + o + '</b> accès ouvert' + (o > 1 ? 's' : '') + '</span></div>' : '') +
       (n ? '<div class="ivg">' + D.items.map(card).join('') + '</div>' :
-        '<div class="empty"><b>Aucun·e intervenant·e pour le moment</b>Ajoutez une personne : elle reçoit un lien pour déposer ses pièces, et l’accès à la plateforme ne s’ouvre qu’après votre validation.</div>');
+        '<div class="empty"><b>Aucun·e intervenant·e pour le moment</b>Ajoutez une personne : son compte est créé tout de suite, elle se connecte et dépose ses pièces dans « Mon dossier ». Le reste de la plateforme ne s’ouvre qu’après votre validation.</div>');
   }
 
   function byId(id) { return D.items.filter(function (r) { return r.id === id; })[0]; }
@@ -91,14 +91,14 @@
     C().modal('<h3>' + (r ? 'Modifier' : 'Ajouter') + ' une personne</h3>' +
       '<label class="f"><span>Nom</span><input id="ivn" maxlength="80" value="' + e(r ? r.nom : '') + '"></label>' +
       '<label class="f"><span>Fonction</span><select id="ivfn">' + ['Superviseur·e', 'Intervenant·e', 'Autre'].map(function (x) { return '<option' + (r && r.fonction === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
-      '<label class="f"><span>Adresse e-mail <small>(pour envoyer le lien)</small></span><input id="ive" type="email" maxlength="120" value="' + e(r ? r.email : '') + '"></label>' +
+      '<label class="f"><span>Adresse e-mail <small>(pour envoyer ses accès)</small></span><input id="ive" type="email" maxlength="120" value="' + e(r ? r.email : '') + '"></label>' +
       '<label class="f"><span>Tarif horaire en € <small>(facultatif, utilisé dans Budget pour estimer les honoraires)</small></span><input id="ivt" inputmode="decimal" maxlength="8" value="' + (r && r.tarif != null ? e(String(r.tarif).replace('.', ',')) : '') + '"></label>' +
       '<label class="f"><span>Note <small>(facultatif, visible des admins uniquement)</small></span><input id="ivno" maxlength="300" value="' + e(r ? r.note : '') + '"></label>' +
       '<div class="row"><button class="btn" id="ivok">Enregistrer</button><button class="btn l" data-m="x">Annuler</button>' + (r ? '<button class="link" id="ivdel" style="margin-left:auto;color:var(--poppy,#E30F1B)">Supprimer</button>' : '') + '</div><div class="err" id="iverr" style="margin-top:10px"></div>');
     $('ivok').onclick = function () {
       $('ivok').disabled = true;
       api({ action: 'interv_save', id: r ? r.id : null, nom: $('ivn').value, fonction: $('ivfn').value, email: $('ive').value, tarif: $('ivt').value, note: $('ivno').value }).then(function (d) {
-        if (d.ok) { C().closeModal(); set(d); toast(r ? 'Enregistré.' : 'Personne ajoutée : envoyez-lui le lien.'); } else { $('ivok').disabled = false; $('iverr').textContent = d.error || 'Erreur'; }
+        if (d.ok) { C().closeModal(); set(d); toast(r ? 'Enregistré.' : 'Personne ajoutée : son compte est créé, envoyez-lui ses accès.'); } else { $('ivok').disabled = false; $('iverr').textContent = d.error || 'Erreur'; }
       });
     };
     if (r) $('ivdel').onclick = function () {
@@ -127,17 +127,22 @@
   }
 
   function valider(r) {
-    C().modal('<h3>Ouvrir l’accès de ' + e(r.nom) + '</h3><p>Le dossier est complet. Vérifiez les pièces (voir) avant de valider. Un compte « superviseur » sera créé : accueil, supervisions et réunions, calendrier (sans coordonnées de patients) et ressources.</p>' +
-      (r.email && D.mail ? '<label class="cmck"><input type="checkbox" id="ivsend" checked> Envoyer l’identifiant et le code par mail à ' + e(r.email) + '</label>' : '<p class="sub">Aucun envoi de mail possible : l’identifiant et le code s’afficheront ici, à transmettre vous-même.</p>') +
+    C().modal('<h3>Ouvrir l’accès de ' + e(r.nom) + '</h3><p>Le dossier est complet. Vérifiez les pièces (voir) avant de valider. Après validation, ' + e(r.nom) + ' accède à toute la plateforme « superviseur » : accueil, supervisions et réunions, calendrier (sans coordonnées de patients), ressources, et ses chiffres dans « Mon dossier ».</p>' +
+      (r.email && D.mail ? '<label class="cmck"><input type="checkbox" id="ivsend" checked> Prévenir ' + e(r.nom) + ' par mail (' + e(r.email) + ')</label>' : '') +
       '<div class="row" style="margin-top:12px"><button class="btn" id="ivgo">Valider et ouvrir l’accès</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="iverr" style="margin-top:10px"></div>');
     $('ivgo').onclick = function () {
       $('ivgo').disabled = true;
       api({ action: 'interv_valider', id: r.id, envoyer: !!($('ivsend') && $('ivsend').checked) }).then(function (d) {
         if (!d.ok) { $('ivgo').disabled = false; $('iverr').textContent = d.error || 'Erreur'; return; }
-        set(d);
-        C().modal('<h3>Accès ouvert</h3><p>' + e(r.nom) + ' peut se connecter sur la plateforme.</p><div class="ivcode">' + e(d.compte) + '<br>' + e(d.code) + '</div><p class="sub">' + (d.mailEnvoye ? 'Un mail avec ces accès vient d’être envoyé.' : 'Transmettez ces accès par un canal sûr, puis supprimez le message.') + ' Le code reste consultable dans Comptes › Voir le code.</p><div class="row"><button class="btn" data-m="x">Fermer</button></div>');
+        C().closeModal(); set(d); toast('Accès ouvert pour ' + r.nom + (d.mailEnvoye ? ' (mail envoyé).' : '.'));
       });
     };
+  }
+  function codes(r) {
+    api({ action: 'compte_code', nom: r.compte }).then(function (d) {
+      if (!d.ok) { toast(d.error || 'Erreur'); return; }
+      C().modal('<h3>Accès de ' + e(r.nom) + '</h3><p>Adresse : <b>' + e(location.origin) + '/gestion</b></p><div class="ivcode">' + e(r.compte) + '<br>' + e(d.code) + '</div><p class="sub">Identifiant puis code. À transmettre par un canal sûr (ou avec « Envoyer les accès »). Tant que le dossier n’est pas validé, la personne ne voit que « Mon dossier ».</p><div class="row"><button class="btn" data-m="x">Fermer</button></div>');
+    });
   }
 
   function clic(ev) {
@@ -149,16 +154,13 @@
     else if (k === 'reltous') { if (!D.mail) { toast('L’envoi de mail n’est pas configuré.'); return; } if (!confirm('Envoyer un rappel à toutes les personnes dont le dossier est incomplet (avec une adresse e-mail) ?')) return; b.disabled = true; api({ action: 'interv_relance_tous' }).then(function (d) { if (d.ok) { set(d); toast(plur(d.relances || 0, 'rappel envoyé', 'rappels envoyés') + '.'); } else { b.disabled = false; toast(d.error || 'Erreur'); } }); }
     else if (k === 'edit' && r) formPersonne(r);
     else if (k === 'val' && r) valider(r);
-    else if (k === 'rev' && r) { if (confirm('Retirer l’accès de ' + r.nom + ' ? Son compte est désactivé tout de suite ; vous pourrez le rouvrir.')) api({ action: 'interv_revoquer', id: r.id }).then(function (d) { set(d); toast('Accès retiré.'); }); }
-    else if (k === 'copy' && r) {
-      var done = function () { toast('Lien copié : envoyez-le à ' + r.nom + '.'); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(r.lien).then(done, function () { window.prompt('Copiez ce lien :', r.lien); }); else window.prompt('Copiez ce lien :', r.lien);
-    }
+    else if (k === 'rev' && r) { if (confirm('Retirer l’accès de ' + r.nom + ' ? Elle ne verra plus que « Mon dossier » ; vous pourrez rouvrir l’accès.')) api({ action: 'interv_revoquer', id: r.id }).then(function (d) { set(d); toast('Accès retiré.'); }); }
+    else if (k === 'codes' && r) codes(r);
     else if (k === 'mail' && r) {
-      if (!r.email) { toast('Ajoutez d’abord son adresse e-mail (Modifier), ou copiez le lien.'); return; }
-      if (!D.mail) { toast('L’envoi de mail n’est pas configuré : copiez le lien.'); return; }
-      if (!confirm('Envoyer à ' + r.email + ' le lien pour déposer ses pièces ?')) return;
-      b.disabled = true; api({ action: 'interv_mail', id: r.id }).then(function (d) { if (d.ok) { set(d); toast('Lien envoyé à ' + r.email + '.'); } else { b.disabled = false; toast(d.error || 'Envoi impossible.'); } });
+      if (!r.email) { toast('Ajoutez d’abord son adresse e-mail (Modifier), ou utilisez « Voir les accès ».'); return; }
+      if (!D.mail) { toast('L’envoi de mail n’est pas configuré : utilisez « Voir les accès ».'); return; }
+      if (!confirm('Envoyer à ' + r.email + ' son identifiant et son code, avec la liste des pièces à déposer ?')) return;
+      b.disabled = true; api({ action: 'interv_mail', id: r.id }).then(function (d) { if (d.ok) { set(d); toast('Accès envoyés à ' + r.email + '.'); } else { b.disabled = false; toast(d.error || 'Envoi impossible.'); } });
     }
     else if (k === 'pget' && r) {
       api({ action: 'interv_piece_get', id: r.id, piece: b.dataset.p }).then(function (d) {
