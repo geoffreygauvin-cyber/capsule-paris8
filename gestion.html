@@ -342,6 +342,12 @@ section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
 .atb .rbt{background:#fff;color:var(--rasp);font:600 13px Poppins,sans-serif;border:0;padding:5px 14px;border-radius:99px;cursor:pointer;white-space:nowrap}.atb .rbt:hover{background:var(--ink);color:#fff}
 .atb .more{justify-self:start;background:none;border:0;color:var(--rasp);font:600 13px Poppins,sans-serif;cursor:pointer;padding:2px 6px}.atb .more:hover{text-decoration:underline}
 @media (max-width:700px){.atb .t span{display:none}.atb .r{padding:9px 12px;gap:10px}}
+/* Sélecteur de mode : bascule sobre à trois positions, dans le style du champ « Aller à… » */
+.msw{display:grid!important;grid-template-columns:1fr 1.35fr 1fr!important;gap:2px!important;margin:10px 0 14px!important;padding:3px!important;border-radius:14px!important;background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;position:relative}
+.msw span{display:none!important}
+.msw button{padding:8px 2px!important;border-radius:11px!important;font-size:11.5px!important;font-weight:500!important;color:rgba(255,255,255,.72)!important;text-align:center}
+.msw button.on{background:#FDF5EB!important;color:var(--rasp)!important;font-weight:700!important;box-shadow:none!important}
+.msw button:not(.on):hover{background:rgba(255,255,255,.12)!important;color:#fff!important}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
