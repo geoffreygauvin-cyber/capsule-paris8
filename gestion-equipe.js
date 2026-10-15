@@ -4,7 +4,7 @@
   'use strict';
   var mode = 'orga';
   function e(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function cap(s) { if (window.CAPSULE && window.CAPSULE.cap) return window.CAPSULE.cap(s); s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
   var TONES = [['#F9DEE5', '#AE164E'], ['#EADCF0', '#7B206B'], ['#FFDAD6', '#E30F1B'], ['#FDF5EB', '#75151F']];
   function tone(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return TONES[h % TONES.length]; }
   function css() {

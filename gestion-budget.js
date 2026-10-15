@@ -17,7 +17,7 @@
   function toast(t) { if (C()) C().toast(t); }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function nrm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/\s+/g, '-'); }
-  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function cap(s) { if (window.CAPSULE && window.CAPSULE.cap) return window.CAPSULE.cap(s); s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
   function eur(n) { n = Math.round((n || 0) * 100) / 100; return n.toLocaleString('fr-FR', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }) + ' €'; }
   function nb(n) { return (Math.round(n * 10) / 10).toString().replace('.', ','); }
   function jour(d) { var t = new Date(d + 'T12:00:00'); return isNaN(t) ? d : t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); }

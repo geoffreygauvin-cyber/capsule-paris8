@@ -66,6 +66,7 @@ const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"
 const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
 const MAX_FICHIER = 4 * 1024 * 1024;
 const ROLES = ["etudiant", "admin"];
+const aliasMap = async () => (await getStore("config").get("alias", { type: "json" }).catch(() => null)) || {}; // nom affiché choisi pour un compte : { identifiant: "Nom affiché" }
 const nrm = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, "-");
 const rlv = (v) => (v?.role === "superviseur" ? (v.actif ? "superviseur" : "desactive") : ROLES.includes(v?.role) ? v.role : "etudiant");
 const HEURES_SUP = Array.from({ length: 23 }, (_, k) => { const m = 8 * 60 + k * 30; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + (m % 60 ? "30" : "00"); });
@@ -114,8 +115,9 @@ export default async (req) => {
   try { b = await req.json(); } catch { return J({ error: "Requête invalide" }, 400); }
 
   if (b.action === "login") {
-    const c = comptes(); const u = nrm(b.compte);
+    const c = comptes(); let u = nrm(b.compte);
     await new Promise((r) => setTimeout(r, 600)); // freine les essais répétés
+    if (!(u in c) && !(NAME.test(u) && await ac.get(u, { type: "json" }))) { const al = await aliasMap(), k = Object.keys(al).find((x) => nrm(al[x]) === u); if (k) u = k; } // on peut aussi se connecter avec son nom affiché
     if (u in c) {
       const ov = await getStore("codes").get(u, { type: "json" });
       if (ov) {
@@ -159,6 +161,22 @@ export default async (req) => {
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of TECH) if (t in m) m[t] = "admin"; return m; };
 
+  if (b.action === "compte_alias") {
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    const n = nrm(b.nom), al = await aliasMap(), c = comptes();
+    if (!(n in c) && !(NAME.test(n) && await ac.get(n, { type: "json" }))) return J({ error: "Compte introuvable." }, 404);
+    const nom = clean(b.affiche, 40).replace(/\s+/g, " ").trim();
+    if (!nom) delete al[n];
+    else {
+      const k = nrm(nom);
+      if (!NAME.test(k)) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -)." }, 400);
+      if (k !== n && ((k in c) || await ac.get(k, { type: "json" }))) return J({ error: "Ce nom est déjà utilisé par un autre compte." }, 400);
+      if (Object.keys(al).some((x) => x !== n && nrm(al[x]) === k)) return J({ error: "Ce nom est déjà utilisé." }, 400);
+      al[n] = nom;
+    }
+    await getStore("config").setJSON("alias", al);
+    return J({ ok: true, alias: al });
+  }
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code", "acces_list", "acces_apercu", "acces_mail"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const c = comptes(); const n = nrm(b.nom);
@@ -368,7 +386,7 @@ export default async (req) => {
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
     const IVP = admin ? await IV.chargerPieces().catch(() => IV.PIECES_DEFAUT) : null;
-    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, capacite, compte: user, alias: await aliasMap(), admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -580,6 +598,7 @@ export default async (req) => {
     const typeB = ["individuelle", "reunion"].includes(b.type) ? b.type : b.type === "entretien" && admin ? "entretien" : "groupe";
     let superviseur = clean(b.superviseur, 60).trim();
     if (superviseur.toLowerCase() in roles) superviseur = superviseur.toLowerCase();
+    else { const al = await aliasMap(), hit = Object.keys(al).find((k) => nrm(al[k]) === nrm(superviseur)); if (hit) superviseur = hit; }
     if (typeB === "reunion" && !admin) superviseur = user;
     if (typeB === "entretien") superviseur = user;
     if (!superviseur) return J({ error: "Indiquez le nom du ou de la superviseur·e." }, 400);
