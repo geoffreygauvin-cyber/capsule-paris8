@@ -353,6 +353,15 @@ section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
 aside{background:radial-gradient(90% 40% at 50% 42%,rgba(253,245,235,.07),transparent 70%),radial-gradient(120% 45% at 100% 0%,rgba(174,22,78,.28),transparent 70%),linear-gradient(170deg,#6B1B2B 0%,#721F42 48%,#6C2161 100%)!important;isolation:isolate}
 aside::before{content:"";position:fixed;left:0;top:0;width:248px;height:100vh;z-index:-1;pointer-events:none;background-image:radial-gradient(rgba(253,245,235,.075) 1.1px,transparent 1.5px);background-size:11px 11px;-webkit-mask-image:radial-gradient(circle at 100% 0,#000,transparent 50%);mask-image:radial-gradient(circle at 100% 0,#000,transparent 50%)}
 }
+/* Menu : la liste des rubriques défile seule, la pastille du compte reste en bas sans rien recouvrir */
+#navs{display:flex;flex-direction:column;gap:2px;min-height:0}
+@media (min-width:861px){
+aside{overflow:hidden!important}
+#navs{flex:1 1 auto;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(253,245,235,.35) transparent;margin:0 -6px;padding:0 6px 8px}
+.me{position:static!important;flex:none;margin-top:6px!important;box-shadow:0 6px 18px rgba(40,6,24,.25)!important;border:1px solid rgba(255,255,255,.2)!important;background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.07))!important}
+.me:hover{background:linear-gradient(135deg,rgba(255,255,255,.24),rgba(255,255,255,.12))!important}
+}
+@media (max-width:860px){#navs{display:contents}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
@@ -962,14 +971,14 @@ function buildNav(){
  var as=document.querySelector('aside');
  if(!NVSRC){NVSRC={};Array.prototype.forEach.call(as.querySelectorAll('.nv'),function(b){NVSRC[b.dataset.v]=b.cloneNode(true)});Object.keys(NIC).forEach(function(k){var b=document.createElement('button');b.className='nv';b.dataset.v=k;b.innerHTML='<svg viewBox="0 0 24 24">'+NIC[k]+'</svg><span class="nl"></span>';NVSRC[k]=b})}
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
- var anchor=as.querySelector('.uni')||as.querySelector('.me');
+ var host=$('navs');if(!host){host=document.createElement('div');host.id='navs';as.insertBefore(host,as.querySelector('.uni')||as.querySelector('.me'))}
  var C={etudiant:[['Espace étudiant psychologue',[11,19,14,1,2,4,10,5,6,7]],['Communication',[12,13]]],admin:[['Espace étudiant psychologue',[11,19,14,1,2,4,6,7]],['Communication',[12,13]],['Espace admin',[10,15,16,8,3]]],superviseur:locked?[['Mon espace RH',[18]]]:[['Mon espace RH',[18]],['Espace superviseur',[11,19,17,10,2,6]]]}[role];
  var LB={1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Mails patient·es',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Réunions & annonces':'Supervisions & réunions',15:'Gestion RH',16:'Budget',17:'Mon récap',18:'Mon dossier',19:'Discussions'};
- var CL=navCol();C.forEach(function(g,gi){var h=document.createElement('button');h.type='button';h.className='grp'+(CL[g[0]]?' col':'');h.dataset.gk=g[0];h.setAttribute('aria-expanded',CL[g[0]]?'false':'true');h.innerHTML='<span>'+esc(g[0])+'</span><i aria-hidden="true"></i>';as.insertBefore(h,anchor);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');b.dataset.gk=g[0];if(CL[g[0]])b.classList.add('gh');var lab=b.querySelector('.nl');
+ var CL=navCol();C.forEach(function(g,gi){var h=document.createElement('button');h.type='button';h.className='grp'+(CL[g[0]]?' col':'');h.dataset.gk=g[0];h.setAttribute('aria-expanded',CL[g[0]]?'false':'true');h.innerHTML='<span>'+esc(g[0])+'</span><i aria-hidden="true"></i>';host.appendChild(h);g[1].forEach(function(v){var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');b.dataset.gk=g[0];if(CL[g[0]])b.classList.add('gh');var lab=b.querySelector('.nl');
    if(lab)lab.textContent=LB[v];else{var t=Array.prototype.filter.call(b.childNodes,function(n){return n.nodeType===3});if(t.length)t[t.length-1].nodeValue=LB[v]}
    if(v===19&&!b.querySelector('b')){var nm=document.createElement('b');nm.id='nbmsg';nm.className='hide';b.appendChild(nm)}
    if(v===15&&!b.querySelector('b')){var nb=document.createElement('b');nb.id='nbrh';nb.className='hide';b.appendChild(nb)}
-   as.insertBefore(b,anchor)})});navBadges();if(window.msgBadge)setTimeout(window.msgBadge,300);
+   host.appendChild(b)})});navBadges();if(window.msgBadge)setTimeout(window.msgBadge,300);
  document.querySelector('#v5 h1').textContent=LB[5];document.querySelector('#v3 h1').textContent='Comptes';
  $('v10').querySelector('#sh1').textContent=LB[10];
  var first=locked?18:11;var on=as.querySelector('.nv[data-v="'+first+'"]');
