@@ -18,6 +18,11 @@
   function fr(iso0) { if (!iso0) return ''; var d = new Date(iso0); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }); }
   function nom(n) { return n ? n.charAt(0).toUpperCase() + n.slice(1) : ''; }
   function body(t) { return e(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\n/g, '<br>'); }
+  function aud(x) { return x.pour || 'etudiants'; }
+  function superv() { var r = window.CAPSULE.data().roles || {}; return Object.keys(r).filter(function (n) { return r[n] === 'superviseur'; }); }
+  function membres(x) { var a = aud(x); return a === 'superviseurs' ? superv() : a === 'tous' ? eleves().concat(superv()) : eleves(); }
+  var PL = { etudiants: 'étudiant·es', superviseurs: 'superviseur·es', tous: 'étudiant·es et superviseur·es' };
+  function pourMoi(x) { var r = window.CAPSULE.role && window.CAPSULE.role(), a = aud(x); return a === 'tous' || (r === 'superviseur' ? a === 'superviseurs' : a === 'etudiants'); }
   function eleves() { var d = window.CAPSULE.data(), r = d.roles || {}; return (d.equipe || []).filter(function (n) { return r[n] !== 'admin'; }); }
 
   /* états : programmée (pas encore affichée) / en cours / archivée (fin dépassée, ou 30 jours sans date de fin, ou archivée à la main) */
@@ -28,26 +33,26 @@
   function card(x, adm, ro) {
     var st = '';
     if (adm) {
-      var el = eleves(), lus = (x.lus || []).filter(function (n) { return el.indexOf(n) > -1; });
+      var el = membres(x), lus = (x.lus || []).filter(function (n) { return el.indexOf(n) > -1; });
       st = planned(x) ? '<span class="annst">Programmée : s’affichera le ' + e(frD(x.debut)) + '</span>' : archivee(x) ? '<span class="annst off">Archivée</span>' : '<span class="annst on">En cours' + (x.jusqua ? ' jusqu’au ' + e(frD(x.jusqua)) : '') + '</span>';
-      st += planned(x) ? '' : '<small title="' + e(lus.map(nom).join(', ')) + '">Lu par ' + lus.length + ' sur ' + el.length + ' étudiant·es</small>';
+      st += '<span class="annst">Pour : ' + e(PL[aud(x)]) + '</span>'; st += planned(x) ? '' : '<small title="' + e(lus.map(nom).join(', ')) + '">Lu par ' + lus.length + ' sur ' + el.length + ' étudiant·es</small>';
     }
     return '<div class="ann' + (x.important ? ' imp' : '') + ((!adm && x.lu) || (adm && archivee(x)) ? ' lu' : '') + '"><div class="annh"><b>' + (x.important ? '<span class="annt">Important</span> ' : '') + e(x.titre) + '</b><small>' + e(nom(x.par)) + ' · ' + e(fr(x.le)) + '</small></div>' +
       (x.texte ? '<p>' + body(x.texte) + '</p>' : '') + (x.lien ? '<p><a href="' + e(x.lien) + '" target="_blank" rel="noopener noreferrer">' + e(x.lien) + '</a></p>' : '') +
-      '<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">' + (ro ? '<small>Lu par ' + (x.lus || []).filter(function (n) { return eleves().indexOf(n) > -1; }).length + ' sur ' + eleves().length + ' étudiant·es</small>' : adm ? '<button class="link" data-ae="' + e(x.id) + '">Modifier</button>' + (archivee(x) ? '<button class="link" data-au="' + e(x.id) + '">Remettre en avant</button>' : '<button class="link" data-aa="' + e(x.id) + '">Archiver</button>') + '<button class="link" data-ad="' + e(x.id) + '">Supprimer</button>' + st : (x.lu ? '' : '<button class="btn s" data-al="' + e(x.id) + '">C’est lu</button>')) + '</div></div>';
+      '<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">' + (ro ? '<small>Pour ' + e(PL[aud(x)]) + ' · lu par ' + (x.lus || []).filter(function (n) { return membres(x).indexOf(n) > -1; }).length + ' sur ' + membres(x).length + '</small>' : adm ? '<button class="link" data-ae="' + e(x.id) + '">Modifier</button>' + (archivee(x) ? '<button class="link" data-au="' + e(x.id) + '">Remettre en avant</button>' : '<button class="link" data-aa="' + e(x.id) + '">Archiver</button>') + '<button class="link" data-ad="' + e(x.id) + '">Supprimer</button>' + st : (x.lu ? '' : '<button class="btn s" data-al="' + e(x.id) + '">C’est lu</button>')) + '</div></div>';
   }
 
   /* ---------- bandeau étudiant·es, en tête de l'accueil ---------- */
   function drawBanner() {
     var head = document.querySelector('#v11 > header'), box = $('hann'); if (!head || list === null) return;
-    var adm = isAdm(), act = list.filter(enCours), nonLus = act.filter(function (x) { return !x.lu; }), lus = act.filter(function (x) { return x.lu; });
+    var adm = isAdm(), act = list.filter(enCours).filter(function (x) { return adm || pourMoi(x); }), nonLus = act.filter(function (x) { return !x.lu; }), lus = act.filter(function (x) { return x.lu; });
     var nv = document.querySelector('.nv[data-v="11"]');
     if (nv) { var bd = nv.querySelector('b'); if (bd) bd.remove(); if (!adm && nonLus.length) nv.insertAdjacentHTML('beforeend', '<b title="Annonces non lues">' + nonLus.length + '</b>'); }
     if (!act.length) { if (box) box.remove(); return; }
     if (!box) { head.insertAdjacentHTML('beforebegin', '<div class="annbox" id="hann"></div>'); box = $('hann'); }
     if (adm) {
       box.className = 'annbox';
-      box.innerHTML = '<h3>Annonces en ligne<span class="annok">ce que voient les étudiant·es</span><button class="btn s" id="an_gest" style="margin-left:auto;background:#fff;color:var(--rasp)">Gérer les annonces</button></h3>' + act.map(function (x) { return card(x, false, true); }).join('');
+      box.innerHTML = '<h3>Annonces en ligne<span class="annok">ce que voient les équipes</span><button class="btn s" id="an_gest" style="margin-left:auto;background:#fff;color:var(--rasp)">Gérer les annonces</button></h3>' + act.map(function (x) { return card(x, false, true); }).join('');
       return;
     }
     box.className = 'annbox' + (nonLus.length ? '' : ' calm');
@@ -61,7 +66,8 @@
     var d0 = x ? (x.debut || today()) : today(), n0 = x && x.jusqua ? Math.max(1, diff(d0, x.jusqua) + 1) : 7;
     var opts = DUR.slice(); if (!opts.some(function (o) { return o[0] === n0; })) opts.push([n0, n0 + ' jours (actuel)']);
     x = x || { titre: '', texte: '', important: false, lien: '' };
-    return '<div class="newc" id="annf" style="margin-bottom:14px"><b>' + (editing ? 'Modifier l’annonce' : 'Nouvelle annonce pour les étudiant·es') + '</b>' +
+    return '<div class="newc" id="annf" style="margin-bottom:14px"><b>' + (editing ? 'Modifier l’annonce' : 'Nouvelle annonce') + '</b>' +
+      '<label class="f" style="margin-top:10px">Pour qui ?<select id="an_p">' + [['etudiants', 'Les étudiant·es psy'], ['superviseurs', 'Les superviseur·es'], ['tous', 'Les deux (étudiant·es et superviseur·es)']].map(function (o) { return '<option value="' + o[0] + '"' + (aud(x) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
       '<label class="f" style="margin-top:10px">Titre<input id="an_t" maxlength="120" value="' + e(x.titre) + '" placeholder="ex. Réunion d’équipe décalée à jeudi"></label>' +
       '<label class="f" style="margin-top:10px">Message<textarea id="an_x" rows="4" maxlength="2000" style="width:100%">' + e(x.texte) + '</textarea></label>' +
       '<label class="f" style="margin-top:10px">Lien (facultatif)<input id="an_l" maxlength="500" value="' + e(x.lien) + '" placeholder="https://…"></label>' +
@@ -79,7 +85,7 @@
   function drawAdmin() {
     if (!host || list === null) return;
     var cur = list.filter(function (x) { return !archivee(x); }).sort(function (a, z) { return (a.debut || a.le || '').localeCompare(z.debut || z.le || '') * -1; }), old = list.filter(archivee);
-    var h = '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:12px"><p class="sub" style="margin:0;max-width:640px">Les étudiant·es voient l’annonce en haut de leur Accueil, avec une pastille dans le menu tant qu’ils ne l’ont pas lue.</p>' + (formOpen ? '' : '<button class="btn" id="an_new">+ Nouvelle annonce</button>') + '</div>';
+    var h = '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:12px"><p class="sub" style="margin:0;max-width:640px">Choisissez le public de chaque annonce : étudiant·es, superviseur·es ou les deux. Elle s’affiche en haut de leur Accueil, avec une pastille dans le menu tant qu’elle n’est pas lue.</p>' + (formOpen ? '' : '<button class="btn" id="an_new">+ Nouvelle annonce</button>') + '</div>';
     if (formOpen) h += form(editing ? list.filter(function (x) { return x.id === editing; })[0] : null);
     h += cur.length ? cur.map(function (x) { return card(x, true); }).join('') : (formOpen ? '' : '<div class="empty"><b>Aucune annonce en cours</b>Rédigez une annonce : elle peut s’afficher tout de suite ou à une date choisie.</div>');
     if (old.length) h += '<details style="margin-top:12px"><summary class="sub" style="cursor:pointer">Archives (' + old.length + ')</summary><div style="margin-top:8px">' + old.map(function (x) { return card(x, true); }).join('') + '</div></details>';
@@ -100,7 +106,7 @@
     else if (b.id === 'an_new') { editing = ''; formOpen = true; drawAdmin(); }
     else if (b.id === 'an_cancel') { editing = ''; formOpen = false; drawAdmin(); }
     else if (b.id === 'an_save') {
-      var debut = $('an_b').value || today(), o = { action: 'annonce_save', id: editing, titre: ($('an_t').value || '').trim(), texte: $('an_x').value, lien: ($('an_l').value || '').trim(), debut: debut, jusqua: plus(debut, +$('an_n').value - 1), important: $('an_i').checked };
+      var debut = $('an_b').value || today(), o = { action: 'annonce_save', id: editing, pour: $('an_p').value, titre: ($('an_t').value || '').trim(), texte: $('an_x').value, lien: ($('an_l').value || '').trim(), debut: debut, jusqua: plus(debut, +$('an_n').value - 1), important: $('an_i').checked };
       if (o.lien && !/^https?:/i.test(o.lien)) o.lien = 'https://' + o.lien;
       msg('Enregistrement…'); api(o).then(function (d) { if (d && d.ok) { editing = ''; formOpen = false; put(d); window.CAPSULE.toast(o.id ? 'Annonce modifiée.' : debut > today() ? 'Annonce programmée pour le ' + frD(debut) + '.' : 'Annonce publiée : les étudiant·es la voient en haut de leur accueil.'); } else msg((d && d.error) || 'Échec.'); });
     }

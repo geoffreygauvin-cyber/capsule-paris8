@@ -160,7 +160,7 @@ export default async (req) => {
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
-  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
+  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of ADMIN_FIXE) if (t in m) m[t] = "admin"; return m; };
 
   if (b.action === "compte_alias") {
@@ -823,7 +823,8 @@ export default async (req) => {
     const as = getStore("annonces"), cle = "liste";
     const liste = (await as.get(cle, { type: "json" })) || [];
     const auj = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
-    const vue = (l) => (admin ? l : l.filter((x) => !x.debut || x.debut <= auj)).map((x) => (admin ? x : { ...x, lus: undefined, lu: (x.lus || []).includes(user) }));
+    const pourMoi = (x) => { const p = x.pour || "etudiants"; return p === "tous" || (sup ? p === "superviseurs" : p === "etudiants"); }; // public visé : étudiant·es (défaut), superviseur·es ou les deux
+    const vue = (l) => (admin ? l : l.filter((x) => pourMoi(x) && (!x.debut || x.debut <= auj))).map((x) => (admin ? x : { ...x, lus: undefined, lu: (x.lus || []).includes(user) }));
     if (b.action === "annonce_list") return J({ ok: true, annonces: vue(liste) });
     if (b.action === "annonce_lu") {
       const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
@@ -837,7 +838,7 @@ export default async (req) => {
       await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
     }
     if (b.action === "annonce_del") { const reste = liste.filter((x) => x.id !== String(b.id)); await as.setJSON(cle, reste); return J({ ok: true, annonces: reste }); }
-    const titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 2000).trim(), important = !!b.important, debut = String(b.debut || "").trim(), jusqua = String(b.jusqua || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
+    const pour = ["etudiants", "superviseurs", "tous"].includes(b.pour) ? b.pour : "etudiants", titre = clean(b.titre, 120).trim(), texte = clean(b.texte, 2000).trim(), important = !!b.important, debut = String(b.debut || "").trim(), jusqua = String(b.jusqua || "").trim(), lien = String(b.lien || "").trim().slice(0, 500);
     if (!titre) return J({ error: "Donnez un titre à l'annonce." }, 400);
     if ((jusqua && !/^\d{4}-\d{2}-\d{2}$/.test(jusqua)) || (debut && !/^\d{4}-\d{2}-\d{2}$/.test(debut))) return J({ error: "Date invalide." }, 400);
     if (debut && jusqua && jusqua < debut) return J({ error: "La date de fin est avant la date de début." }, 400);
@@ -845,11 +846,11 @@ export default async (req) => {
     const now = new Date().toISOString();
     if (b.id) {
       const cur = liste.find((x) => x.id === String(b.id)); if (!cur) return J({ error: "Annonce introuvable." }, 404);
-      const change = cur.titre !== titre || cur.texte !== texte;
-      Object.assign(cur, { titre, texte, important, debut, jusqua, lien, maj: now, archivee: false }); if (change) cur.lus = [];
+      const change = cur.titre !== titre || cur.texte !== texte || (cur.pour || "etudiants") !== pour;
+      Object.assign(cur, { titre, texte, important, debut, jusqua, lien, pour, maj: now, archivee: false }); if (change) cur.lus = [];
     } else {
       while (liste.length >= 60) liste.pop();
-      liste.unshift({ id: randomUUID(), titre, texte, important, debut, jusqua, lien, par: user, le: now, lus: [] });
+      liste.unshift({ id: randomUUID(), titre, texte, important, debut, jusqua, lien, pour, par: user, le: now, lus: [] });
     }
     await as.setJSON(cle, liste); return J({ ok: true, annonces: liste });
   }

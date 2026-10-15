@@ -221,3 +221,9 @@ Export Excel : feuilles Synthèse, Dépenses, Supervisions, Stagiaires. Code : `
 
 ## Changer le nom affiché d'un compte (Comptes › Actions › « Changer le nom affiché »)
 Le nom affiché est un **alias** : il remplace l'identifiant partout dans la plateforme (listes, calendrier, supervisions, messages, budget…) mais l'identifiant technique reste le même, donc aucune donnée (séances, patient·es, historique) n'est perdue ni à migrer. On peut aussi **se connecter avec le nom affiché**. Valable pour tous les comptes, y compris principaux. Un nom déjà pris par un autre compte est refusé ; vider le champ revient au nom d'origine. Stockage : store `config`, clé `alias` ({identifiant: nom}) ; action `compte_alias` de `gestion.mjs`.
+
+## Annonces par public et programmation des supervisions
+**Annonces** : chaque annonce a un public (« Pour qui ? ») : étudiant·es psy (par défaut, y compris pour les anciennes annonces), superviseur·es, ou les deux (champ `pour` : `etudiants`, `superviseurs`, `tous`). Le filtrage se fait côté serveur (`annonce_list`, bloc annonces de `gestion.mjs`) ; les comptes superviseur peuvent lire les annonces et les marquer lues. Le suivi « lu par X sur N » se calcule sur le public visé.
+
+**Programmation des supervisions** : les admins ne programment plus que des **réunions** (bouton « + Programmer une réunion », onglet « Réunions » de Réunions & annonces) ; ils voient toujours toutes les séances et notent les présences, et peuvent modifier une supervision existante. Les superviseur·es programment leurs supervisions depuis leur propre espace (« Supervisions & réunions »). Le serveur (`sup_save`) n'est pas bloqué pour les admins : seul le formulaire est restreint.
+
