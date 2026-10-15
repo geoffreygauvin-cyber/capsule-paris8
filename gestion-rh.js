@@ -2,7 +2,7 @@
    - « Suivi de l'équipe » : une carte par étudiant·e psy (règlement signé, parcours d'accueil, présence, heures), une liste « À traiter » et un dossier détaillé par personne.
    - « Présences » : séances à pointer, bilan par étudiant·e (présence, retards, absences excusées ou non), journal des retards et absences, signalement manuel d'un retard ou d'une absence
      hors séance programmée (rendez-vous patient, permanence…), export CSV.
-   Les présences aux réunions et supervisions se notent dans Réunions & annonces (bouton « Noter les présences ») et sont enregistrées avec chaque séance (champ « statuts »).
+   Les présences aux réunions et supervisions se notent dans Réunions, entretiens & annonces (bouton « Noter les présences ») et sont enregistrées avec chaque séance (champ « statuts »).
    Les événements saisis à la main sont dans le store Netlify Blobs « rh » (actions rh_events, rh_event_save, rh_event_delete de netlify/functions/gestion.mjs).
    Seuils d'alerte « À voir » : voir SEUIL ci-dessous. Seul·es les étudiant·es psy sont suivi·es (pas les admins ni le service technique).
    Utilise window.CAPSULE (exposé par gestion.html). Points d'entrée : window.rhEquipe(élément) et window.rhPres(élément), appelés par drawGest(). */

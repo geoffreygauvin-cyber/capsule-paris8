@@ -366,6 +366,12 @@ aside{overflow:hidden!important}
 /* Onglets des regroupements du menu */
 .hubt{display:inline-flex;flex-wrap:wrap;gap:2px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 16px;max-width:100%}
 .hubt .chip i{margin-left:7px}
+.rgs{margin-bottom:10px}.rgs .chip{font-size:14.5px;font-weight:600;padding:9px 22px}.rgs .chip.on{background:var(--rasp)}
+.sacts{display:grid;gap:10px;margin-top:6px}.sact{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;display:grid;grid-template-columns:minmax(190px,1.3fr) repeat(5,minmax(84px,1fr));gap:12px;align-items:center}
+.sact .nm{display:flex;gap:12px;align-items:center;min-width:0}.sact .nm b{display:block}.sact .nm small{color:var(--muted);font-size:12.5px}
+.sact .nu b{display:block;font-size:21px;color:var(--rasp);line-height:1.15}.sact .nu span{font-size:12px;color:var(--muted);display:block}.sact .nu small{display:block;font-size:11.5px;margin-top:2px}
+.sact .wr{grid-column:1/-1;margin:0;font-size:13px;color:#5A3B00;background:#FFF1D6;border-radius:10px;padding:7px 12px}
+@media (max-width:900px){.sact{grid-template-columns:repeat(3,minmax(0,1fr))}.sact .nm{grid-column:1/-1}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
@@ -432,9 +438,9 @@ aside{overflow:hidden!important}
 <div class="edays" id="ebody"></div></div><div id="hbody" style="margin-top:22px"></div></section>
 <section id="v10" class="hide"><header class="ph0 pastel t3"><div class="tag" id="gtag">Formation</div><h1 id="sh1">Supervision</h1><p class="sub" id="ssub"></p></header><div class="filters ssw hide"></div>
 <div class="filters hide" id="gtabs"></div><div id="gsup"><div class="ekp" id="skp"></div>
-<div class="gbar"><div class="filters" id="stabs"></div><button class="btn" id="sadd">+ Programmer une séance ou une réunion</button></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div></section>
+<div class="gbar"><div class="filters" id="stabs"></div><button class="btn" id="sadd">+ Programmer une séance ou une réunion</button></div><div id="slist"></div><div id="shrs"></div></div><div id="gann" class="hide"></div><div id="gent" class="hide"></div></section>
 <section id="v15" class="hide"><header class="ph0 pastel t2"><div class="tag">Espace admin</div><h1>Gestion RH</h1><p class="sub" id="rsub"></p></header>
-<div class="filters" id="hrtabs"></div><div id="geq" class="hide"></div><div id="gpre" class="hide"></div><div id="gint" class="hide"></div><div id="gent" class="hide"></div><div id="gjur" class="hide"></div></section>
+<div class="filters rgs" id="hrgrp"></div><div class="filters" id="hrtabs"></div><div id="gact" class="hide"></div><div id="geq" class="hide"></div><div id="gpre" class="hide"></div><div id="gint" class="hide"></div><div id="gjur" class="hide"></div></section>
 <section id="v19" class="hide"><header class="ph0 pastel t2"><div class="tag">Communication</div><h1>Discussions</h1><p class="sub">La messagerie interne de l’équipe : un message à une personne, ou un groupe.</p></header><div id="v19b"></div></section>
 <section id="v18" class="hide"><header class="ph0 pastel t2"><div class="tag">Mon espace RH</div><h1>Mon dossier</h1><p class="sub">Vos pièces justificatives, vos séances et vos honoraires.</p></header><div id="v18b"></div></section>
 <section id="v17" class="hide"><header class="ph0 pastel t3"><div class="tag">Espace superviseur</div><h1>Mon récap</h1><p class="sub">Vos séances à venir, vos heures et l’état de votre dossier administratif.</p></header><div id="v17b"></div></section>
@@ -891,8 +897,8 @@ var TUTO_ET=[['Accueil : ton profil','Les annonces de l’équipe s’affichent 
  ['Publications : réseaux sociaux','Crée un visuel à partir d’un modèle (PNG, PDF ou PowerPoint), enregistre-le dans le planning avec sa date, et retrouve dans l’onglet Planning ce qui est prêt à publier, par réseau. Une publication passe en rouge la veille de sa date, pour ne pas l’oublier.']];
 var TUTO_AD=[['Comptes : créer et gérer les comptes','« Ajouter un compte » : prénom (accents acceptés), statut Admin ou Étudiant·e psy, code libre (8 caractères minimum) ou généré. Sur chaque ligne : « Envoyer l’accès » (mail avec identifiant, code et mode d’emploi) et le menu Actions : Voir le code, Changer le code (l’ancien cesse de marcher) et Supprimer. Le statut se change avec le menu déroulant, après confirmation.'],
   ['Accès : à envoyer à chaque personne','« Envoyer l’accès » envoie par mail l’identifiant, le code et le mode d’emploi complet correspondant à son statut, avec un rappel : ce tutoriel reste disponible dans Ressources. « Envoyer les accès par mail » (bloc d’export de Suivi d’activité) l’envoie à toute l’équipe d’un coup. Si le code est « non récupérable » (compte ancien), fais d’abord « Changer le code ».'],
- ['Réunions & annonces','Deux onglets. Réunions : programme les réunions d’équipe (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences, avec retards et absences ; les séances de supervision sont programmées par les superviseur·es depuis leur espace, tu les retrouves ici. Annonces : écris un message pour les étudiant·es, les superviseur·es ou les deux, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil.'],
- ['Gestion RH','Suivi de l’équipe (présences, retards, absences, personnes à voir), entretiens privés (feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu) et règlement intérieur, avec ses signatures. Intervenant·es : pour chaque superviseur·e, « Envoyer le lien » lui permet de déposer ses pièces (devis, RIB, Kbis, pièce d’identité…, liste modifiable avec « Pièces demandées ») ; quand le dossier est complet, vous le vérifiez puis cliquez sur « Valider et ouvrir l’accès » : son compte n’existe qu’à ce moment-là. Un rappel part automatiquement chaque lundi aux dossiers incomplets (« sans pièces en ligne, pas de paiement »), réglable ou désactivable, et le bouton « Relancer » le fait à la demande.'],
+ ['Réunions, entretiens & annonces','Trois onglets. Réunions : programme les réunions d’équipe (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences, avec retards et absences ; les séances de supervision sont programmées par les superviseur·es depuis leur espace, tu les retrouves ici. Entretiens privés : entretiens individuels avec un·e étudiant·e (feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu). Annonces : écris un message pour les étudiant·es, les superviseur·es ou les deux, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil.'],
+ ['Gestion RH','Deux rubriques. Étudiant·es : dossiers (règlement signé, parcours d’accueil, présences, personnes à voir), règlement intérieur et ses signatures, absences et retards. Superviseur·es : onglet Activité (séances tenues, heures, étudiant·es suivi·es, présence de chacun·e) et onglet Dossiers : pour chaque superviseur·e, « Envoyer le lien » lui permet de déposer ses pièces (devis, RIB, Kbis, pièce d’identité…, liste modifiable avec « Pièces demandées ») ; quand le dossier est complet, vous le vérifiez puis cliquez sur « Valider et ouvrir l’accès » : son compte n’existe qu’à ce moment-là. Un rappel part automatiquement chaque lundi aux dossiers incomplets (« sans pièces en ligne, pas de paiement »), réglable ou désactivable, et le bouton « Relancer » le fait à la demande.'],
  ['Budget','Budget : « Réglages » (période, financements, budget prévu par poste), puis « Dépenses » pour chaque facture ou règlement (justificatif facultatif). Les honoraires de supervision se calculent seuls d’après le planning (heures × tarif horaire) et les gratifications des stagiaires d’après leurs dates de stage. La vue d’ensemble donne le reste disponible et alerte en cas de dépassement ; export Excel.'],
  ['Suivi d’activité : les indicateurs','Chiffres généraux (demandes, personnes suivies, séances réalisées, présence, satisfaction), parcours des personnes (attente avant la première séance, séances par personne, durée du suivi, écart entre deux séances), graphiques par mois et par statut, bien-être, satisfaction et changement perçu, puis le détail par étudiant·e. Données descriptives : une tendance, pas une preuve d’efficacité.'],
  ['Exports et sauvegarde','Dans Suivi d’activité, « Exporter les données » : patients, demandes, séances, heures par étudiant·e et journal des messages en CSV (Excel), ou sauvegarde complète en JSON. Ce sont des données personnelles : à conserver et à partager avec précaution.']];
@@ -954,8 +960,8 @@ document.addEventListener('click',function(ev){var h=ev.target.closest('aside .g
 /* ---- Aller à… : recherche d'une page (Ctrl+K ou bouton du menu) ---- */
 function gotoList(){
  var L=[];Array.prototype.forEach.call(document.querySelectorAll('aside .nv'),function(b){var c=b.cloneNode(true);Array.prototype.forEach.call(c.querySelectorAll('svg,b'),function(x){x.remove()});L.push({t:c.textContent.trim(),g:b.dataset.gk||'',f:function(){nav(+b.dataset.v)}});if(b.dataset.vs){var hh=curHubs.filter(function(x){return x.tabs.map(function(t){return t[0]}).join(',')===b.dataset.vs})[0];if(hh)hh.tabs.forEach(function(t){L.push({t:hh.lb+' › '+t[1],g:b.dataset.gk||'',f:function(){nav(t[0])}})})}});
- if(isAdmin){[['Gestion RH','Intervenant·es','int'],['Gestion RH','Suivi de l’équipe','eq'],['Gestion RH','Présences','pre'],['Gestion RH','Entretiens privés','ent'],['Gestion RH','Règlement intérieur','jur']].forEach(function(x){L.push({t:x[0]+' › '+x[1],g:'Espace admin',f:function(){window.CAPSULE.gest(x[2])}})});
-  L.push({t:'Réunions & annonces › Annonces',g:'Espace admin',f:function(){window.CAPSULE.gest('ann')}});
+ if(isAdmin){[['Gestion RH › Superviseur·es','Dossiers','int'],['Gestion RH › Superviseur·es','Activité','act'],['Gestion RH › Étudiant·es','Dossiers','eq'],['Gestion RH › Étudiant·es','Absences & retards','pre'],['Gestion RH › Étudiant·es','Règlement intérieur','jur']].forEach(function(x){L.push({t:x[0]+' › '+x[1],g:'Espace admin',f:function(){window.CAPSULE.gest(x[2])}})});
+  L.push({t:'Réunions, entretiens & annonces › Entretiens privés',g:'Espace admin',f:function(){window.CAPSULE.gest('ent')}});L.push({t:'Réunions, entretiens & annonces › Annonces',g:'Espace admin',f:function(){window.CAPSULE.gest('ann')}});
   [['sup','Supervisions'],['stag','Stagiaires'],['dep','Dépenses'],['reg','Réglages']].forEach(function(x){L.push({t:'Budget › '+x[1],g:'Espace admin',f:function(){if(window.budTab)window.budTab(x[0]);nav(16)}})})}
  return L}
 function gotoOpen(){
@@ -982,7 +988,7 @@ function buildNav(){
  Array.prototype.forEach.call(as.querySelectorAll('.nv,.grp'),function(x){x.remove()});
  var host=$('navs');if(!host){host=document.createElement('div');host.id='navs';as.insertBefore(host,as.querySelector('.uni')||as.querySelector('.me'))}
  var C={etudiant:[['Espace étudiant psychologue',[11,19,5]],['Patient·es',[1,2,4,7]],['Équipe & ressources',[14,10,6,12,13]]],admin:[['Espace étudiant psychologue',[11,19]],['Patient·es',[1,2,4,7]],['Équipe & ressources',[14,6,12,13]],['Espace admin',[10,15,16,8,3]]],superviseur:locked?[['Mon espace RH',[18]]]:[['Mon espace RH',[18]],['Espace superviseur',[11,19,17,10,2,6]]]}[role];
- var LB={1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Mails patient·es',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Réunions & annonces':'Supervisions & réunions',15:'Gestion RH',16:'Budget',17:'Mon récap',18:'Mon dossier',19:'Discussions'};
+ var LB={1:'Demandes',2:'Calendrier',3:'Comptes',4:'Patients',5:role==='etudiant'?'Mon activité':'Activité équipe',6:'Ressources',7:'Mails patient·es',8:'Suivi d’activité',11:'Accueil',12:'Publications',13:'Charte graphique',14:'Équipe',10:role==='admin'?'Réunions, entretiens & annonces':'Supervisions & réunions',15:'Gestion RH',16:'Budget',17:'Mon récap',18:'Mon dossier',19:'Discussions'};
  var avail={};C.forEach(function(g){g[1].forEach(function(v){avail[v]=1})});curHubs=hubsFor(avail);var placed={};
  C=C.map(function(g){var out=[];g[1].forEach(function(v){var h=curHubs.filter(function(x){return x.tabs.some(function(t){return t[0]===v})})[0];if(!h){out.push(v);return}if(!placed[h.k]){placed[h.k]=1;out.push('h:'+h.k)}});return [g[0],out]}).filter(function(g){return g[1].length});
  var CL=navCol();C.forEach(function(g,gi){var h=document.createElement('button');h.type='button';h.className='grp'+(CL[g[0]]?' col':'');h.dataset.gk=g[0];h.setAttribute('aria-expanded',CL[g[0]]?'false':'true');h.innerHTML='<span>'+esc(g[0])+'</span><i aria-hidden="true"></i>';host.appendChild(h);g[1].forEach(function(v0){var hub=typeof v0==='string'?curHubs.filter(function(x){return x.k===v0.slice(2)})[0]:null,v=hub?hub.tabs[0][0]:v0;var b=NVSRC[v].cloneNode(true);b.classList.remove('on','hide');b.dataset.gk=g[0];if(hub)b.dataset.vs=hub.tabs.map(function(t){return t[0]}).join(',');if(CL[g[0]])b.classList.add('gh');var lab=b.querySelector('.nl');
@@ -1074,42 +1080,71 @@ document.addEventListener('click',function(e){var b=e.target.closest('button[dat
  else{window.open('https://meet.google.com/new','_blank','noopener');toast('Copiez le lien de la réunion Google Meet, puis collez-le dans le champ.');t.focus()}});
 var gtab='sup',rtab='eq',etab='avenir';
 /* Deux entrées dans le menu de gauche pour les admins.
-   « Réunions & annonces » (vue v10, drawGest) : Réunions & supervisions, Annonces.
-   « Gestion RH » (vue v15, drawRH) : Suivi de l'équipe, Présences, Entretiens privés, Règlement intérieur.
-   Pour ajouter un onglet Gestion RH : l'ajouter dans RT et RBOX, créer son conteneur dans la section v15 et l'appeler en fin de drawRH. */
+   « Réunions, entretiens & annonces » (vue v10, drawGest) : Réunions & supervisions, Entretiens privés, Annonces.
+   « Gestion RH » (vue v15, drawRH) : deux rubriques. Étudiant·es : Dossiers, Règlement intérieur, Absences & retards. Superviseur·es : Dossiers, Activité.
+   Pour ajouter un onglet Gestion RH : l'ajouter dans RT0 (rubrique) et RBOX, créer son conteneur dans la section v15 et l'appeler en fin de drawRH. */
 var GSUB={sup:'',
  ann:'Écrivez une annonce pour les étudiant·es, pour les superviseur·es ou pour les deux : elle s’affiche en haut de leur Accueil. Vous pouvez la programmer à une date et choisir sa durée d’affichage.',
- eq:'Chaque étudiant·e psy en un coup d’œil : règlement signé, parcours d’accueil, présence et heures. Ouvrez un dossier pour le détail et les actions.',
- pre:'Qui était là, qui était en retard, qui était absent·e (excusé·e ou non) aux réunions et aux supervisions. Vous pouvez aussi signaler un retard ou une absence à un rendez-vous patient ou à une permanence.',
- int:'Superviseur·es et autres intervenant·es : chacun·e dépose ses pièces (devis, RIB, Kbis, pièce d’identité…) depuis un lien personnel. L’accès à la plateforme ne s’ouvre qu’une fois le dossier complet et validé par vous.',
+ eq:'Le dossier de chaque étudiant·e psy en un coup d’œil : règlement signé, parcours d’accueil, présence et heures. Ouvrez un dossier pour le détail et les actions.',
+ pre:'Absences et retards : qui était là, qui était en retard, qui était absent·e (excusé·e ou non) aux réunions et aux supervisions. Vous pouvez aussi signaler un retard ou une absence à un rendez-vous patient ou à une permanence.',
+ int:'Dossiers des superviseur·es et autres intervenant·es : chacun·e dépose ses pièces (devis, RIB, Kbis, pièce d’identité…) depuis un lien personnel. L’accès à la plateforme ne s’ouvre qu’une fois le dossier complet et validé par vous.',
  ent:'Entretiens individuels avec un·e étudiant·e (feedback, recadrage, point d’étape). Seuls les admins voient le motif et les notes ; l’étudiant·e voit « Entretien individuel », la date et le lieu dans son agenda.',
+ act:'L’activité de chaque superviseur·e : séances tenues, heures, étudiant·es suivi·es et présence. Les chiffres viennent des supervisions programmées dans Réunions, entretiens & annonces.',
  jur:'Le règlement intérieur de l’équipe : rédigez le texte, publiez-le pour qu’il apparaisse dans le parcours d’accueil des étudiant·es, et retrouvez l’exemplaire signé de chacun·e.'};
-var RT=[['eq','Suivi de l’équipe'],['int','Intervenant·es'],['pre','Présences'],['ent','Entretiens privés'],['jur','Règlement intérieur']],RBOX={eq:'geq',int:'gint',pre:'gpre',ent:'gent',jur:'gjur'},intervN=0;
+var RT0={etu:[['eq','Dossiers'],['jur','Règlement intérieur'],['pre','Absences & retards']],sup:[['int','Dossiers'],['act','Activité']]},RGL={etu:'Étudiant·es',sup:'Superviseur·es'},RBOX={eq:'geq',int:'gint',pre:'gpre',jur:'gjur',act:'gact'},rlast={etu:'eq',sup:'int'},intervN=0;
+function rgrp(){return RT0.sup.some(function(t){return t[0]===rtab})?'sup':'etu'}
 function aPointer(){var E=etuL();return supItems.filter(function(x){return x.type!=='entretien'&&!x.fait&&supPast(x)&&(x.participants||[]).some(function(n){return E.indexOf(n)>-1})})}
 function drawGest(){
  var adm=isAdmin;$('gtabs').classList.toggle('hide',!adm);
  if(!adm){gtab='sup';$('gtag').textContent='Formation';$('ssub').classList.remove('hide')}
  else{
-  if(gtab!=='sup'&&gtab!=='ann')gtab='sup';
+  if(gtab!=='sup'&&gtab!=='ann'&&gtab!=='ent')gtab='sup';
   $('gtag').textContent='Espace admin';
-  $('gtabs').innerHTML=[['sup','Réunions'],['ann','Annonces']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
+  $('gtabs').innerHTML=[['sup','Réunions'],['ent','Entretiens privés'],['ann','Annonces']].map(function(t){return '<button class="chip'+(gtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+'</button>'}).join('');
   $('ssub').textContent=GSUB[gtab];$('ssub').classList.toggle('hide',!GSUB[gtab])}
- $('gsup').classList.toggle('hide',gtab!=='sup');$('gann').classList.toggle('hide',gtab!=='ann'||!adm);
+ $('gsup').classList.toggle('hide',gtab!=='sup');$('gann').classList.toggle('hide',gtab!=='ann'||!adm);$('gent').classList.toggle('hide',gtab!=='ent'||!adm);
+ if(adm&&gtab==='ent')drawEnt();
  if(adm&&gtab==='ann'&&window.annAdmin)window.annAdmin($('gann'));
  drawRH()}
-function rhChips(){var np=aPointer().length;$('hrtabs').innerHTML=RT.map(function(t){return '<button class="chip'+(rtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+(t[0]==='pre'&&np?'<i title="Séances passées dont les présences ne sont pas notées">'+np+'</i>':'')+(t[0]==='int'&&intervN?'<i title="Dossiers complets à valider">'+intervN+'</i>':'')+'</button>'}).join('')}
+function rhChips(){var np=aPointer().length,g=rgrp();
+ $('hrgrp').innerHTML=['etu','sup'].map(function(k){var n=k==='etu'?np:intervN;return '<button class="chip'+(g===k?' on':'')+'" data-rg="'+k+'">'+RGL[k]+(n&&g!==k?'<i title="'+(k==='etu'?'Séances passées dont les présences ne sont pas notées':'Dossiers complets à valider')+'">'+n+'</i>':'')+'</button>'}).join('');
+ $('hrtabs').innerHTML=RT0[g].map(function(t){return '<button class="chip'+(rtab===t[0]?' on':'')+'" data-g="'+t[0]+'">'+t[1]+(t[0]==='pre'&&np?'<i title="Séances passées dont les présences ne sont pas notées">'+np+'</i>':'')+(t[0]==='int'&&intervN?'<i title="Dossiers complets à valider">'+intervN+'</i>':'')+'</button>'}).join('')}
 window.addEventListener('intv',function(ev){intervN=ev.detail||0;if(!$('v15').classList.contains('hide'))rhChips();if(typeof navBadges==='function')navBadges()});
 function drawRH(){
  if(!isAdmin||$('v15').classList.contains('hide'))return;
- if(!RBOX[rtab])rtab='eq';var np=aPointer().length;
+ if(!RBOX[rtab])rtab='eq';rlast[rgrp()]=rtab;var np=aPointer().length;
  rhChips();
  $('rsub').textContent=GSUB[rtab];
  Object.keys(RBOX).forEach(function(k){$(RBOX[k]).classList.toggle('hide',k!==rtab)});
  if(rtab==='int'&&window.intvAdmin)window.intvAdmin($('gint'));
- if(rtab==='ent')drawEnt();if(rtab==='jur'&&window.jurAdmin)window.jurAdmin($('gjur'));
+ if(rtab==='jur'&&window.jurAdmin)window.jurAdmin($('gjur'));
+ if(rtab==='act')drawSupAct($('gact'));
  if(rtab==='eq'&&window.rhEquipe)window.rhEquipe($('geq'));if(rtab==='pre'&&window.rhPres)window.rhPres($('gpre'))}
 $('gtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){gtab=b.dataset.g;drawGest()}};
 $('hrtabs').onclick=function(e){var b=e.target.closest('.chip');if(b){rtab=b.dataset.g;drawRH()}};
+$('hrgrp').onclick=function(e){var b=e.target.closest('.chip');if(b){rtab=rlast[b.dataset.rg]||RT0[b.dataset.rg][0][0];drawRH()}};
+/* ---- Gestion RH › Superviseur·es › Activité : état des lieux par superviseur·e (calculé à partir des supervisions programmées) ---- */
+var actp='tout';
+function drawSupAct(el){
+ var ym=iso(new Date()).slice(0,7),inP=function(x){return actp==='mois'?x.date.slice(0,7)===ym:true},hr=function(m){return (m/60).toFixed(m%60?1:0).replace('.',',')+' h'};
+ var S=supItems.filter(function(x){return x.type!=='reunion'&&x.type!=='entretien'}),names={};
+ Object.keys(roles).forEach(function(n){if(roles[n]==='superviseur')names[n]=1});S.forEach(function(x){if(x.superviseur&&roles[x.superviseur]!=='etudiant')names[x.superviseur]=1});
+ var rows=Object.keys(names).map(function(n){
+  var l=S.filter(function(x){return x.superviseur===n&&inP(x)}),pa=l.filter(supPast),up=l.filter(function(x){return !supPast(x)}),stu={},fait=pa.filter(function(x){return x.fait}),pres=0,tot=0;
+  pa.forEach(function(x){(x.participants||[]).forEach(function(p){if(roles[p]==='etudiant')stu[p]=1})});
+  fait.forEach(function(x){var ps=(x.participants||[]).filter(function(p){return roles[p]==='etudiant'});tot+=ps.length;pres+=ps.filter(function(p){return (x.presents||[]).indexOf(p)>-1}).length});
+  return {n:n,s:pa.length,m:pa.reduce(function(a,x){return a+x.duree},0),e:Object.keys(stu).length,t:tot?Math.round(100*pres/tot):null,ap:pa.length-fait.length,up:up.length,next:up[0],last:pa[pa.length-1]}
+ }).sort(function(a,z){return z.m-a.m||a.n.localeCompare(z.n,'fr')});
+ var T=rows.reduce(function(a,r){a.s+=r.s;a.m+=r.m;a.ap+=r.ap;a.up+=r.up;return a},{s:0,m:0,ap:0,up:0});
+ el.innerHTML='<div class="filters" id="actp"><button class="chip'+(actp==='tout'?' on':'')+'" data-p="tout">Depuis le début</button><button class="chip'+(actp==='mois'?' on':'')+'" data-p="mois">Ce mois-ci</button></div>'+
+  '<div class="ekp"><div class="kpi pastel"><b>'+T.s+'</b><span>séance'+(T.s>1?'s':'')+' tenue'+(T.s>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+hr(T.m)+'</b><span>d’encadrement</span></div><div class="kpi pastel"><b>'+T.up+'</b><span>à venir</span></div></div>'+
+  (rows.length?'<div class="sacts">'+rows.map(function(r){
+   var nu=function(v,l,x){return '<div class="nu"><b>'+v+'</b><span>'+l+(x?'<small>'+x+'</small>':'')+'</span></div>'};
+   return '<article class="sact"><div class="nm">'+av(r.n)+'<div><b>'+esc(cap(r.n))+'</b><small>'+(r.last?'Dernière séance le '+esc(fday(r.last.date)):'Aucune séance tenue'+(actp==='mois'?' ce mois-ci':' pour l’instant'))+'</small></div></div>'+
+    nu(r.s,'séance'+(r.s>1?'s':'')+' tenue'+(r.s>1?'s':''))+nu(hr(r.m),'d’encadrement')+nu(r.e,'étudiant·e'+(r.e>1?'s':'')+' suivi·e'+(r.e>1?'s':''))+nu(r.t==null?'—':r.t+' %','de présence')+nu(r.up,'à venir',r.next?'prochaine : '+esc(fday(r.next.date))+', '+fh(r.next.heure):'')+
+    (r.ap?'<p class="wr">'+r.ap+' séance'+(r.ap>1?'s':'')+' passée'+(r.ap>1?'s':'')+' sans présences notées.</p>':'')+'</article>'}).join('')+'</div>':
+   '<div class="empty"><b>Aucun·e superviseur·e pour le moment</b>Les superviseur·es apparaissent ici dès qu’un compte superviseur existe ou qu’une supervision leur est attribuée.</div>');
+ $('actp').onclick=function(e){var b=e.target.closest('.chip');if(b){actp=b.dataset.p;drawSupAct(el)}}}
 function drawEnt(){
  var all=supItems.filter(function(x){return x.type==='entretien'}),up=all.filter(function(x){return !supPast(x)}),pa=all.filter(supPast).reverse(),l=etab==='avenir'?up:pa;
  $('gent').innerHTML='<div class="gbar"><div class="filters" id="etabs"><button class="chip'+(etab==='avenir'?' on':'')+'" data-k="avenir">À venir'+(up.length?'<i>'+up.length+'</i>':'')+'</button><button class="chip'+(etab==='passes'?' on':'')+'" data-k="passes">Passés'+(pa.length?'<i>'+pa.length+'</i>':'')+'</button></div><button class="btn" id="ent_new">+ Nouvel entretien</button></div>'+
@@ -1162,7 +1197,7 @@ function supForm(id,pre0){
    r.items.forEach(function(it){var f=false;supItems=supItems.map(function(y){if(y.id===it.id){f=true;return it}return y});if(!f)supItems.push(it)});
    supItems.sort(function(a,z){return(a.date+a.heure).localeCompare(z.date+z.heure)});closeM();drawSup();drawEmp();var ru=r.items[0]&&r.items[0].type==='reunion';toast(r.items.length>1?r.items.length+(ru?' réunions programmées.':' séances programmées.'):(ru?'Réunion enregistrée.':'Supervision enregistrée.'))})};
  $('sgo').onclick=function(){go(false)}}
-/* Pointage d'une séance : un statut par personne (présent·e, en retard + minutes, absent·e excusé·e, absent·e) et un motif facultatif. Les statuts alimentent Gestion RH > Présences. */
+/* Pointage d'une séance : un statut par personne (présent·e, en retard + minutes, absent·e excusé·e, absent·e) et un motif facultatif. Les statuts alimentent Gestion RH > Étudiant·es > Absences & retards. */
 var PST=[['present','Présent·e'],['retard','En retard'],['excuse','Excusé·e'],['absent','Absent·e']];
 function stOf(x,n){var s=x.statuts&&x.statuts[n];if(s)return s;return{s:(x.presents||[]).indexOf(n)>-1?'present':'absent'}}
 function presForm(id){var x=supItems.filter(function(y){return y.id===id})[0];if(!x)return;var ps=x.participants||[],cur={};
