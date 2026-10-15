@@ -52,7 +52,6 @@
   }
 
   function badge(n) {
-    var hm = $('hubmsg'); if (hm) { hm.textContent = n; hm.classList.toggle('hide', !n); }
     var b = $('nbmsg'); if (!b) return;
     b.textContent = n; b.classList.toggle('hide', !n); b.title = n ? n + ' conversation' + (n > 1 ? 's' : '') + ' avec des messages non lus' : '';
   }
