@@ -238,8 +238,8 @@ export default async (req) => {
   if (String(b.action || "").startsWith("interv_")) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     const { iv, pc } = IV.stores(), pieces = await IV.chargerPieces();
-    const vueI = async (r) => { const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; return { id: r.id, nom: r.nom, email: r.email || "", fonction: r.fonction || "", tarif: r.tarif ?? null, note: r.note || "", creeLe: r.creeLe, docs: r.docs || {}, prog: IV.progression(r, pieces), valide: r.valide || null, compte: a && a.actif ? r.compte : "", lien: IV.lienDossier(r.id) }; };
-    const sortie = async (x = {}) => ({ ok: true, pieces: await IV.chargerPieces(), mail: mailReady(), items: await Promise.all((await IV.lister()).map(vueI)), ...x });
+    const vueI = async (r) => { const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; return { id: r.id, nom: r.nom, email: r.email || "", fonction: r.fonction || "", tarif: r.tarif ?? null, note: r.note || "", creeLe: r.creeLe, docs: r.docs || {}, prog: IV.progression(r, pieces), valide: r.valide || null, relance: r.relance || null, envoye: r.envoye || null, compte: a && a.actif ? r.compte : "", lien: IV.lienDossier(r.id) }; };
+    const sortie = async (x = {}) => ({ ok: true, pieces: await IV.chargerPieces(), mail: mailReady(), relanceCfg: await IV.cfgRelance(), items: await Promise.all((await IV.lister()).map(vueI)), ...x });
     if (b.action === "interv_list") return J(await sortie());
     if (b.action === "interv_cfg") {
       const src = Array.isArray(b.pieces) ? b.pieces.slice(0, 25) : [], vus = new Set(), out = [];
@@ -262,8 +262,25 @@ export default async (req) => {
       await iv.setJSON("i/" + r.id, r);
       return J(await sortie({ id: r.id }));
     }
+    if (b.action === "interv_relance_cfg") {
+      await getStore("config").setJSON("relance", { actif: b.actif !== false && b.actif !== "false", jours: Number(b.jours) === 14 ? 14 : 7 });
+      return J(await sortie());
+    }
+    if (b.action === "interv_relance_tous") {
+      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré." }, 400);
+      let n = 0;
+      for (const r of await IV.lister()) { if (!IV.aRelancer(r, pieces)) continue; try { await IV.relancer(r, pieces, envoyer, user, "manuel"); n++; } catch (e) { console.error("relance échouée", r.id, e.message); } }
+      return J(await sortie({ relances: n }));
+    }
     const id = String(b.id || ""), r = /^[0-9a-f-]{36}$/.test(id) ? await IV.charger(id) : null;
     if (!r) return J({ error: "Introuvable." }, 404);
+    if (b.action === "interv_relance") {
+      if (!r.email) return J({ error: "Ajoutez d'abord l'adresse e-mail de la personne." }, 400);
+      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré." }, 400);
+      if (!IV.aRelancer(r, pieces)) return J({ error: "Ce dossier est déjà complet ou validé." }, 400);
+      try { await IV.relancer(r, pieces, envoyer, user, "manuel"); } catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
+      return J(await sortie());
+    }
     if (b.action === "interv_piece_get") {
       const f = r.docs?.[String(b.piece)], buf = f ? await pc.get(id + "/" + String(b.piece), { type: "arrayBuffer" }) : null;
       return buf ? J({ ok: true, nom: f.nom, mime: f.mime, data: Buffer.from(buf).toString("base64") }) : J({ error: "Pièce introuvable." }, 404);
@@ -286,7 +303,7 @@ export default async (req) => {
       if (!r.email) return J({ error: "Ajoutez d'abord l'adresse e-mail de la personne." }, 400);
       if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré : copiez le lien et envoyez-le vous-même." }, 400);
       const liste = pieces.filter((p) => p.obl).map((p) => "- " + p.label + (p.aide ? " (" + p.aide + ")" : "")), fac = pieces.filter((p) => !p.obl).map((p) => "- " + p.label);
-      const text = [`Bonjour ${r.nom},`, "", "Pour finaliser votre intervention auprès de CAPSULE (consultations psychologiques gratuites des étudiant·es de Paris 8), merci de déposer vos pièces administratives sur ce lien personnel :", IV.lienDossier(r.id), "", "Pièces à fournir :", ...liste, ...(fac.length ? ["", "Facultatif :", ...fac] : []), "", "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.", "Dès que le dossier est complet et vérifié, nous vous ouvrons l'accès à la plateforme de l'équipe.", "", "Ce lien est personnel : ne le transmettez pas. Pour toute question, répondez à ce mail.", "", "L'équipe CAPSULE"].join("\n");
+      const text = [`Bonjour ${r.nom},`, "", "Pour finaliser votre intervention auprès de CAPSULE (consultations psychologiques gratuites des étudiant·es de Paris 8), merci de déposer vos pièces administratives sur ce lien personnel :", IV.lienDossier(r.id), "", "Pièces à fournir :", ...liste, ...(fac.length ? ["", "Facultatif :", ...fac] : []), "", "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.", "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. Dès que le dossier est complet et vérifié, nous vous ouvrons l'accès à la plateforme de l'équipe.", "", "Ce lien est personnel : ne le transmettez pas. Pour toute question, répondez à ce mail.", "", "L'équipe CAPSULE"].join("\n");
       try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre dossier administratif, CAPSULE Paris 8", text }, null, { modele: "Dossier intervenant·e", par: user, type: "manuel" }); }
       catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
       r.envoye = new Date().toISOString(); await iv.setJSON("i/" + id, r); return J(await sortie());
@@ -324,6 +341,13 @@ export default async (req) => {
     return J({ error: "Action inconnue." }, 400);
   }
 
+  const monDossier = async (nom) => {
+    try {
+      const a = await ac.get(nom, { type: "json" }), r = a?.intervenant ? await IV.charger(a.intervenant) : null; if (!r) return null;
+      const pieces = await IV.chargerPieces(), pr = IV.progression(r, pieces);
+      return { nom: r.nom, complet: pr.complet, manquantes: pr.manquantes, valide: r.valide?.le || null, tarif: r.tarif ?? null, pieces: IV.vuePieces(r, pieces).map((p) => ({ label: p.label, obl: p.obl, ok: !!p.doc })) };
+    } catch { return null; }
+  };
   if (b.action === "list") {
     const { blobs } = await store.list({ prefix: "d/" });
     let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
@@ -341,7 +365,7 @@ export default async (req) => {
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
     const IVP = admin ? await IV.chargerPieces().catch(() => IV.PIECES_DEFAUT) : null;
-    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };

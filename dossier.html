@@ -81,7 +81,7 @@ textarea:focus{outline:2px solid var(--rasp);outline-offset:1px}
     box.innerHTML = '<h1>Bonjour ' + esc(info.nom) + '</h1>' +
       (info.valide ? '<p class="good">Votre dossier est validé. Votre accès à la plateforme est ouvert : vos identifiants vous ont été transmis par la coordination.</p>' :
        info.complet ? '<p class="good">Merci, toutes les pièces obligatoires sont déposées. La coordination les vérifie puis vous ouvre l’accès à la plateforme.</p>' :
-       '<p>Pour finaliser votre intervention, merci de déposer les pièces ci-dessous. L’accès à la plateforme de l’équipe est ouvert une fois le dossier complet et vérifié.</p>') +
+       '<p>Pour finaliser votre intervention, merci de déposer les pièces ci-dessous. <b>Sans pièces déposées en ligne, aucun paiement ne peut être effectué.</b> L’accès à la plateforme de l’équipe est ouvert une fois le dossier complet et vérifié.</p>') +
       '<div><div class="pg" role="progressbar" aria-valuenow="' + info.ok_n + '" aria-valuemin="0" aria-valuemax="' + info.total + '"><i style="width:' + pct + '%"></i></div><p class="soft" style="margin-top:6px">' + info.ok_n + ' pièce' + (info.ok_n > 1 ? 's' : '') + ' obligatoire' + (info.ok_n > 1 ? 's' : '') + ' sur ' + info.total + '</p></div>' +
       '<ul class="pcs">' + info.pieces.map(function (p) {
         var d = p.doc, id = 'f_' + p.id;

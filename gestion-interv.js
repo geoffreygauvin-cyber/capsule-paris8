@@ -37,6 +37,7 @@
       '.ivf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:auto}.ivf .hint{font-size:12.5px;color:var(--muted,#6B5861);flex:1 1 100%}' +
       '.ivrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,2fr) auto auto;gap:8px;align-items:center;margin-bottom:8px}.ivrow input[type=text]{width:100%}.ivrow label{display:flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}' +
       '@media (max-width:620px){.ivrow{grid-template-columns:1fr 1fr}.ivrow input[type=text]:first-child{grid-column:1/-1}}' +
+      '.ivauto{font-size:13px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.ivauto select{width:auto}' +
       '.ivcode{font:700 20px/1.4 Consolas,Menlo,monospace;background:var(--cream,#FDF5EB);border-radius:12px;padding:10px 14px;margin:6px 0;word-break:break-all}';
     document.head.appendChild(s);
   }
@@ -61,17 +62,20 @@
       '<ul class="ivl">' + lines + '</ul>' +
       (r.tarif != null ? '<small style="color:var(--muted,#6B5861)">Tarif horaire : ' + String(r.tarif).replace('.', ',') + ' €/h (utilisé dans Budget)</small>' : '') +
       (r.note ? '<small style="color:var(--muted,#6B5861)">' + e(r.note) + '</small>' : '') +
+      (!done && r.relance ? '<small style="color:var(--muted,#6B5861)">Relancé·e le ' + e(jour(r.relance.dernier)) + (r.relance.n > 1 ? ' (' + r.relance.n + ' fois)' : '') + '</small>' : '') +
       '<div class="ivf">' +
       (done ? '<button class="btn l s" data-k="rev" data-id="' + e(r.id) + '">Retirer l’accès</button><span class="hint">Identifiant : <b>' + e(r.compte) + '</b> (le code se retrouve dans Comptes › Voir le code).</span>'
         : wait ? '<button class="btn s" data-k="val" data-id="' + e(r.id) + '">Valider et ouvrir l’accès</button>'
           : '<span class="hint">L’accès pourra être ouvert quand il ne manquera plus : ' + e(p.manquantes.join(', ')) + '.</span>') +
+      (!done && !wait && r.email ? '<button class="btn l s" data-k="rel" data-id="' + e(r.id) + '">Relancer</button>' : '') +
       '<button class="btn l s" data-k="mail" data-id="' + e(r.id) + '">Envoyer le lien</button><button class="link" data-k="copy" data-id="' + e(r.id) + '">Copier le lien</button><button class="link" data-k="edit" data-id="' + e(r.id) + '">Modifier</button></div></article>';
   }
 
   function draw() {
     if (!el || !D) return;
     var n = D.items.length, w = attente(), o = D.items.filter(function (r) { return r.compte; }).length, inc = n - w - o;
-    el.innerHTML = '<div class="ivbar"><button class="btn" data-k="new">+ Ajouter une personne</button><button class="btn l" data-k="cfg">Pièces demandées</button></div>' +
+    el.innerHTML = '<div class="ivbar"><button class="btn" data-k="new">+ Ajouter une personne</button><button class="btn l" data-k="cfg">Pièces demandées</button>' + (inc ? '<button class="btn l" data-k="reltous">Relancer les ' + inc + ' dossier' + (inc > 1 ? 's' : '') + ' incomplet' + (inc > 1 ? 's' : '') + '</button>' : '') + '<span class="sp"></span><label class="ivauto"><input type="checkbox" data-k="auto"' + (D.relanceCfg && D.relanceCfg.actif ? ' checked' : '') + '> Relance automatique tous les <select data-k="autoj" aria-label="Fréquence de la relance"><option value="7"' + (D.relanceCfg && D.relanceCfg.jours === 7 ? ' selected' : '') + '>7 jours</option><option value="14"' + (D.relanceCfg && D.relanceCfg.jours === 14 ? ' selected' : '') + '>14 jours</option></select></label></div>' +
+      (D.relanceCfg && D.relanceCfg.actif && inc ? '<p class="sub" style="margin:-6px 0 14px">Un mail part le lundi matin aux personnes dont le dossier est incomplet : « sans pièces en ligne, pas de paiement ».</p>' : '') +
       (n ? '<div class="ivsum"><span><b>' + w + '</b> à valider</span><span><b>' + inc + '</b> dossier' + (inc > 1 ? 's' : '') + ' incomplet' + (inc > 1 ? 's' : '') + '</span><span><b>' + o + '</b> accès ouvert' + (o > 1 ? 's' : '') + '</span></div>' : '') +
       (n ? '<div class="ivg">' + D.items.map(card).join('') + '</div>' :
         '<div class="empty"><b>Aucun·e intervenant·e pour le moment</b>Ajoutez une personne : elle reçoit un lien pour déposer ses pièces, et l’accès à la plateforme ne s’ouvre qu’après votre validation.</div>');
@@ -137,10 +141,12 @@
   }
 
   function clic(ev) {
-    var b = ev.target.closest('[data-k]'); if (!b || b.tagName === 'INPUT') return;
+    var b = ev.target.closest('[data-k]'); if (!b || b.tagName === 'INPUT' || b.tagName === 'SELECT') return;
     var k = b.dataset.k, r = b.dataset.id ? byId(b.dataset.id) : null;
     if (k === 'new') formPersonne(null);
     else if (k === 'cfg') formPieces();
+    else if (k === 'rel' && r) { if (!D.mail) { toast('L’envoi de mail n’est pas configuré.'); return; } if (!confirm('Envoyer à ' + r.email + ' un rappel des pièces manquantes ?')) return; b.disabled = true; api({ action: 'interv_relance', id: r.id }).then(function (d) { if (d.ok) { set(d); toast('Rappel envoyé à ' + r.email + '.'); } else { b.disabled = false; toast(d.error || 'Envoi impossible.'); } }); }
+    else if (k === 'reltous') { if (!D.mail) { toast('L’envoi de mail n’est pas configuré.'); return; } if (!confirm('Envoyer un rappel à toutes les personnes dont le dossier est incomplet (avec une adresse e-mail) ?')) return; b.disabled = true; api({ action: 'interv_relance_tous' }).then(function (d) { if (d.ok) { set(d); toast(plur(d.relances || 0, 'rappel envoyé', 'rappels envoyés') + '.'); } else { b.disabled = false; toast(d.error || 'Erreur'); } }); }
     else if (k === 'edit' && r) formPersonne(r);
     else if (k === 'val' && r) valider(r);
     else if (k === 'rev' && r) { if (confirm('Retirer l’accès de ' + r.nom + ' ? Son compte est désactivé tout de suite ; vous pourrez le rouvrir.')) api({ action: 'interv_revoquer', id: r.id }).then(function (d) { set(d); toast('Accès retiré.'); }); }
@@ -164,7 +170,11 @@
     else if (k === 'pdel' && r) { if (confirm('Retirer cette pièce du dossier de ' + r.nom + ' ?')) api({ action: 'interv_piece_del', id: r.id, piece: b.dataset.p }).then(set); }
   }
   function chg(ev) {
-    var i = ev.target; if (!i.dataset || i.dataset.k !== 'pup' || !i.files[0]) return;
+    var i = ev.target;
+    if (i.dataset && (i.dataset.k === 'auto' || i.dataset.k === 'autoj')) {
+      var a = el.querySelector('[data-k="auto"]'), j = el.querySelector('[data-k="autoj"]');
+      api({ action: 'interv_relance_cfg', actif: a.checked, jours: j.value }).then(function (d) { set(d); if (d && d.ok) toast(a.checked ? 'Relance automatique activée.' : 'Relance automatique désactivée.'); }); return;
+    } if (!i.dataset || i.dataset.k !== 'pup' || !i.files[0]) return;
     var id = i.dataset.id, p = i.dataset.p, f = i.files[0];
     readFile(f, function (data) { api({ action: 'interv_piece_up', id: id, piece: p, nom: f.name, data: data }).then(function (d) { set(d); if (d && d.ok) toast('Pièce ajoutée.'); }); });
   }

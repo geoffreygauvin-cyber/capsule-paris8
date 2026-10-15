@@ -46,3 +46,28 @@ export function vuePieces(rec, pieces) {
   const docs = rec.docs || {};
   return pieces.map((p) => ({ id: p.id, label: p.label, aide: p.aide || "", obl: !!p.obl, doc: docs[p.id] ? { nom: docs[p.id].nom, taille: docs[p.id].taille, le: docs[p.id].le } : null }));
 }
+
+// Relance des dossiers incomplets : mail hebdomadaire (fonction relance-dossiers) ou manuel (bouton « Relancer »).
+// Réglage : store « config », clé « relance » { actif, jours } ; suivi par personne : rec.relance = { dernier, n }.
+export async function cfgRelance() {
+  const v = (await getStore("config").get("relance", { type: "json" })) || {};
+  return { actif: v.actif !== false, jours: [7, 14].includes(Number(v.jours)) ? Number(v.jours) : 7 };
+}
+export function aRelancer(rec, pieces) { return !rec.valide && !!rec.email && !progression(rec, pieces).complet; }
+export function texteRelance(rec, pieces) {
+  const pr = progression(rec, pieces);
+  const text = [`Bonjour ${rec.nom},`, "",
+    `Votre dossier administratif CAPSULE n'est pas encore complet : il manque ${pr.manquantes.length > 1 ? "ces pièces" : "cette pièce"} :`,
+    ...pr.manquantes.map((m) => "- " + m), "",
+    "Merci de les déposer sur votre lien personnel :", lienDossier(rec.id), "",
+    "Sans les pièces déposées en ligne, nous ne pourrons pas procéder au paiement de vos interventions. L'accès à la plateforme de l'équipe s'ouvre aussi une fois le dossier complet et vérifié.", "",
+    "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Si vous avez déjà tout envoyé par un autre canal, répondez simplement à ce mail.", "",
+    "L'équipe CAPSULE"].join("\n");
+  return { subject: "Dossier administratif incomplet : pièces à déposer, CAPSULE Paris 8", text };
+}
+// Envoie la relance et note la date. `envoyer` est la fonction de mail ; lève l'erreur d'envoi.
+export async function relancer(rec, pieces, envoyer, par, type) {
+  await envoyer({ email: rec.email, prenom: rec.nom, id: "" }, texteRelance(rec, pieces), null, { modele: "Relance dossier intervenant·e", par, type });
+  rec.relance = { dernier: new Date().toISOString(), n: (rec.relance?.n || 0) + 1 };
+  await stores().iv.setJSON("i/" + rec.id, rec);
+}
