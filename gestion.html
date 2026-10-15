@@ -387,7 +387,6 @@ aside{overflow:hidden!important}
 
 <div id="app" class="hide">
 <aside><div class="brand"><span data-logo="48" data-mono="#FDF5EB"></span><span class="wm">CAPSULE<small>Espace équipe</small></span></div>
-<button type="button" id="goto" class="gt" aria-label="Aller à une page (Ctrl K)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>Aller à…</span><kbd>Ctrl K</kbd></button>
 <div id="modesw" class="msw hide" role="group" aria-label="Mode d’affichage"><span>Mode</span><button type="button" data-mode="etu" title="Passer en mode étudiant psychologue">Étudiant</button><button type="button" data-mode="sup" title="Passer en mode superviseur·e">Superviseur</button><button type="button" data-mode="admin" title="Passer en mode admin">Admin</button></div>
 <button class="nv on" data-v="1"><svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></svg>Demandes<b id="nbn" class="hide"></b></button>
 <button class="nv" data-v="2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendrier</button>
@@ -969,7 +968,7 @@ function gotoOpen(){
  $('gq').onkeydown=function(e){if(e.key==='ArrowDown'){sel=Math.min(l.length-1,sel+1);l=draw();e.preventDefault()}else if(e.key==='ArrowUp'){sel=Math.max(0,sel-1);l=draw();e.preventDefault()}else if(e.key==='Enter'&&l[sel]){go(all.indexOf(l[sel]));e.preventDefault()}};
  $('gl').onclick=function(e){var b=e.target.closest('button[data-i]');if(b)go(+b.dataset.i)};
  $('gq').focus()}
-$('goto').onclick=gotoOpen;
+if($('goto'))$('goto').onclick=gotoOpen;
 document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();gotoOpen()}});
 /* Regroupements du menu : une entrée de menu ouvre un ensemble de pages reliées par des onglets (les pages elles-mêmes ne changent pas). */
 var HUBS=[{k:'com',lb:'Publications & charte',tabs:[[12,'Publications'],[13,'Charte graphique']]}],curHubs=[];
