@@ -160,7 +160,7 @@ export default async (req) => {
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
-  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
+  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del", "msg_conv", "msg_new", "msg_list", "msg_send", "msg_del"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   // Intervenant·e : tant que son dossier n'est pas validé par l'équipe, seul « Mon dossier » (dépôt des pièces) est accessible.
   let verrou = false;
   if (sup) { const a0 = await ac.get(user, { type: "json" }), r0 = a0?.intervenant ? await IV.charger(a0.intervenant).catch(() => null) : null; verrou = !r0?.valide; }
@@ -855,6 +855,64 @@ export default async (req) => {
       out.equipe = Object.fromEntries(await Promise.all(noms.map(async (n) => [n, { ...(await etat(n)), depuis: NAME.test(n) ? ((await ac.get(n, { type: "json" }))?.creeLe || "") : "" }])));
     }
     return J(out);
+  }
+  // Messagerie interne (équipe) : conversations à deux ou en groupe, entre comptes de la plateforme.
+  // Store « messagerie » : c/<id> conversation {id,type,nom,membres,dernier,maj}, m/<id>/<iso>_<alea> message {de,texte,le}, r/<compte> {<id conversation>: iso de dernière lecture}.
+  if (["msg_conv", "msg_new", "msg_list", "msg_send", "msg_del"].includes(b.action)) {
+    const ms = getStore({ name: "messagerie", consistency: "strong" });
+    const roles = await rolesMap();
+    if (!(user in roles)) return J({ error: "Compte introuvable." }, 403);
+    const lectures = async () => (await ms.get("r/" + user, { type: "json" })) || {};
+    const marquer = async (id, le) => { const r = await lectures(); r[id] = le; await ms.setJSON("r/" + user, r); };
+    const dernierDe = (c) => c.dernier?.le || "";
+    const conv = async (id) => { const c = id && /^[\w.-]{1,80}$/.test(String(id)) ? await ms.get("c/" + id, { type: "json" }) : null; return c && (c.membres || []).includes(user) ? c : null; };
+    if (b.action === "msg_conv") {
+      const { blobs } = await ms.list({ prefix: "c/" }), r = await lectures(), out = [];
+      for (const x of blobs) {
+        const c = await ms.get(x.key, { type: "json" }); if (!c || !(c.membres || []).includes(user)) continue;
+        const vu = r[c.id] || "", nonLus = c.dernier && c.dernier.de !== user && dernierDe(c) > vu ? (await ms.list({ prefix: "m/" + c.id + "/" })).blobs.filter((k) => k.key.slice(("m/" + c.id + "/").length) > vu && true).length : 0;
+        out.push({ ...c, nonLus });
+      }
+      out.sort((a, z) => String(z.maj).localeCompare(String(a.maj)));
+      return J({ ok: true, convs: out, total: out.reduce((n, c) => n + (c.nonLus ? 1 : 0), 0), contacts: Object.keys(roles).filter((n) => n !== user) });
+    }
+    if (b.action === "msg_new") {
+      const ids = [...new Set((Array.isArray(b.membres) ? b.membres : []).map((n) => String(n).toLowerCase()))].filter((n) => n !== user && n in roles).slice(0, 60);
+      if (!ids.length) return J({ error: "Choisissez au moins une personne." }, 400);
+      if (ids.length === 1) {
+        const id = "dm-" + [user, ids[0]].sort().join("__"), ex = await ms.get("c/" + id, { type: "json" });
+        if (ex) return J({ ok: true, conv: ex });
+        const c = { id, type: "dm", nom: "", membres: [user, ids[0]], creePar: user, creeLe: new Date().toISOString(), maj: new Date().toISOString(), dernier: null };
+        await ms.setJSON("c/" + id, c); return J({ ok: true, conv: c });
+      }
+      const nom = clean(b.nom, 60).trim();
+      if (!nom) return J({ error: "Donnez un nom au groupe." }, 400);
+      const id = "g-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), c = { id, type: "groupe", nom, membres: [user, ...ids], creePar: user, creeLe: new Date().toISOString(), maj: new Date().toISOString(), dernier: null };
+      await ms.setJSON("c/" + id, c); return J({ ok: true, conv: c });
+    }
+    const c = await conv(b.id);
+    if (!c) return J({ error: "Conversation introuvable." }, 404);
+    if (b.action === "msg_list") {
+      const { blobs } = await ms.list({ prefix: "m/" + c.id + "/" }), cles = blobs.map((k) => k.key).sort().slice(-150);
+      const msgs = (await Promise.all(cles.map(async (k) => { const v = await ms.get(k, { type: "json" }); return v ? { ...v, k: k.slice(("m/" + c.id + "/").length) } : null; }))).filter(Boolean);
+      const dern = msgs.length ? msgs[msgs.length - 1].k : ""; if (dern) await marquer(c.id, dern);
+      return J({ ok: true, conv: c, msgs: msgs.map((m) => ({ k: m.k, de: m.de, texte: m.texte, le: m.le, sup: !!m.sup })) });
+    }
+    if (b.action === "msg_send") {
+      const texte = clean(b.texte, 2000).trim(); if (!texte) return J({ error: "Message vide." }, 400);
+      const le = new Date().toISOString(), k = le + "_" + Math.random().toString(36).slice(2, 6);
+      await ms.setJSON("m/" + c.id + "/" + k, { de: user, texte, le });
+      c.dernier = { de: user, texte: texte.slice(0, 80), le: k }; c.maj = le; await ms.setJSON("c/" + c.id, c);
+      await marquer(c.id, k);
+      return J({ ok: true });
+    }
+    if (b.action === "msg_del") {
+      const k = String(b.k || ""); if (!/^[\w:.\-]{10,60}$/.test(k)) return J({ error: "Message introuvable." }, 404);
+      const m = await ms.get("m/" + c.id + "/" + k, { type: "json" }); if (!m) return J({ error: "Message introuvable." }, 404);
+      if (m.de !== user && !admin) return J({ error: "Vous ne pouvez supprimer que vos messages." }, 403);
+      await ms.setJSON("m/" + c.id + "/" + k, { ...m, texte: "", sup: true });
+      return J({ ok: true });
+    }
   }
   if (["annonce_list", "annonce_save", "annonce_del", "annonce_lu", "annonce_arch"].includes(b.action)) {
     const as = getStore("annonces"), cle = "liste";
