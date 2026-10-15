@@ -599,7 +599,7 @@ export default async (req) => {
       }
       return x;
     };
-    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); return J({ ok: true, items: l.map(masque) }); }
+    if (b.action === "sup_list") { let l = await toutes(); if (role === "etudiant") l = l.filter((x) => (x.participants || []).includes(user) || x.creePar === user); else if (!admin) l = l.filter((x) => x.type !== "entretien" || (x.participants || []).includes(user) || x.creePar === user); /* entretiens privés : jamais envoyés à un·e superviseur·e qui n'en fait pas partie */ return J({ ok: true, items: l.map(masque) }); }
     const own = (x) => admin || x.creePar === user;
     if (b.action === "sup_delete") {
       const l = await toutes(), x = l.find((y) => y.id === String(b.id)); if (!x) return J({ error: "Séance introuvable." }, 404);
