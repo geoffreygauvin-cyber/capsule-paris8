@@ -310,6 +310,23 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 .ph0{margin-bottom:30px}.stats{gap:16px!important;margin-bottom:30px}.stat{padding:20px 22px}
 section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
 .sc{gap:8px}
+/* Style simplifié : compteurs blancs à coin de points, réunions en lignes, actions secondaires en gris */
+.kpi.pastel,.stat,.stat.pastel{background:#fff!important;border:1px solid var(--line)!important;box-shadow:none}
+.kpi.pastel::before,.stat.pastel::before{display:block;-webkit-mask-image:radial-gradient(circle at 100% 0,#000,transparent 52%)!important;mask-image:radial-gradient(circle at 100% 0,#000,transparent 52%)!important}
+.kpi b,.stat b{color:var(--rasp)}.kpi:nth-child(2) b{color:var(--purple)}.kpi:nth-child(3) b{color:var(--poppy)}
+.btn.l,.btn.l.s{background:none!important;border:0!important;color:#7a6670!important;box-shadow:none;font-weight:500;padding-left:6px;padding-right:6px}
+.btn.l:hover{color:var(--ink)!important;text-decoration:underline}.link{color:#9a8a92!important}
+.sgrid{display:flex!important;flex-direction:column;gap:0!important;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.sc2.pastel{background:none!important;border-radius:0;border-top:1px solid var(--line)!important;border-width:1px 0 0!important;display:grid;grid-template-columns:150px minmax(0,1fr) auto;column-gap:24px;row-gap:4px;align-items:center;padding:16px 22px;margin:0}
+.sc2.pastel:first-child{border-top:0!important}
+.sc2.pastel::before{-webkit-mask-image:linear-gradient(270deg,#000 0%,transparent 28%)!important;mask-image:linear-gradient(270deg,#000 0%,transparent 28%)!important;opacity:.7}
+.sc2 .sh{grid-column:1;grid-row:1/4;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:16px;background:var(--rose);align-self:stretch;justify-content:center;position:relative;overflow:hidden}
+.sc2.t2 .sh{background:var(--lilac)}.sc2.t3 .sh{background:var(--blush)}
+.sc2 .sh::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(174,22,78,.35) 1.4px,transparent 1.8px);background-size:9px 9px;-webkit-mask-image:linear-gradient(225deg,#000,transparent 70%);mask-image:linear-gradient(225deg,#000,transparent 70%)}
+.sc2 .sh>*{position:relative}.sc2 .sh b{color:var(--rasp)}.sc2 .sh span{color:#5E4B55}
+.sc2 h3{grid-column:2;grid-row:1;margin:0;font-size:16px}.sc2 p{grid-column:2;grid-row:2;margin:0}.sc2 .pp{grid-column:2;grid-row:3;margin:4px 0 0}
+.sc2 .row{grid-column:3;grid-row:1/4;margin:0!important}
+@media (max-width:700px){.sc2.pastel{grid-template-columns:1fr;padding:14px 16px}.sc2 .sh{grid-column:1;grid-row:auto;flex-direction:row;gap:10px;align-items:baseline;justify-self:start;padding:8px 14px}.sc2 h3,.sc2 p,.sc2 .pp,.sc2 .row{grid-column:1;grid-row:auto}.sc2 .row{margin-top:8px!important}}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
