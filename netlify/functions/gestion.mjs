@@ -133,9 +133,9 @@ export default async (req) => {
 
   // Profils (photo, titre, présentation, contact) : lecture « forte » pour qu'un enregistrement soit relu tel quel juste après.
   const profils = () => getStore({ name: "profils", consistency: "strong" });
-  const rls = getStore("roles"), SEED = { violette: "etudiant" };
+  const rls = getStore("roles"), SEED = { violette: "etudiant", alfred: "etudiant" };
   // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
-  const TECH = ["violette"];
+  const TECH = ["alfred", "violette"]; // « violette » = ancien identifiant du service technique, conservé le temps de la bascule vers « alfred »
   const prinRole = async (n) => { if (TECH.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
@@ -349,6 +349,9 @@ export default async (req) => {
     } catch { return null; }
   };
   if (b.action === "list") {
+    if (user === "alfred") { // reprise du profil (photo, titre, présentation) de l'ancien identifiant « violette »
+      try { const pr = profils(); if (!(await pr.get("alfred", { type: "json" }))) { const old = await pr.get("violette", { type: "json" }); if (old) await pr.setJSON("alfred", old); } } catch (e) { console.error(e); }
+    }
     const { blobs } = await store.list({ prefix: "d/" });
     let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
     const capacite = sup ? null : CP.calcul(items, await CP.etudiants(), await CP.chargerCfg());
