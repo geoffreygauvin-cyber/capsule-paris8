@@ -971,7 +971,7 @@ function gotoOpen(){
 $('goto').onclick=gotoOpen;
 document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();gotoOpen()}});
 /* Regroupements du menu : une entrée de menu ouvre un ensemble de pages reliées par des onglets (les pages elles-mêmes ne changent pas). */
-var HUBS=[{k:'pat',lb:'Patient·es',tabs:[[1,'Demandes'],[4,'Patients'],[7,'Mails patient·es']]},{k:'res',lb:'Ressources',tabs:[[6,'Documents'],[12,'Publications'],[13,'Charte graphique']]},{k:'eq',lb:'Équipe',tabs:[[14,'Équipe'],[19,'Discussions'],[3,'Comptes']]},{k:'rh',lb:'Gestion RH',tabs:[[15,'Ressources humaines'],[16,'Budget']]}],curHubs=[];
+var HUBS=[{k:'com',lb:'Publications & charte',tabs:[[12,'Publications'],[13,'Charte graphique']]}],curHubs=[];
 function hubsFor(av){return HUBS.map(function(h){return {k:h.k,lb:h.lb,tabs:h.tabs.filter(function(t){return av[t[0]]})}}).filter(function(h){return h.tabs.length>1})}
 function hubBar(n){var o=$('hubt');if(o)o.remove();var h=curHubs.filter(function(x){return x.tabs.some(function(t){return t[0]===n})})[0];if(!h||$('v'+n).classList.contains('hide'))return;
  $('v'+n).insertAdjacentHTML('afterbegin','<div class="hubt" id="hubt" role="tablist" aria-label="'+esc(h.lb)+'">'+h.tabs.map(function(t){return '<button type="button" class="chip'+(t[0]===n?' on':'')+'" data-hv="'+t[0]+'">'+esc(t[1])+(t[0]===19?'<i id="hubmsg" class="hide"></i>':'')+'</button>'}).join('')+'</div>')}

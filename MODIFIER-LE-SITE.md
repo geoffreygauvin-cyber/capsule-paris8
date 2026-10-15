@@ -237,5 +237,6 @@ Rubrique **Discussions** du menu (juste sous Accueil, pour les étudiant·es, su
 
 **Ressources déposées par les superviseur·es** : un·e superviseur·e validé·e voit le bouton « + Ajouter une ressource » (fichier de 4 Mo maximum ou lien) ; il ou elle ne peut modifier ou supprimer que les documents qu'il ou elle a ajoutés (contrôle fait côté serveur, actions `res_*`). Les étudiant·es ne peuvent que consulter ; les admins gèrent tout.
 
-## Menu regroupé par onglets
-Le menu de gauche regroupe des pages reliées : **Équipe** (Équipe, Discussions, Comptes), **Patient·es** (Demandes, Patients, Mails patient·es), **Ressources** (Documents, Publications, Charte graphique), **Gestion RH** (Ressources humaines, Budget). Une barre d'onglets en haut de la page permet de passer de l'une à l'autre ; les pages elles-mêmes n'ont pas changé. Un regroupement n'apparaît que si la personne a accès à au moins deux de ses pages (un·e superviseur·e voit donc « Discussions » et « Ressources » seuls). Pour modifier un regroupement : tableau `HUBS` dans `gestion.html` (numéro de page, libellé de l'onglet). La recherche « Aller à… » liste aussi chaque onglet.
+## Menu : Publications & charte
+« Publications » et « Charte graphique » forment une seule entrée du menu (« Publications & charte »), avec deux onglets en haut de page. Les regroupements sont décrits dans le tableau `HUBS` de `gestion.html` (numéro de page, libellé de l'onglet) : on peut en ajouter d'autres en suivant le même modèle. La recherche « Aller à… » liste aussi chaque onglet.
+
