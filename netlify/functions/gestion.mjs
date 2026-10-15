@@ -137,9 +137,9 @@ export default async (req) => {
   const profils = () => getStore({ name: "profils", consistency: "strong" });
   const rls = getStore("roles"), SEED = { violette: "etudiant", alfred: "etudiant" };
   // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
-  const TECH = ["alfred"]; // compte partagé « SERVICES TECHNIQUES » : admin + interrupteur de mode pour voir les autres versions de la plateforme
+  const TECH = ["violette", "alfred"]; // compte partagé « SERVICES TECHNIQUES » (identifiant historique « violette », affiché « Alfred » via le nom affiché ; « alfred » reconnu aussi s'il est créé) : admin + interrupteur de mode
   const TECH_LB = "SERVICES TECHNIQUES · à utiliser pour voir les autres versions de la CAPSULE";
-  const ADMIN_FIXE = [...TECH, "violette"]; // « violette » (ancien compte technique) reste admin de façon permanente, sans le statut technique
+  const ADMIN_FIXE = TECH;
   const prinRole = async (n) => { if (ADMIN_FIXE.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
