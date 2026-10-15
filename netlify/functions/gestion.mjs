@@ -160,7 +160,7 @@ export default async (req) => {
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
-  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del", "msg_conv", "msg_new", "msg_list", "msg_send", "msg_del"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
+  if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del", "res_add", "res_upd", "res_del", "msg_conv", "msg_new", "msg_list", "msg_send", "msg_del"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   // Intervenant·e : tant que son dossier n'est pas validé par l'équipe, seul « Mon dossier » (dépôt des pièces) est accessible.
   let verrou = false;
   if (sup) { const a0 = await ac.get(user, { type: "json" }), r0 = a0?.intervenant ? await IV.charger(a0.intervenant).catch(() => null) : null; verrou = !r0?.valide; }
@@ -957,8 +957,10 @@ export default async (req) => {
     return J({ ok: true, nom: m.nom, mime: m.mime, data: Buffer.from(buf).toString("base64") });
   }
   if (["res_add", "res_upd", "res_del"].includes(b.action)) {
-    if (!admin) return J({ error: "Réservé aux comptes principaux." }, 403);
+    if (!admin && !sup) return J({ error: "Réservé aux comptes principaux et aux superviseur·es." }, 403);
     const rs = getStore("ressources");
+    // Un·e superviseur·e peut déposer des documents et ne modifie ou supprime que les siens.
+    if (sup && b.action !== "res_add") { const m0 = await rs.get("m/" + String(b.id), { type: "json" }); if (!m0 || m0.par !== user) return J({ error: "Vous ne pouvez modifier que les documents que vous avez ajoutés." }, 403); }
     if (b.action === "res_del") { const id = String(b.id); await rs.delete("m/" + id); await rs.delete("f/" + id); return J({ ok: true }); }
     const titre = clean(b.titre, 120).trim(), description = clean(b.description, 500).trim(), categorie = CATS.includes(b.categorie) ? b.categorie : CATS[0];
     if (!titre) return J({ error: "Donnez un titre." }, 400);
