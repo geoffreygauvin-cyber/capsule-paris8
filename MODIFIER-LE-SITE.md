@@ -227,3 +227,5 @@ Le nom affiché est un **alias** : il remplace l'identifiant partout dans la pla
 
 **Programmation des supervisions** : les admins ne programment plus que des **réunions** (bouton « + Programmer une réunion », onglet « Réunions » de Réunions & annonces) ; ils voient toujours toutes les séances et notent les présences, et peuvent modifier une supervision existante. Les superviseur·es programment leurs supervisions depuis leur propre espace (« Supervisions & réunions »). Le serveur (`sup_save`) n'est pas bloqué pour les admins : seul le formulaire est restreint.
 
+
+**Réunions : qui est invité·e ?** Dans « Programmer une réunion », des boutons de groupe (tous les étudiant·es, toute l'équipe admin, tous les superviseur·es, tout le monde) cochent d'un clic, puis on ajuste personne par personne. Les admins et superviseur·es n'apparaissent que pour une réunion (une supervision ne concerne que des étudiant·es). Formulaire `supForm` de `gestion.html`.

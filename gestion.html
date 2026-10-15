@@ -305,6 +305,11 @@ label.f>#ssl{display:block;margin-top:0;font-size:12px;font-weight:600;text-tran
 @media (min-width:861px) and (max-height:780px){.nv{padding:6px 12px;font-size:14px}.nv svg{width:18px;height:18px}.grp{padding:8px 12px 2px;font-size:10.5px}.brand{margin-bottom:8px}.brand [data-logo]{transform:scale(.85);transform-origin:left center}.me{padding:8px 10px}.me .av{width:32px;height:32px}}
 @media (min-width:861px) and (max-height:680px){.nv{padding:4px 10px;font-size:13.5px}.nv svg{width:17px;height:17px}.grp{padding:5px 12px 1px}.brand{margin-bottom:6px}.brand .wm small{display:none}.brand svg{height:36px!important}aside{padding:12px 12px 10px}.msw button{padding:4px}.me{padding:6px 10px}.me .av{width:30px;height:30px}}
 @media (min-width:861px) and (max-height:620px){.grp{font-size:0;padding:0;height:1px;margin:5px 12px;background:rgba(253,245,235,.16)}}
+/* Aération : points décoratifs plus discrets, plus d'espace entre les blocs */
+.pastel::before{opacity:.45}
+.ph0{margin-bottom:30px}.stats{gap:16px!important;margin-bottom:30px}.stat{padding:20px 22px}
+section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
+.sc{gap:8px}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
@@ -1076,11 +1081,15 @@ function supForm(id,pre0){
  '<label class="f">Durée<select id="sdu">'+du.map(function(m){return '<option value="'+m+'"'+((x?x.duree:60)===m?' selected':'')+'>'+(m%60?Math.floor(m/60)+' h 30':(m/60)+' h')+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Lieu<input id="sli" maxlength="80" list="sli-l" value="'+esc(x?x.lieu:'')+'" placeholder="ex. Salle 1"><datalist id="sli-l">'+(cfg.salles||[]).map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></label>'+
  (x?'':'<label class="f">Répéter<select id="sre"><option value="1">Une seule fois</option>'+[2,3,4,6,8,10,12].map(function(n){return '<option value="'+n+'">Chaque semaine, '+n+' fois</option>'}).join('')+'</select></label>')+'</div>'+visioField('svi',x?x.lien:'')+
- '<div class="mq" style="margin-top:10px"><b>Personnes concernées</b></div><div class="sc" id="spp" style="margin-bottom:6px">'+etuL().concat(Object.keys(roles).filter(function(n){return roles[n]==='superviseur'})).map(function(n){var sv2=roles[n]==='superviseur';return '<button type="button" data-p="'+esc(n)+'"'+(sv2?' data-sv="1"'+((x?x.type==='reunion':pre0==='reunion')?'':' style="display:none"'):'')+' class="'+(pr.indexOf(n)>-1?'on':'')+'" style="flex:0 0 auto;padding:0 14px">'+esc(cap(n))+'</button>'}).join('')+'</div><button type="button" class="link" id="sall" style="margin:0 0 10px">Tout le monde</button>'+
+ '<div class="mq" style="margin-top:10px"><b>Qui est invité·e ?</b></div><div class="sc" id="sgr" style="margin-bottom:8px"></div><div class="sc" id="spp" style="margin-bottom:10px">'+etuL().concat(Object.keys(roles).filter(function(n){return roles[n]==='superviseur'||(roles[n]==='admin'&&n!==moi)})).map(function(n){var rl=roles[n],hid=rl!=='etudiant'&&!(x?x.type==='reunion':pre0==='reunion');return '<button type="button" data-p="'+esc(n)+'" data-r="'+rl+'"'+(rl!=='etudiant'?' data-sv="1"':'')+(hid?' style="display:none;flex:0 0 auto;padding:0 14px"':' style="flex:0 0 auto;padding:0 14px"')+' class="'+(pr.indexOf(n)>-1?'on':'')+'">'+esc(cap(n))+'</button>'}).join('')+'</div>'+
  '<div id="serr" style="margin:8px 0"></div><div class="row"><button class="btn" id="sgo">'+(x?'Enregistrer':'Programmer')+'</button><button class="btn l" data-m="x">Annuler</button></div>');
+ var GR=[['etudiant','Tous les étudiant·es'],['admin','Toute l’équipe admin'],['superviseur','Tous les superviseur·es'],['*','Tout le monde']];
+ var chips=function(){return Array.prototype.filter.call($('spp').children,function(b){return b.style.display!=='none'})};
+ var drawGr=function(){var reu=$('sty').value==='reunion';$('sgr').innerHTML=GR.filter(function(g){return reu||g[0]==='etudiant'||g[0]==='*'}).map(function(g){var c=chips().filter(function(b){return g[0]==='*'||b.dataset.r===g[0]});return c.length?'<button type="button" class="chip" data-g="'+g[0]+'" style="flex:0 0 auto;padding:0 14px">'+g[1]+'</button>':''}).join('')};
  $('spp').onclick=function(e){var b=e.target.closest('button[data-p]');if(b)b.classList.toggle('on')};
- $('sall').onclick=function(){Array.prototype.forEach.call($('spp').children,function(b){if(b.style.display!=='none')b.classList.add('on')})};
- $('sty').onchange=function(){var r=this.value==='reunion';$('ssl').textContent=r?'Organisé par':'Superviseur·e';if(r&&!isAdmin){$('ssv').value=cap(moi);$('ssv').readOnly=true}else{$('ssv').readOnly=false;if(!r&&!isAdmin&&$('ssv').value===cap(moi))$('ssv').value=''}Array.prototype.forEach.call($('spp').querySelectorAll('[data-sv]'),function(b){b.style.display=r?'':'none';if(!r)b.classList.remove('on')})};
+ $('sgr').onclick=function(e){var g=e.target.closest('button[data-g]');if(!g)return;var c=chips().filter(function(b){return g.dataset.g==='*'||b.dataset.r===g.dataset.g}),all=c.every(function(b){return b.classList.contains('on')});c.forEach(function(b){b.classList.toggle('on',!all)})};
+ $('sty').onchange=function(){var r=this.value==='reunion';$('ssl').textContent=r?'Organisé par':'Superviseur·e';if(r&&!isAdmin){$('ssv').value=cap(moi);$('ssv').readOnly=true}else{$('ssv').readOnly=false;if(!r&&!isAdmin&&$('ssv').value===cap(moi))$('ssv').value=''}Array.prototype.forEach.call($('spp').querySelectorAll('[data-sv]'),function(b){b.style.display=r?'':'none';if(!r)b.classList.remove('on')});drawGr()};
+ drawGr();
  var go=function(force){
   var ps=Array.prototype.map.call($('spp').querySelectorAll('button.on'),function(b){return b.dataset.p});$('sgo').disabled=true;
   api({action:'sup_save',id:x?x.id:null,titre:$('sti').value,type:$('sty').value,superviseur:$('ssv').value,date:$('sda').value,heure:$('sho').value,duree:+$('sdu').value,lieu:$('sli').value,lien:$('svi').value.trim(),participants:ps,repeter:x?1:+($('sre')?$('sre').value:1),forcer:!!force}).then(function(r){
