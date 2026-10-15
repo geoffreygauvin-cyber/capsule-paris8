@@ -141,7 +141,7 @@ Deux modèles dans `charte/` : `CAPSULE-modele-etudiants.pptx` (10 diapositives)
 Section « Logo animé » : aperçu en boucle (muet) et téléchargement de `capsule-logo-anime-16x9.mp4` (1920 × 1080), `…-carre.mp4` (1080 × 1080), `…-story.mp4` (1080 × 1920) et `capsule-logo-anime.gif` (960 × 540), durée ≈ 6 s. Les images fixes affichées avant lecture sont dans `charte/apercus/`. Pour remplacer une vidéo, déposer un fichier du même nom (H.264, yuv420p, `-movflags +faststart` pour que l'aperçu démarre vite).
 
 ## Statut « Service technique » et interrupteur de mode
-Compte avec le statut spécial **Service technique** (aujourd'hui : `alfred`, ancien identifiant `violette` conservé dans la liste le temps de la bascule, liste `TECH` dans `netlify/functions/gestion.mjs`) :
+Compte avec le statut spécial **Service technique** (aujourd'hui : `alfred`, compte partagé « SERVICES TECHNIQUES · à utiliser pour voir les autres versions de la CAPSULE » ; `violette`, ancien compte technique, reste admin permanent via `ADMIN_FIXE` mais n'a plus le statut technique, liste `TECH` dans `netlify/functions/gestion.mjs`) :
 - droits admin permanents, quel que soit le type de compte (compte principal ou compte créé dans l'onglet Comptes : le serveur force le rôle admin et l'annuaire des rôles) . Le statut ne se change pas dans l'onglet Comptes : l'action `compte_role` est refusée, la ligne affiche « Service technique » ;
 - titre fixe « Service technique » (renvoyé dans `titres` par `list` ; `profil_titre` est refusé pour ce compte, le champ est grisé dans le profil) ;
 - dans l'organigramme, bloc « Service technique · transversal » sous les étudiant·es ;

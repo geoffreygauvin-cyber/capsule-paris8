@@ -137,8 +137,10 @@ export default async (req) => {
   const profils = () => getStore({ name: "profils", consistency: "strong" });
   const rls = getStore("roles"), SEED = { violette: "etudiant", alfred: "etudiant" };
   // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
-  const TECH = ["alfred", "violette"]; // « violette » = ancien identifiant du service technique, conservé le temps de la bascule vers « alfred »
-  const prinRole = async (n) => { if (TECH.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
+  const TECH = ["alfred"]; // compte partagé « SERVICES TECHNIQUES » : admin + interrupteur de mode pour voir les autres versions de la plateforme
+  const TECH_LB = "SERVICES TECHNIQUES · à utiliser pour voir les autres versions de la CAPSULE";
+  const ADMIN_FIXE = [...TECH, "violette"]; // « violette » (ancien compte technique) reste admin de façon permanente, sans le statut technique
+  const prinRole = async (n) => { if (ADMIN_FIXE.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
   if (!tk) return J({ error: "Session expirée, reconnectez-vous." }, 401);
   const user = tk.u; let role = "admin";
@@ -154,12 +156,12 @@ export default async (req) => {
     if (acc.role === "superviseur" && !acc.actif) return J({ error: "Ce compte a été désactivé." }, 401);
     role = acc.role === "superviseur" ? "superviseur" : ROLES.includes(acc.role) ? acc.role : "etudiant";
   }
-  if (TECH.includes(user)) role = "admin"; // Service technique : admin quel que soit le type de compte (principal ou créé dans l'onglet Comptes)
+  if (ADMIN_FIXE.includes(user)) role = "admin"; // Service technique : admin quel que soit le type de compte (principal ou créé dans l'onglet Comptes)
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of TECH) if (t in m) m[t] = "admin"; return m; };
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of ADMIN_FIXE) if (t in m) m[t] = "admin"; return m; };
 
   if (b.action === "compte_alias") {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
@@ -211,15 +213,15 @@ export default async (req) => {
       if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
       await getStore("codes").setJSON(n, { salt, hash: hashCode(code, salt), enc: encCode(code), le: new Date().toISOString(), par: user });
       const { blobs } = await ac.list();
-      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
+      return J({ ok: true, code, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action === "compte_role" && n in c) {
-      if (TECH.includes(n)) return J({ error: cap(n) + " a le statut Service technique : il ne se change pas ici." }, 400);
+      if (ADMIN_FIXE.includes(n)) return J({ error: cap(n) + " est administrateur·rice de façon permanente : son statut ne se change pas ici." }, 400);
       if (!["admin", "etudiant"].includes(b.role)) return J({ error: "Statut inconnu." }, 400);
       if (b.role !== "admin" && !(await Promise.all(Object.keys(c).filter((k) => k !== n).map(prinRole))).includes("admin")) return J({ error: "Il doit rester au moins un compte admin." }, 400);
       await rls.setJSON(n, { role: b.role });
       const { blobs } = await ac.list();
-      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
+      return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
     }
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
@@ -238,11 +240,11 @@ export default async (req) => {
         const old = await ac.get(n, { type: "json" });
         await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant"), ...(old?.actif ? { actif: true, intervenant: old.intervenant } : {}) });
         const { blobs } = await ac.list();
-        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }; })), principaux: Object.keys(c) });
+        return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) }; })), principaux: Object.keys(c) });
       }
     }
     const { blobs } = await ac.list();
-    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }));
+    const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) }));
     return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
   }
 
@@ -367,9 +369,6 @@ export default async (req) => {
     } catch { return null; }
   };
   if (b.action === "list") {
-    if (user === "alfred") { // reprise du profil (photo, titre, présentation) de l'ancien identifiant « violette »
-      try { const pr = profils(); if (!(await pr.get("alfred", { type: "json" }))) { const old = await pr.get("violette", { type: "json" }); if (old) await pr.setJSON("alfred", old); } } catch (e) { console.error(e); }
-    }
     const { blobs } = await store.list({ prefix: "d/" });
     let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
     const capacite = sup ? null : CP.calcul(items, await CP.etudiants(), await CP.chargerCfg());
@@ -381,7 +380,7 @@ export default async (req) => {
     const ps = profils(); const { blobs: pb } = await ps.list();
     const profs = await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" })) || {}]));
     const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
-    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre])); for (const n of TECH) titres[n] = "Service technique";
+    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre])); for (const n of TECH) titres[n] = TECH_LB;
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();

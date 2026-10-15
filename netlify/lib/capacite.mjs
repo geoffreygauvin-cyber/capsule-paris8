@@ -4,7 +4,7 @@
 import { getStore } from "@netlify/blobs";
 
 export const DEFAUT_MAX = 4;
-const TECH = ["alfred", "violette"]; // même liste que gestion.mjs : le service technique ne suit pas de patient·es
+const TECH = ["alfred"]; // même liste que gestion.mjs : le service technique ne suit pas de patient·es
 const cfgStore = () => getStore({ name: "config", consistency: "strong" });
 
 // Occupe une place : rendez-vous fixé, suivi en cours, ou séance à replanifier après au moins une séance réalisée.
