@@ -9,11 +9,14 @@ import * as REG from "../lib/reglement.mjs";
 import * as FI from "../lib/fiches.mjs";
 import * as CP from "../lib/capacite.mjs";
 import * as CO from "../lib/compteur.mjs";
+import * as IV from "../lib/interv.mjs";
+import * as BU from "../lib/budget.mjs";
 
 export const config = { path: "/api/gestion" };
 
 const MAIL_ET = [["Accueil : ton profil", "Les annonces de l’équipe s’affichent tout en haut (pense à cliquer sur « C’est lu »), puis ton emploi du temps de la semaine (rendez-vous patients, supervisions, réunions), tes heures de consultation, le nombre de patients suivis et ta prochaine supervision."], ["Demandes : prendre en charge", "Les demandes du site arrivent ici, classées par onglet. Ouvre une fiche, passe-la en « contactée », puis fixe le rendez-vous (jour, heure, salle). Une alerte te prévient d’un conflit, ou si la personne a déjà un rendez-vous la même semaine. Tu peux aussi déplacer une personne d’un onglet à l’autre à la main. Chaque mail de rendez-vous contient un lien : si la personne annule ou demande un autre créneau, le créneau est libéré et un bandeau apparaît sur sa fiche et sur ton Accueil (clique sur « C’est noté » une fois pris en compte). Quand toutes les places sont prises, les nouvelles demandes du site arrivent dans l’onglet « Liste d’attente », dans l’ordre d’arrivée : planifie la première dès qu’une place se libère (les admins règlent le nombre de places par étudiant·e avec « Régler »)."], ["Après chaque séance", "Dans « À confirmer » (Accueil) ou sur la fiche, indique si la séance a eu lieu ou si la personne est absente. Si elle a eu lieu, note le bien-être de la semaine et l’utilité de la séance (0 à 10). Chaque personne peut avoir plusieurs rendez-vous, numérotés 1, 2, 3…"], ["Calendrier, Patients, Messages, Ressources", "Calendrier : tous les rendez-vous, par thérapeute. Patients : la base avec le décompte des séances (sur 8) et les indicateurs généraux. Messages : mails types et historique. Ressources : documents utiles de l’équipe."], ["Supervisions et réunions : tu les programmes toi-même", "« + Programmer une séance ou une réunion » : choisis le type (supervision de groupe, individuelle ou réunion d’équipe), la date, l’heure, le lieu, un lien de visio si besoin et les personnes invitées. La séance s’ajoute à ton agenda et à celui des invités. Tu ne modifies ou ne supprimes que celles que tu as créées ; après la séance, note les présences."], ["Publications : réseaux sociaux", "Crée un visuel à partir d’un modèle (PNG, PDF ou PowerPoint), enregistre-le dans le planning avec sa date, et retrouve dans l’onglet Planning ce qui est prêt à publier, par réseau. Une publication passe en rouge la veille de sa date, pour ne pas l’oublier."]];
-const MAIL_AD = [["Comptes : créer et gérer les comptes", "« Ajouter un compte » : prénom (accents acceptés), statut Admin ou Étudiant·e psy, code libre (8 caractères minimum) ou généré. Sur chaque ligne : « Envoyer l’accès » (mail avec identifiant, code et mode d’emploi) et le menu Actions : Voir le code, Changer le code (l’ancien cesse de marcher) et Supprimer. Le statut se change avec le menu déroulant, après confirmation."], ["Accès : à envoyer à chaque personne", "« Envoyer l’accès » envoie par mail l’identifiant, le code et le mode d’emploi complet correspondant à son statut, avec un rappel : ce tutoriel reste disponible dans Ressources. « Envoyer les accès par mail » (bloc d’export de Suivi d’activité) l’envoie à toute l’équipe d’un coup. Si le code est « non récupérable » (compte ancien), fais d’abord « Changer le code »."], ["Réunions & annonces", "Deux onglets. Réunions & supervisions : programme-les (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences, avec retards et absences. Annonces : écris un message pour les étudiant·es, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil."], ["Gestion RH", "Suivi de l’équipe (présences, retards, absences, personnes à voir), entretiens privés (feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu) et règlement intérieur, avec ses signatures."], ["Suivi d’activité : les indicateurs", "Chiffres généraux (demandes, personnes suivies, séances réalisées, présence, satisfaction), parcours des personnes (attente avant la première séance, séances par personne, durée du suivi, écart entre deux séances), graphiques par mois et par statut, bien-être, satisfaction et changement perçu, puis le détail par étudiant·e. Données descriptives : une tendance, pas une preuve d’efficacité."], ["Exports et sauvegarde", "Dans Suivi d’activité, « Exporter les données » : patients, demandes, séances, heures par étudiant·e et journal des messages en CSV (Excel), ou sauvegarde complète en JSON. Ce sont des données personnelles : à conserver et à partager avec précaution."]];
+const MAIL_AD = [["Comptes : créer et gérer les comptes", "« Ajouter un compte » : prénom (accents acceptés), statut Admin ou Étudiant·e psy, code libre (8 caractères minimum) ou généré. Sur chaque ligne : « Envoyer l’accès » (mail avec identifiant, code et mode d’emploi) et le menu Actions : Voir le code, Changer le code (l’ancien cesse de marcher) et Supprimer. Le statut se change avec le menu déroulant, après confirmation."], ["Accès : à envoyer à chaque personne", "« Envoyer l’accès » envoie par mail l’identifiant, le code et le mode d’emploi complet correspondant à son statut, avec un rappel : ce tutoriel reste disponible dans Ressources. « Envoyer les accès par mail » (bloc d’export de Suivi d’activité) l’envoie à toute l’équipe d’un coup. Si le code est « non récupérable » (compte ancien), fais d’abord « Changer le code »."], ["Réunions & annonces", "Deux onglets. Réunions & supervisions : programme-les (ponctuelles ou chaque semaine, avec un lien de visio si besoin) et note les présences, avec retards et absences. Annonces : écris un message pour les étudiant·es, programmable et avec une durée d’affichage ; il s’affiche en haut de leur Accueil."], ["Gestion RH", "Suivi de l’équipe (présences, retards, absences, personnes à voir), entretiens privés (feedback, recadrage, point d’étape ; l’étudiant·e ne voit ni le motif ni les notes, seulement la date et le lieu) et règlement intérieur, avec ses signatures. Intervenant·es : pour chaque superviseur·e, « Envoyer le lien » lui permet de déposer ses pièces (devis, RIB, Kbis, pièce d’identité…, liste modifiable avec « Pièces demandées ») ; quand le dossier est complet, vous le vérifiez puis cliquez sur « Valider et ouvrir l’accès » : son compte n’existe qu’à ce moment-là."],
+  ["Budget", "Budget : « Réglages » (période, financements, budget prévu par poste), puis « Dépenses » pour chaque facture ou règlement (justificatif facultatif). Les honoraires de supervision se calculent seuls d’après le planning (heures × tarif horaire) et les gratifications des stagiaires d’après leurs dates de stage. La vue d’ensemble donne le reste disponible et alerte en cas de dépassement ; export Excel."], ["Suivi d’activité : les indicateurs", "Chiffres généraux (demandes, personnes suivies, séances réalisées, présence, satisfaction), parcours des personnes (attente avant la première séance, séances par personne, durée du suivi, écart entre deux séances), graphiques par mois et par statut, bien-être, satisfaction et changement perçu, puis le détail par étudiant·e. Données descriptives : une tendance, pas une preuve d’efficacité."], ["Exports et sauvegarde", "Dans Suivi d’activité, « Exporter les données » : patients, demandes, séances, heures par étudiant·e et journal des messages en CSV (Excel), ou sauvegarde complète en JSON. Ce sont des données personnelles : à conserver et à partager avec précaution."]];
 
 const hx = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const ETIQ = "font-size:11px;font-weight:600;letter-spacing:.12em;color:#7B206B;padding:18px 0 6px";
@@ -64,7 +67,7 @@ const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-of
 const MAX_FICHIER = 4 * 1024 * 1024;
 const ROLES = ["etudiant", "admin"];
 const nrm = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, "-");
-const rlv = (v) => (v?.role === "superviseur" ? "desactive" : ROLES.includes(v?.role) ? v.role : "etudiant");
+const rlv = (v) => (v?.role === "superviseur" ? (v.actif ? "superviseur" : "desactive") : ROLES.includes(v?.role) ? v.role : "etudiant");
 const HEURES_SUP = Array.from({ length: 23 }, (_, k) => { const m = 8 * 60 + k * 30; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + (m % 60 ? "30" : "00"); });
 const DUREES = [60, 90, 120, 180];
 const fin = (h, d) => { const m = mn(h) + d; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
@@ -124,7 +127,7 @@ export default async (req) => {
     }
     const a = NAME.test(u) ? await ac.get(u, { type: "json" }) : null;
     if (!a || !timingSafeEqual(Buffer.from(hashCode(String(b.code ?? "").trim(), a.salt)), Buffer.from(a.hash))) return J({ error: "Compte ou code incorrect." }, 401);
-    if (a.role === "superviseur") return J({ error: "Ce compte a été désactivé." }, 401);
+    if (a.role === "superviseur" && !a.actif) return J({ error: "Ce compte a été désactivé." }, 401);
     return J({ ok: true, token: makeToken(u, "membre", a.hash.slice(0, 10)), compte: u });
   }
 
@@ -146,15 +149,15 @@ export default async (req) => {
   else {
     const acc = await ac.get(user, { type: "json" });
     if (!(acc?.hash || "").startsWith(tk.k || "!")) return J({ error: "Session expirée, reconnectez-vous." }, 401);
-    if (acc.role === "superviseur") return J({ error: "Ce compte a été désactivé." }, 401);
-    role = ROLES.includes(acc.role) ? acc.role : "etudiant";
+    if (acc.role === "superviseur" && !acc.actif) return J({ error: "Ce compte a été désactivé." }, 401);
+    role = acc.role === "superviseur" ? "superviseur" : ROLES.includes(acc.role) ? acc.role : "etudiant";
   }
   if (TECH.includes(user)) role = "admin"; // Service technique : admin quel que soit le type de compte (principal ou créé dans l'onglet Comptes)
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
-  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") continue; m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of TECH) if (t in m) m[t] = "admin"; return m; };
+  const rolesMap = async () => { const { blobs } = await ac.list(); const m = Object.fromEntries(await Promise.all(Object.keys(comptes()).map(async (k) => [k, await prinRole(k)]))); for (const x of blobs) { const v = await ac.get(x.key, { type: "json" }); if (v?.role === "superviseur") { if (v.actif) m[x.key] = "superviseur"; continue; } m[x.key] = ROLES.includes(v?.role) ? v.role : "etudiant"; } for (const t of TECH) if (t in m) m[t] = "admin"; return m; };
 
   if (["comptes_list", "compte_create", "compte_reset", "compte_delete", "compte_role", "compte_code", "acces_list", "acces_apercu", "acces_mail"].includes(b.action)) {
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
@@ -215,7 +218,7 @@ export default async (req) => {
         if (code.length < 8) return J({ error: "Code trop court (8 caractères minimum)." }, 400);
         const salt = randomBytes(16).toString("hex");
         const old = await ac.get(n, { type: "json" });
-        await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant") });
+        await ac.setJSON(n, { nom: n, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: old?.creeLe || new Date().toISOString(), creePar: old?.creePar || user, role: old?.role || (ROLES.includes(b.role) ? b.role : "etudiant"), ...(old?.actif ? { actif: true, intervenant: old.intervenant } : {}) });
         const { blobs } = await ac.list();
         return J({ ok: true, code, membres: await Promise.all(blobs.map(async (x) => { const v = await ac.get(x.key, { type: "json" }); return { nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }; })), principaux: Object.keys(c) });
       }
@@ -223,6 +226,102 @@ export default async (req) => {
     const { blobs } = await ac.list();
     const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: TECH.includes(v.nom) ? "admin" : rlv(v) }));
     return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
+  }
+
+  // ---- Budget : réservé aux admins (voir netlify/lib/budget.mjs) ----
+  if (String(b.action || "").startsWith("budget_")) {
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    const r = await BU.action(b, user), { _s, ...o } = r; return J(o, _s || 200);
+  }
+
+  // ---- Dossier des intervenant·es : pièces à déposer, validation, ouverture de l'accès (rôle « superviseur », actif seulement après validation) ----
+  if (String(b.action || "").startsWith("interv_")) {
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    const { iv, pc } = IV.stores(), pieces = await IV.chargerPieces();
+    const vueI = async (r) => { const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; return { id: r.id, nom: r.nom, email: r.email || "", fonction: r.fonction || "", tarif: r.tarif ?? null, note: r.note || "", creeLe: r.creeLe, docs: r.docs || {}, prog: IV.progression(r, pieces), valide: r.valide || null, compte: a && a.actif ? r.compte : "", lien: IV.lienDossier(r.id) }; };
+    const sortie = async (x = {}) => ({ ok: true, pieces: await IV.chargerPieces(), mail: mailReady(), items: await Promise.all((await IV.lister()).map(vueI)), ...x });
+    if (b.action === "interv_list") return J(await sortie());
+    if (b.action === "interv_cfg") {
+      const src = Array.isArray(b.pieces) ? b.pieces.slice(0, 25) : [], vus = new Set(), out = [];
+      for (const p of src) {
+        const label = clean(p.label, 90).trim(); if (!label) continue;
+        let id = /^[a-z0-9-]{2,30}$/.test(String(p.id || "")) ? String(p.id) : nrm(label).replace(/[^a-z0-9-]/g, "").slice(0, 24) || "piece";
+        while (vus.has(id)) id = id.slice(0, 26) + "-" + randomBytes(2).toString("hex");
+        vus.add(id); out.push({ id, label, aide: clean(p.aide, 140).trim(), obl: !!p.obl });
+      }
+      if (!out.length) return J({ error: "Gardez au moins une pièce." }, 400);
+      await getStore("config").setJSON("pieces", out);
+      return J(await sortie());
+    }
+    if (b.action === "interv_save") {
+      const nom = clean(b.nom, 80).trim(); if (!nom) return J({ error: "Indiquez le nom de la personne." }, 400);
+      const email = String(b.email || "").trim().toLowerCase(); if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse e-mail invalide." }, 400);
+      const tarif = b.tarif === "" || b.tarif == null ? null : Math.max(0, Math.round(Number(String(b.tarif).replace(",", ".")) * 100) / 100); if (tarif !== null && !Number.isFinite(tarif)) return J({ error: "Tarif horaire invalide." }, 400);
+      const ex = b.id ? await IV.charger(String(b.id)) : null; if (b.id && !ex) return J({ error: "Introuvable." }, 404);
+      const r = { ...(ex || { id: randomUUID(), creeLe: new Date().toISOString(), docs: {}, valide: null, compte: "" }), nom, email, fonction: IV.FONCTIONS.includes(b.fonction) ? b.fonction : "Superviseur·e", tarif, note: clean(b.note, 300).trim() };
+      await iv.setJSON("i/" + r.id, r);
+      return J(await sortie({ id: r.id }));
+    }
+    const id = String(b.id || ""), r = /^[0-9a-f-]{36}$/.test(id) ? await IV.charger(id) : null;
+    if (!r) return J({ error: "Introuvable." }, 404);
+    if (b.action === "interv_piece_get") {
+      const f = r.docs?.[String(b.piece)], buf = f ? await pc.get(id + "/" + String(b.piece), { type: "arrayBuffer" }) : null;
+      return buf ? J({ ok: true, nom: f.nom, mime: f.mime, data: Buffer.from(buf).toString("base64") }) : J({ error: "Pièce introuvable." }, 404);
+    }
+    if (b.action === "interv_piece_del") {
+      const pid = String(b.piece); if (r.docs?.[pid]) { delete r.docs[pid]; await pc.delete(id + "/" + pid); r.notifie = false; await iv.setJSON("i/" + id, r); }
+      return J(await sortie());
+    }
+    if (b.action === "interv_piece_up") {
+      const p = pieces.find((x) => x.id === String(b.piece)); if (!p) return J({ error: "Pièce inconnue." }, 400);
+      const nom = clean(b.nom, 120).replace(/[\\/]/g, "_") || "piece", ext = nom.split(".").pop().toLowerCase();
+      if (!IV.EXT_PIECE[ext]) return J({ error: "Format non accepté : PDF, image (JPG, PNG) ou Word." }, 400);
+      if (typeof b.data !== "string" || !/^[A-Za-z0-9+/=]+$/.test(b.data)) return J({ error: "Fichier invalide." }, 400);
+      const buf = Buffer.from(b.data, "base64"); if (!buf.length || buf.length > IV.MAX_PIECE) return J({ error: "Fichier vide ou trop lourd (4 Mo maximum)." }, 400);
+      await pc.set(id + "/" + p.id, buf, { metadata: { mime: IV.EXT_PIECE[ext] } });
+      r.docs = { ...(r.docs || {}), [p.id]: { nom, mime: IV.EXT_PIECE[ext], taille: buf.length, le: new Date().toISOString(), par: user } };
+      await iv.setJSON("i/" + id, r); return J(await sortie());
+    }
+    if (b.action === "interv_mail") {
+      if (!r.email) return J({ error: "Ajoutez d'abord l'adresse e-mail de la personne." }, 400);
+      if (!mailReady()) return J({ error: "L'envoi de mail n'est pas configuré : copiez le lien et envoyez-le vous-même." }, 400);
+      const liste = pieces.filter((p) => p.obl).map((p) => "- " + p.label + (p.aide ? " (" + p.aide + ")" : "")), fac = pieces.filter((p) => !p.obl).map((p) => "- " + p.label);
+      const text = [`Bonjour ${r.nom},`, "", "Pour finaliser votre intervention auprès de CAPSULE (consultations psychologiques gratuites des étudiant·es de Paris 8), merci de déposer vos pièces administratives sur ce lien personnel :", IV.lienDossier(r.id), "", "Pièces à fournir :", ...liste, ...(fac.length ? ["", "Facultatif :", ...fac] : []), "", "Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.", "Dès que le dossier est complet et vérifié, nous vous ouvrons l'accès à la plateforme de l'équipe.", "", "Ce lien est personnel : ne le transmettez pas. Pour toute question, répondez à ce mail.", "", "L'équipe CAPSULE"].join("\n");
+      try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre dossier administratif, CAPSULE Paris 8", text }, null, { modele: "Dossier intervenant·e", par: user, type: "manuel" }); }
+      catch (e) { return J({ error: "Envoi impossible : " + String(e.message || e).slice(0, 120) }, 502); }
+      r.envoye = new Date().toISOString(); await iv.setJSON("i/" + id, r); return J(await sortie());
+    }
+    if (b.action === "interv_valider") {
+      const pr = IV.progression(r, pieces); if (!pr.complet) return J({ error: "Il manque : " + pr.manquantes.join(", ") + "." }, 400);
+      const c = comptes(); let nom = r.compte, a = nom ? await ac.get(nom, { type: "json" }) : null, code;
+      if (!a) {
+        const base = (nrm(r.nom).replace(/[^a-z0-9._-]/g, "").slice(0, 26) || "intervenant"); nom = base;
+        for (let k = 2; (nom in c || await ac.get(nom, { type: "json" }) || !NAME.test(nom)) && k < 50; k++) nom = base.slice(0, 26) + "-" + k;
+        code = genCode(); const salt = randomBytes(16).toString("hex");
+        await ac.setJSON(nom, { nom, salt, hash: hashCode(code, salt), enc: encCode(code), creeLe: new Date().toISOString(), creePar: user, role: "superviseur", actif: true, intervenant: r.id });
+      } else {
+        code = a.enc ? decCode(a.enc) : null;
+        if (!code) { code = genCode(); const salt = randomBytes(16).toString("hex"); a = { ...a, salt, hash: hashCode(code, salt), enc: encCode(code) }; }
+        await ac.setJSON(nom, { ...a, actif: true });
+      }
+      r.valide = { par: user, le: new Date().toISOString() }; r.compte = nom; await iv.setJSON("i/" + id, r);
+      let mailEnvoye = false;
+      if (b.envoyer && r.email && mailReady()) {
+        const text = [`Bonjour ${r.nom},`, "", "Votre dossier est complet et validé : votre accès à la plateforme CAPSULE est ouvert.", "", `Adresse : ${new URL(req.url).origin}/gestion`, `Identifiant : ${nom}`, `Code : ${code}`, "", "Vous y retrouvez l'accueil, les supervisions et réunions, le calendrier et les ressources de l'équipe. Gardez ce message pour vous et ne partagez jamais votre code (supprimez le mail après lecture). La session dure 8 h, puis il faut se reconnecter.", "", "L'équipe CAPSULE"].join("\n");
+        try { await envoyer({ email: r.email, prenom: r.nom, id: "" }, { subject: "Votre accès à la plateforme CAPSULE", text }, null, { modele: "Accès intervenant·e", par: user, type: "manuel" }); mailEnvoye = true; } catch (e) { console.error(e); }
+      }
+      return J(await sortie({ compte: nom, code, mailEnvoye }));
+    }
+    if (b.action === "interv_revoquer") {
+      const a = r.compte ? await ac.get(r.compte, { type: "json" }) : null; if (a) await ac.setJSON(r.compte, { ...a, actif: false });
+      r.valide = null; await iv.setJSON("i/" + id, r); return J(await sortie());
+    }
+    if (b.action === "interv_delete") {
+      const { blobs } = await pc.list({ prefix: id + "/" }); await Promise.all(blobs.map((x) => pc.delete(x.key)));
+      if (r.compte) { await ac.delete(r.compte); await profils().delete(r.compte); }
+      await iv.delete("i/" + id); return J(await sortie());
+    }
+    return J({ error: "Action inconnue." }, 400);
   }
 
   if (b.action === "list") {
@@ -241,7 +340,8 @@ export default async (req) => {
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
     const roles = await rolesMap();
-    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    const IVP = admin ? await IV.chargerPieces().catch(() => IV.PIECES_DEFAUT) : null;
+    return J({ ok: true, items, capacite, compte: user, admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };

@@ -12,6 +12,18 @@
   to = "/rdv.html"
   status = 200
 
+[[redirects]]
+  from = "/dossier"
+  to = "/dossier.html"
+  status = 200
+
+[[headers]]
+  for = "/dossier*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+
 [[headers]]
   for = "/rdv*"
   [headers.values]

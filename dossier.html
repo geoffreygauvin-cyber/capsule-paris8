@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Votre dossier, CAPSULE Paris 8</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Page intervenant·e : dépôt des pièces administratives. Même charte que le site. */
+:root{--cream:#FDF5EB;--white:#fff;--ink:#1F1217;--muted:#5E4B55;--line:#E8D9D3;--rasp:#AE164E;--purple:#7B206B;--poppy:#E30F1B;--maroon:#75151F;--rose:#F9DEE5;--lilac:#EADCF0;--f:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--f);font-size:17px;line-height:1.65;padding:0 20px 56px}
+h1,p{margin:0}
+h1{font-size:clamp(26px,5.4vw,36px);font-weight:600;line-height:1.15;letter-spacing:-.02em;text-wrap:balance}
+h1:focus{outline:none}
+a{color:var(--rasp)}
+:focus-visible{outline:3px solid var(--purple);outline-offset:3px;border-radius:8px}
+.w{max-width:640px;margin:0 auto}
+.top{padding:26px 0 18px}
+.top a{text-decoration:none;color:inherit;display:inline-block}
+.wm{font-weight:700;font-size:20px;letter-spacing:.06em;line-height:1}
+.wm small{display:block;font-weight:500;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:7px;color:var(--muted)}
+.rule{display:flex;width:96px;height:6px;border-radius:3px;overflow:hidden;margin:0 0 22px}
+.rule i{display:block;height:100%}.rule i:nth-child(1){background:var(--purple);width:40%}.rule i:nth-child(2){background:var(--rasp);width:40%}.rule i:nth-child(3){background:var(--poppy);width:20%}
+.card{background:var(--white);border:1px solid var(--line);border-radius:28px;padding:34px 32px}
+.card>*+*{margin-top:18px}
+.rdv{background:var(--rose);border-radius:20px;padding:18px 22px}
+.rdv .d{font-weight:600;font-size:21px;line-height:1.3;color:var(--maroon)}
+.rdv .h{font-weight:600;color:var(--purple)}
+.rdv p+p{margin-top:4px}.rdv .s{font-size:15px;color:var(--muted)}
+.soft{color:var(--muted);font-size:15.5px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font:inherit;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;border:2px solid var(--rasp);background:var(--rasp);color:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--purple);border-color:var(--purple)}
+.btn.line{background:transparent;color:var(--rasp)}.btn.line:hover{background:var(--rasp);color:#fff;border-color:var(--rasp)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding-inline:12px;text-decoration:underline}
+.btn:disabled{opacity:.6;cursor:default}
+form>*+*{margin-top:16px}
+fieldset{border:0;padding:0;margin:0}legend{font-weight:500;font-size:15px;margin-bottom:8px;padding:0}
+.ck{display:inline-flex;gap:9px;align-items:center;margin:0 18px 6px 0;font-weight:400;font-size:16px}.ck input{width:20px;height:20px;accent-color:var(--rasp)}
+label.m{display:block;font-weight:500;font-size:15px}label.m small{color:var(--muted);font-weight:400}
+textarea{display:block;width:100%;margin-top:6px;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--cream);color:var(--ink);resize:vertical}
+textarea:focus{outline:2px solid var(--rasp);outline-offset:1px}
+.err{color:var(--poppy);font-weight:500;font-size:15px}.err:empty{display:none}
+.note{background:var(--lilac);border-radius:16px;padding:12px 16px;font-size:15px}
+.hide{display:none!important}
+.fine{margin-top:22px;font-size:13.5px;color:var(--muted);text-align:center}
+@media (max-width:520px){.card{padding:26px 22px;border-radius:24px}.btn{width:100%}.btns{flex-direction:column}}
+.pcs{list-style:none;margin:0;padding:0;display:grid;gap:10px}.pcs>li{border:1.5px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;background:var(--white)}
+.pcs>li.ok{border-color:#9CCBA0;background:#F3FAF3}.pcs b{font-weight:600;font-size:16px;line-height:1.35;display:block}.pcs small{display:block;color:var(--muted);font-size:13.5px;line-height:1.4;margin-top:2px}.pcs .fn{font-size:14px;color:#1F5A27;font-weight:500;word-break:break-word}
+.pcs .pa{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:1px 10px;background:var(--rose);color:var(--maroon);margin-left:6px;vertical-align:1px}.tag.f{background:#EFE9E5;color:var(--muted)}
+.btn.sm{padding:9px 18px;font-size:14px}.pg{height:10px;border-radius:99px;background:#EFE5DF;overflow:hidden}.pg i{display:block;height:100%;background:var(--rasp);border-radius:99px;transition:width .3s}
+.good{background:#E6F3E7;border-radius:16px;padding:14px 18px;color:#1F5A27;font-weight:500}input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media (max-width:520px){.pcs>li{grid-template-columns:1fr}.pcs .pa{justify-content:flex-start}.pcs .btn{width:auto}}
+</style>
+</head>
+<body>
+<div class="w">
+  <header class="top"><a href="/" aria-label="CAPSULE, retour au site"><span class="wm">CAPSULE<small>Université Paris 8</small></span></a></header>
+  <div class="rule" aria-hidden="true"><i></i><i></i><i></i></div>
+  <main class="card" id="box" aria-live="polite"><p class="soft">Chargement de votre dossier…</p></main>
+  <p class="fine">Vos documents sont enregistrés de façon sécurisée et ne sont consultables que par la coordination de CAPSULE.</p>
+</div>
+<noscript><p style="max-width:640px;margin:20px auto;padding:0 20px">Cette page nécessite JavaScript. Vous pouvez aussi envoyer vos pièces par mail à la coordination.</p></noscript>
+<script>
+(function () {
+  var t = new URLSearchParams(location.search).get('t') || '', box = document.getElementById('box'), info = null, busy = '';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function call(body) {
+    var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ t: t }, body)) } : undefined;
+    return fetch('/api/dossier' + (body ? '' : '?t=' + encodeURIComponent(t)), o).then(function (r) { return r.json().catch(function () { return {}; }); });
+  }
+  function taille(n) { return n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' Ko' : (n / 1048576).toFixed(1).replace('.', ',') + ' Mo'; }
+  function draw(msg) {
+    var pct = info.total ? Math.round(100 * info.ok_n / info.total) : 100;
+    box.innerHTML = '<h1>Bonjour ' + esc(info.nom) + '</h1>' +
+      (info.valide ? '<p class="good">Votre dossier est validé. Votre accès à la plateforme est ouvert : vos identifiants vous ont été transmis par la coordination.</p>' :
+       info.complet ? '<p class="good">Merci, toutes les pièces obligatoires sont déposées. La coordination les vérifie puis vous ouvre l’accès à la plateforme.</p>' :
+       '<p>Pour finaliser votre intervention, merci de déposer les pièces ci-dessous. L’accès à la plateforme de l’équipe est ouvert une fois le dossier complet et vérifié.</p>') +
+      '<div><div class="pg" role="progressbar" aria-valuenow="' + info.ok_n + '" aria-valuemin="0" aria-valuemax="' + info.total + '"><i style="width:' + pct + '%"></i></div><p class="soft" style="margin-top:6px">' + info.ok_n + ' pièce' + (info.ok_n > 1 ? 's' : '') + ' obligatoire' + (info.ok_n > 1 ? 's' : '') + ' sur ' + info.total + '</p></div>' +
+      '<ul class="pcs">' + info.pieces.map(function (p) {
+        var d = p.doc, id = 'f_' + p.id;
+        return '<li class="' + (d ? 'ok' : '') + '"><div><b>' + esc(p.label) + '<span class="tag' + (p.obl ? '' : ' f') + '">' + (p.obl ? 'obligatoire' : 'facultatif') + '</span></b>' + (d ? '<span class="fn">✓ ' + esc(d.nom) + ' · ' + taille(d.taille) + '</span>' : (p.aide ? '<small>' + esc(p.aide) + '</small>' : '')) + '</div>' +
+          '<div class="pa"><input type="file" id="' + id + '" data-p="' + esc(p.id) + '" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx">' +
+          '<label for="' + id + '" class="btn sm' + (d ? ' line' : '') + '" role="button" tabindex="0">' + (busy === p.id ? 'Envoi…' : d ? 'Remplacer' : 'Choisir un fichier') + '</label>' +
+          (d && !info.valide ? '<button class="btn quiet sm" data-del="' + esc(p.id) + '" type="button">Supprimer</button>' : '') + '</div></li>';
+      }).join('') + '</ul>' +
+      '<div class="err" id="err" role="alert">' + esc(msg || '') + '</div>' +
+      '<p class="soft">Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vous pouvez revenir sur cette page avec le même lien, tant que le dossier n’est pas validé.</p>';
+  }
+  function load() {
+    call().then(function (r) {
+      if (!r.ok) { box.innerHTML = '<h1>Ce lien n’est pas valide</h1><p>' + esc(r.error || 'Demandez-en un nouveau à la coordination CAPSULE.') + '</p>'; return; }
+      info = r; draw();
+    }, function () { box.innerHTML = '<h1>Connexion impossible</h1><p>Vérifiez votre connexion et rechargez la page.</p>'; });
+  }
+  box.addEventListener('change', function (e) {
+    var i = e.target; if (!i.matches || !i.matches('input[type=file]') || !i.files[0]) return;
+    var f = i.files[0], p = i.dataset.p;
+    if (f.size > 4 * 1024 * 1024) { draw('« ' + f.name + ' » dépasse 4 Mo. Réduisez-le ou enregistrez-le en PDF compressé.'); return; }
+    busy = p; draw();
+    var rd = new FileReader();
+    rd.onload = function () {
+      var data = String(rd.result).split(',')[1] || '';
+      call({ action: 'deposer', piece: p, nom: f.name, data: data }).then(function (r) { busy = ''; if (r.ok) { info = r; draw(); } else draw(r.error || 'Le dépôt a échoué. Réessayez.'); }, function () { busy = ''; draw('Le dépôt a échoué. Vérifiez votre connexion et réessayez.'); });
+    };
+    rd.onerror = function () { busy = ''; draw('Ce fichier n’a pas pu être lu.'); };
+    rd.readAsDataURL(f);
+  });
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    if (!confirm('Supprimer ce document ?')) return;
+    call({ action: 'supprimer', piece: b.dataset.del }).then(function (r) { if (r.ok) { info = r; draw(); } else draw(r.error || 'Suppression impossible.'); });
+  });
+  box.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('label.btn[for]')) { e.preventDefault(); document.getElementById(e.target.getAttribute('for')).click(); } });
+  load();
+})();
+</script>
+</body>
+</html>
