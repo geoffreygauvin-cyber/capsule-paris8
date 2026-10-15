@@ -45,7 +45,8 @@
       '.dst .m time{display:block;font-size:11px;opacity:.65;margin-top:2px}.dst .m.x{font-style:italic;opacity:.6;background:none;border-style:dashed}.dst .m .dl{border:0;background:none;color:inherit;opacity:.55;font-size:11px;cursor:pointer;padding:0;margin-left:8px;text-decoration:underline}' +
       '.dst .sd{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--line,#EBDDD6);align-items:flex-end}.dst .sd textarea{flex:1;resize:none;min-height:44px;max-height:140px;border:1px solid var(--line,#EBDDD6);border-radius:16px;padding:11px 14px;font:inherit;background:#fff}' +
       '.dst .vide{margin:auto;text-align:center;color:var(--muted,#7a6670);padding:30px;max-width:340px}.dss{font-size:12.5px;color:var(--muted,#7a6670);margin:14px 4px 0}' +
-      '.dsb{display:none}.dsn .rg{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}.dsn .rg button{padding:8px 14px;border-radius:99px;border:1px solid var(--line,#EBDDD6);background:#fff;font:600 13.5px Poppins,sans-serif;cursor:pointer}.dsn .rg button.on{background:var(--rasp,#AE164E);border-color:var(--rasp,#AE164E);color:#fff}' +
+      '.dsw{display:flex;gap:6px 14px;align-items:baseline;flex-wrap:wrap;margin:0 0 16px;padding:12px 18px;border-radius:16px;background:#FFF1F1;border:1px solid #F2B8B8;border-left:5px solid var(--poppy,#E30F1B);font-size:14px}.dsw b{color:#B3121B}.dsw span{color:#5E4B55}' +
+      '.dst .sd small{display:none}.dsb{display:none}.dsn .rg{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}.dsn .rg button{padding:8px 14px;border-radius:99px;border:1px solid var(--line,#EBDDD6);background:#fff;font:600 13.5px Poppins,sans-serif;cursor:pointer}.dsn .rg button.on{background:var(--rasp,#AE164E);border-color:var(--rasp,#AE164E);color:#fff}' +
       '@media (max-width:860px){.dsc{grid-template-columns:1fr}.dsc.th .dsl{display:none}.dsc:not(.th) .dst{display:none}.dsb{display:inline-flex}.dst,.dsl{height:auto;max-height:none;min-height:0}.dst{height:calc(100vh - 190px)}.dsl{max-height:calc(100vh - 230px)}}';
     document.head.appendChild(s);
   }
@@ -96,7 +97,7 @@
       h += m.sup ? '<div class="m x">Message supprimé</div>' : '<div class="m' + (moi ? ' moi' : '') + '">' + (!moi && cur.type === 'groupe' ? '<span class="au">' + e(nom(m.de)) + '</span>' : '') + lien(m.texte) + '<time>' + e(quand(m.le)) + (moi || C().admin() ? '<button type="button" class="dl" data-k="' + e(m.k) + '">supprimer</button>' : '') + '</time></div>';
     });
     if (!msgs.length) h += '<div class="vide">Aucun message pour l’instant. Dites bonjour.</div>';
-    h += '</div><form class="sd" id="dform"><textarea id="dtx" rows="1" maxlength="2000" placeholder="Écrire un message…" title="Entrée pour envoyer, Maj+Entrée pour passer à la ligne" aria-label="Message"></textarea><button class="btn" type="submit">Envoyer</button></form>';
+    h += '</div><form class="sd" id="dform"><textarea id="dtx" rows="1" maxlength="2000" placeholder="Écrire un message… (jamais de patient·e)" title="Entrée pour envoyer, Maj+Entrée pour passer à la ligne" aria-label="Message"></textarea><button class="btn" type="submit">Envoyer</button></form>';
     t.innerHTML = h; var tx = $('dtx'); tx.value = old;
     var f = $('dfil'); if (scroll || true) f.scrollTop = f.scrollHeight;
     tx.onkeydown = function (ev) { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); envoyer(); } };
@@ -115,7 +116,7 @@
   function nouvelle() {
     var ct = contacts.slice().sort(function (a, z) { return nom(a).localeCompare(nom(z), 'fr'); }), sel = {};
     var G = [['*', 'Tout le monde'], ['etudiant', 'Étudiant·es'], ['admin', 'Équipe admin'], ['superviseur', 'Superviseur·es']];
-    C().modal('<h3>Nouvelle discussion</h3><div class="dsn"><p class="sub">Choisissez une personne pour un échange privé, ou plusieurs pour créer un groupe.</p><div class="rg" id="dng"></div><div class="rg" id="dnp"></div><label class="f w hide" id="dnl">Nom du groupe<input id="dnn" maxlength="60" placeholder="ex. Équipe du mardi"></label><div id="dne" style="margin:8px 0"></div><div class="row"><button class="btn" id="dgo">Démarrer</button><button class="btn l" data-m="x">Annuler</button></div></div>');
+    C().modal('<h3>Nouvelle discussion</h3><div class="dsn"><p class="sub">Choisissez une personne pour un échange privé, ou plusieurs pour créer un groupe. <b style="color:#B3121B">Aucune information sur les patient·es.</b></p><div class="rg" id="dng"></div><div class="rg" id="dnp"></div><label class="f w hide" id="dnl">Nom du groupe<input id="dnn" maxlength="60" placeholder="ex. Équipe du mardi"></label><div id="dne" style="margin:8px 0"></div><div class="row"><button class="btn" id="dgo">Démarrer</button><button class="btn l" data-m="x">Annuler</button></div></div>');
     var draw = function () {
       $('dnp').innerHTML = ct.map(function (n) { return '<button type="button" data-n="' + e(n) + '" class="' + (sel[n] ? 'on' : '') + '">' + e(nom(n)) + '</button>'; }).join('') || '<span class="sub">Personne d’autre n’a encore de compte actif.</span>';
       $('dng').innerHTML = ct.length > 2 ? G.filter(function (g) { return g[0] === '*' || ct.some(function (n) { return roleOf(n) === g[0]; }); }).map(function (g) { return '<button type="button" data-g="' + g[0] + '">' + g[1] + '</button>'; }).join('') : '';
@@ -143,8 +144,8 @@
   window.msgBadge = function () { chargerConvs(); };
   window.drawMsg = function (el) {
     box = el; css(); cur = null; mobileThread = false;
-    el.innerHTML = '<div class="dsc" id="dsc"><div class="dsl"><div class="top"><button class="btn" id="dnew" style="width:100%">+ Nouvelle discussion</button></div><ul id="dsul"><li class="none">Chargement…</li></ul></div><div class="dst" id="dst"></div></div>' +
-      '<p class="dss">Messagerie interne de l’équipe CAPSULE. N’y écrivez aucune information permettant d’identifier un·e patient·e ou un·e étudiant·e accompagné·e.</p>';
+    el.innerHTML = '<div class="dsw" role="alert"><b>Ne parlez jamais des patient·es dans cette messagerie.</b><span>Ni nom, ni prénom, ni initiales, ni situation permettant de reconnaître quelqu’un. Pour un cas clinique, passez par la supervision.</span></div><div class="dsc" id="dsc"><div class="dsl"><div class="top"><button class="btn" id="dnew" style="width:100%">+ Nouvelle discussion</button></div><ul id="dsul"><li class="none">Chargement…</li></ul></div><div class="dst" id="dst"></div></div>' +
+      '';
     drawThread(); $('dnew').onclick = nouvelle;
     $('dsul').onclick = function (ev) { var b = ev.target.closest('button[data-id]'); if (b) ouvrir(b.dataset.id); };
     $('dst').onclick = function (ev) {
