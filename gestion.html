@@ -348,6 +348,11 @@ section>*+*{margin-top:0}.card,.dcard{margin-bottom:18px}
 .msw button{padding:8px 2px!important;border-radius:11px!important;font-size:11.5px!important;font-weight:500!important;color:rgba(255,255,255,.72)!important;text-align:center}
 .msw button.on{background:#FDF5EB!important;color:var(--rasp)!important;font-weight:700!important;box-shadow:none!important}
 .msw button:not(.on):hover{background:rgba(255,255,255,.12)!important;color:#fff!important}
+/* Bande de gauche : dégradé bordeaux vers prune, halo clair et trame de points (comme l'écran de connexion) */
+@media (min-width:861px){
+aside{background:radial-gradient(120% 55% at 50% 38%,rgba(253,245,235,.13),transparent 62%),radial-gradient(110% 60% at 0% 100%,rgba(227,15,27,.42),transparent 60%),radial-gradient(100% 55% at 100% 0%,rgba(174,22,78,.7),transparent 62%),linear-gradient(160deg,#6E1A28 0%,#6F1E4E 55%,#6E2166 100%)!important;isolation:isolate}
+aside::before{content:"";position:fixed;left:0;top:0;width:248px;height:100vh;z-index:-1;pointer-events:none;background-image:radial-gradient(rgba(253,245,235,.22) 1.2px,transparent 1.6px);background-size:10px 10px;-webkit-mask-image:radial-gradient(circle at 100% 0,#000,transparent 55%),radial-gradient(circle at 0 100%,#000,transparent 50%);mask-image:radial-gradient(circle at 100% 0,#000,transparent 55%),radial-gradient(circle at 0 100%,#000,transparent 50%)}
+}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
