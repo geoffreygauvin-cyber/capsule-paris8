@@ -650,6 +650,7 @@ export default async (req) => {
     const existantes = await toutes();
     const ex = b.id ? existantes.find((y) => y.id === String(b.id)) : null; if (b.id && !ex) return J({ error: "Séance introuvable." }, 404);
     if (ex && !own(ex)) return J({ error: "Vous ne pouvez modifier que vos propres séances." }, 403);
+    if (role === "etudiant" && !admin && type !== "reunion" && !(ex && ex.type === type)) return J({ error: "Les étudiant·es programment des réunions : les supervisions sont programmées par les superviseur·es." }, 403);
     if (!ex && parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);
     const n = ex || type === "entretien" ? 1 : Math.min(26, Math.max(1, Math.floor(Number(b.repeter)) || 1)), serie = ex ? ex.serie : n > 1 ? randomUUID() : "";
     const dates = Array.from({ length: n }, (_, k) => { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 7 * k); return d.toISOString().slice(0, 10); });
