@@ -67,7 +67,7 @@ label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);text-tra
  .lbox{padding:30px 22px 24px}.lbox h1{font-size:25px}
 }
 /* structure */
-#app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+#app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
 aside{background:var(--maroon);color:var(--cream);padding:20px 14px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(253,245,235,.55) rgba(253,245,235,.08)}
 
 .nv{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;border:0;background:none;color:rgba(253,245,235,.82);font-weight:500;text-align:left;width:100%}
@@ -103,7 +103,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .stat b{display:block;font-size:30px;line-height:1.1;color:var(--rasp)}.stat span{font-size:13px;color:var(--muted)}
 .stat.k2 b{color:var(--purple)}.stat.k3 b{color:var(--poppy)}
 /* filtres */
-.filters{display:flex;flex-wrap:nowrap;gap:2px;align-items:center;margin-bottom:16px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px;overflow-x:auto;scrollbar-width:none;width:fit-content;max-width:100%}.filters::-webkit-scrollbar{display:none}
+.filters{display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-bottom:16px;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:4px;width:fit-content;max-width:100%}
 .chip{border:0;background:none;border-radius:999px;padding:8px 15px;font-weight:500;font-size:13.5px;color:var(--muted);white-space:nowrap;transition:background .15s,color .15s}.chip:hover:not(.on){background:var(--rose);color:var(--ink)}
 .chip i{font-style:normal;margin-left:7px;background:var(--rose);color:var(--rasp);border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:600}.chip.on{background:var(--ink);color:#fff}.chip.on i{background:rgba(255,255,255,.22);color:#fff}
 .tools{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}.tools input{flex:1;min-width:200px;background:var(--paper)}
