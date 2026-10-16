@@ -147,10 +147,10 @@
     if (rc === 'fiches') {
       if (!data) { list.innerHTML = '<div class="empty" style="grid-column:1/-1">Chargement…</div>'; return; }
       var l = data.fiches.filter(function (f) { return !q || norm(f.titre + ' ' + f.accroche + ' ' + f.theme + ' ' + (f.mots || '')).indexOf(q) > -1; });
-      var adm = isAdm(), h = adm ? '<div class="fitool"><p>Les fiches à envoyer ou à imprimer. Vous pouvez en créer de nouvelles, ou partir d’une fiche existante pour l’adapter.</p><button type="button" class="btn" data-fi="nouvelle">+ Nouvelle fiche</button></div>' : '';
+      var adm = isAdm(), h = adm ? '<div class="fitool"><p>Les fiches à envoyer ou à télécharger. Vous pouvez en créer de nouvelles, ou partir d’une fiche existante pour l’adapter.</p><button type="button" class="btn" data-fi="nouvelle">+ Nouvelle fiche</button></div>' : '';
       h += l.length ? l.map(function (f) {
         return '<article class="rc pastel fch" data-fid="' + e(f.id) + '"><div class="fchh"><span class="fth">' + e(f.theme) + '</span><span class="fico">' + ico(f.icone, 0) + '</span></div><h3>' + e(f.titre) + '</h3><p>' + e(f.accroche) + '</p>' +
-          '<div class="row"><button type="button" class="btn s" data-fi="lire">Lire</button><button type="button" class="btn l s" data-fi="imprimer">Imprimer</button><button type="button" class="btn l s" data-fi="envoyer">Envoyer</button></div>' +
+          '<div class="row"><button type="button" class="btn s" data-fi="lire">Lire</button><button type="button" class="btn l s" data-fi="telecharger">Télécharger</button><button type="button" class="btn l s" data-fi="envoyer">Envoyer</button></div>' +
           (adm ? '<div class="fadm">' + (f.perso ? '<button type="button" class="link" data-fi="modifier">Modifier</button><button type="button" class="link" data-fi="dupliquer">Dupliquer</button><button type="button" class="link" data-fi="supprimer">Supprimer</button><small>Créée sur le site · modifiée le ' + e(frDate(f.maj)) + ' par ' + e(nom(f.par)) + '</small>' : '<button type="button" class="link" data-fi="dupliquer">Dupliquer pour l’adapter</button>') + '</div>' : '') + '</article>';
       }).join('') : '<div class="empty" style="grid-column:1/-1"><b>Aucune fiche ne correspond</b>Essayez un autre mot.</div>';
       list.innerHTML = h;
@@ -163,7 +163,7 @@
   function lire(id) {
     var f = fiche(id); if (!f) return; css();
     C().modal('<div class="fim" data-fid="' + e(f.id) + '"><h3>' + e(f.titre) + '</h3><iframe class="fifr" id="fi-fr" title="Fiche : ' + e(f.titre) + '"></iframe>' +
-      '<div class="row"><button type="button" class="btn" data-fi="envoyer">Envoyer par mail</button><button type="button" class="btn l" data-fi="imprimer">Imprimer / PDF</button><button type="button" class="btn l" data-m="x">Fermer</button></div></div>', false);
+      '<div class="row"><button type="button" class="btn" data-fi="envoyer">Envoyer par mail</button><button type="button" class="btn l" data-fi="telecharger">Télécharger</button><button type="button" class="btn l" data-m="x">Fermer</button></div></div>', false);
     $('fi-fr').srcdoc = docFiche(f);
   }
 
@@ -197,6 +197,59 @@
     fr.onload = function () {
       var w = fr.contentWindow;
       sansPolice(w).then(function () { try { w.fit(); w.focus(); w.print(); } catch (x) { toast('Impression impossible depuis ce navigateur.'); } setTimeout(function () { fr.remove(); }, 60000); });
+    };
+    fr.srcdoc = docFiche(f, { print: true }); document.body.appendChild(fr);
+  }
+
+  /* « Télécharger » : la fiche en PDF A4 (rendu image via html2canvas, chargé à la demande).
+     En cas d'échec (réseau, navigateur), on retombe sur l'impression, où l'on peut choisir « Enregistrer en PDF ». */
+  var H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  function nomPdf(f) { return 'capsule-fiche-' + (String(f.titre || 'fiche').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'fiche') + '.pdf'; }
+  function pdfJpeg(canvas) {
+    var bin = atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]), jpg = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
+    var PW = 595.28, PH = 841.89, mm = 72 / 25.4, iw = 188 * mm, ih = iw * canvas.height / canvas.width;
+    if (ih > PH - 20 * mm) { ih = PH - 20 * mm; iw = ih * canvas.width / canvas.height; }
+    var x = (PW - iw) / 2, y = PH - 10 * mm - ih;
+    var te = new TextEncoder(), parts = [], offs = [], len = 0;
+    function add(s) { if (typeof s === 'string') s = te.encode(s); parts.push(s); len += s.length; }
+    function obj(n, body) { offs[n] = len; add(n + ' 0 obj\n' + body + '\nendobj\n'); }
+    add('%PDF-1.4\n');
+    obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+    obj(3, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PW + ' ' + PH + '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+    offs[4] = len; add('4 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + canvas.width + ' /Height ' + canvas.height + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpg.length + ' >>\nstream\n'); add(jpg); add('\nendstream\nendobj\n');
+    var cs = 'q ' + iw.toFixed(2) + ' 0 0 ' + ih.toFixed(2) + ' ' + x.toFixed(2) + ' ' + y.toFixed(2) + ' cm /Im0 Do Q';
+    obj(5, '<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream');
+    var xr = len; add('xref\n0 6\n0000000000 65535 f \n');
+    for (var k = 1; k <= 5; k++) add(('0000000000' + offs[k]).slice(-10) + ' 00000 n \n');
+    add('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF');
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+  function telecharger(id) {
+    var f = fiche(id); if (!f) return;
+    toast('Préparation du PDF…');
+    var fr = document.createElement('iframe'), fini = false; fr.setAttribute('aria-hidden', 'true'); fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;border:0';
+    function repli() { if (fini) return; fini = true; fr.remove(); toast('PDF impossible ici : choisissez « Enregistrer en PDF » dans la fenêtre d’impression.'); imprimer(id); }
+    var minuteur = setTimeout(repli, 20000);
+    fr.onload = function () {
+      var w = fr.contentWindow;
+      sansPolice(w).then(function () {
+        try { w.fit(); } catch (x) {}
+        var sc = w.document.createElement('script'); sc.src = H2C;
+        sc.onerror = function () { clearTimeout(minuteur); repli(); };
+        sc.onload = function () {
+          try {
+            w.html2canvas(w.document.body, { scale: 2.5, backgroundColor: '#ffffff', logging: false }).then(function (c) {
+              if (fini) return; clearTimeout(minuteur); fini = true;
+              var a = document.createElement('a'); a.href = URL.createObjectURL(pdfJpeg(c)); a.download = nomPdf(f);
+              document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+              fr.remove(); toast('Fiche téléchargée en PDF.');
+            }, function () { clearTimeout(minuteur); repli(); });
+          } catch (x) { clearTimeout(minuteur); repli(); }
+        };
+        w.document.head.appendChild(sc);
+      });
     };
     fr.srcdoc = docFiche(f, { print: true }); document.body.appendChild(fr);
   }
@@ -327,6 +380,7 @@
     if (act === 'lire') lire(id);
     else if (act === 'envoyer') envoyer(id);
     else if (act === 'imprimer') imprimer(id);
+    else if (act === 'telecharger') telecharger(id);
     else if (act === 'modifier' && isAdm()) { var f = fiche(id); if (f && f.perso) ouvrirEd(copieDe(f, true), 'Modifier la fiche'); }
     else if (act === 'dupliquer' && isAdm()) { var g = fiche(id); if (g) ouvrirEd(copieDe(g, false), 'Nouvelle fiche (copie)'); }
     else if (act === 'supprimer' && isAdm()) supprimer(id);

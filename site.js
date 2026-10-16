@@ -72,7 +72,7 @@
       var isMail = String(t.valeur).indexOf('{email}') > -1;
       var val = EDIT ? t.valeur : String(t.valeur).replace('{email}', email);
       return '<div>' + ic(t.icone) + '<span class="k">' + E(p + '.etiquette', t.etiquette) + '</span><p class="v"' + (isMail ? ' style="font-size:1.02rem;overflow-wrap:anywhere"' : '') + '>' + E(p + '.valeur', val) + '</p>' +
-        '<p class="d">' + E(p + '.detail', t.detail) + (t.metro ? '<br><span class="m13" aria-hidden="true">13</span>' + E(p + '.metro', t.metro) : '') + '</p></div>';
+        '<p class="d">' + E(p + '.detail', t.detail) + '</p>' + (t.metro ? '<p class="d mline"><span class="m13" aria-hidden="true">13</span><span>' + E(p + '.metro', t.metro) + '</span></p>' : '') + '</div>';
     }).join('') + '</div></div></section>';
     var rs = C.ressources;
     h += '<section id="ressources" style="padding-top:24px">' + head(rs.titre, rs.texte, 'ressources') + '<div class="res">' + rs.liste.map(function (x, i) {

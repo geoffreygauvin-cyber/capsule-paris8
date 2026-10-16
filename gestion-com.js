@@ -337,7 +337,7 @@
     $('cm_pdf').textContent = 'Télécharger en PDF';
   }
   function build() {
-    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="planning">Planning</button><button class="chip" data-tab="pages">Nos pages</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
+    var h = '<div class="filters" id="cmtabs"><button class="chip on" data-tab="creer">Créer un visuel</button><button class="chip" data-tab="planning">À publier</button><button class="chip" data-tab="pages">Nos pages</button></div><div id="cmcreer"><div class="cmw"><div class="cmf">' +
       '<div class="newc"><b>1 · Format</b><div class="filters" id="cmfm" style="margin:10px 0 4px">' + Object.keys(FM).map(function (k) { return '<button class="chip" data-f="' + k + '">' + FM[k].lb + '</button>'; }).join('') + '</div><small id="cmsub" style="color:var(--muted)"></small></div>' +
       '<div class="newc" style="margin-top:14px"><b>2 · Modèle</b><label class="f" style="margin-top:8px">Point de départ<select id="cm_pre">' + Object.keys(PRE).map(function (k) { return '<option value="' + k + '">' + PRE[k].lb + '</option>'; }).join('') + '</select></label>' +
       '<small style="color:var(--muted);display:block;margin-top:6px">Changer de modèle remplace les textes ci-dessous.</small>' +
@@ -359,9 +359,9 @@
       '<div class="row" style="flex-wrap:wrap;margin-top:12px"><button class="btn" id="cm_png">Télécharger en PNG</button><button class="btn l" id="cm_pdf">Télécharger en PDF</button><button class="btn l" id="cm_ppt">Télécharger en PowerPoint</button></div><small style="color:var(--muted);display:block;margin-top:8px">Le PowerPoint se modifie élément par élément (textes, formes, images). Pour un rendu identique à l’aperçu, installez la police Poppins (gratuite, sur Google Fonts).</small>' +
       '<div class="newc" style="margin-top:16px"><b>Légende pour le post</b><p class="sub" style="margin:4px 0 8px">À coller sous l’image sur Instagram, LinkedIn…</p><textarea id="cm_legende" rows="6" style="width:100%"></textarea>' +
       '<div class="row" style="margin-top:8px"><button class="btn l s" id="cm_leg">Générer depuis le visuel</button><button class="btn l s" id="cm_cp">Copier</button></div></div>' +
-      '<div class="newc" style="margin-top:16px"><b>Enregistrer pour publier plus tard</b><p class="sub" style="margin:4px 0 8px">Le visuel et la légende sont gardés dans le planning de l’équipe. Avec une date, l’appli vous rappelle de publier (rappel sur l’accueil et dans le menu).</p>' +
+      '<div class="newc" style="margin-top:16px"><b>Enregistrer pour publier plus tard</b><p class="sub" style="margin:4px 0 8px">Le visuel et la légende sont gardés dans l’onglet « À publier » de l’équipe. Avec une date, l’appli vous rappelle de publier (rappel sur l’accueil et dans le menu).</p>' +
       '<div class="g2"><label class="f">Réseau<select id="cm_pr">' + Object.keys(RS).filter(function (k) { return k !== 'mail'; }).map(function (k) { return '<option value="' + k + '">' + RS[k].lb + '</option>'; }).join('') + '</select></label><label class="f">Date de publication<input type="date" id="cm_pd"></label></div>' +
-      '<div class="row" style="margin-top:10px;align-items:flex-end"><label class="f" style="flex:0 0 130px">Heure (facultatif)<input type="time" id="cm_ph"></label><button class="btn" id="cm_plan">Enregistrer dans le planning</button></div></div>' +
+      '<div class="row" style="margin-top:10px;align-items:flex-end"><label class="f" style="flex:0 0 130px">Heure (facultatif)<input type="time" id="cm_ph"></label><button class="btn" id="cm_plan">Enregistrer pour publier</button></div></div>' +
       '</div></div></div><div id="cmplan" class="hide"></div><div id="cmpages" class="hide"></div>';
     $('v12').insertAdjacentHTML('beforeend', h);
     canvas = $('cmcv');
@@ -480,7 +480,7 @@
   };
 
 
-  /* ---------- onglet « Planning » : un bloc par plateforme ---------- */
+  /* ---------- onglet « À publier » : un bloc par plateforme ---------- */
   var SS = [['idee', 'Idée', '#6B5861'], ['programmee', 'Prête à publier', '#AE164E'], ['publiee', 'Publiée', '#2F7D4F']];
   var pubs = null, pEdit = '', pVis = null, pOpen = false, draftP = null, pTab = '', PFIX = ['linkedin', 'instagram', 'site'];
   function sLb(k) { if (k === 'attente') k = 'idee'; var r = SS.filter(function (x) { return x[0] === k; })[0]; return r ? r[1] : k; }
@@ -492,14 +492,14 @@
   function ech(x) { var n = dTo(x.date); return n < 0 ? 'En retard de ' + (-n) + (n === -1 ? ' jour' : ' jours') : n === 0 ? 'Aujourd’hui' : n === 1 ? 'Demain' : ''; }
   function loadPubs() {
     if (pubs === null) $('cmplan').innerHTML = '<p class="sub">Chargement…</p>';
-    api2({ action: 'pub_list' }).then(function (d) { if (d && d.ok) { pubs = d.publis || []; drawPubs(); } else $('cmplan').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger le planning.') + '</p>'; });
+    api2({ action: 'pub_list' }).then(function (d) { if (d && d.ok) { pubs = d.publis || []; drawPubs(); } else $('cmplan').innerHTML = '<p class="err">' + e((d && d.error) || 'Impossible de charger les publications.') + '</p>'; });
   }
   function savePlan() {
     if (!st.legende) st.legende = legende();
     var vis = Object.assign({}, st); delete vis.legende;
     var d = ($('cm_pd') || {}).value || '', o = { reseau: $('cm_pr').value, titre: st.titre || 'Sans titre', texte: st.legende, statut: d ? 'programmee' : 'idee', date: d, heure: ($('cm_ph') || {}).value || '', lien: '', visuel: vis };
     api2(Object.assign({ action: 'pub_save' }, o)).then(function (r) {
-      if (r && r.ok) { pubs = r.publis; note(d ? 'Enregistré dans le planning (' + frDate(d, o.heure) + '). Rappel en rouge dès la veille sur l’accueil.' : 'Enregistré dans le planning (sans date : ajoutez-en une pour avoir un rappel).'); rappels(); tab('planning'); }
+      if (r && r.ok) { pubs = r.publis; note(d ? 'Enregistré dans « À publier » (' + frDate(d, o.heure) + '). Rappel en rouge dès la veille sur l’accueil.' : 'Enregistré dans « À publier » (sans date : ajoutez-en une pour avoir un rappel).'); rappels(); tab('planning'); }
       else note((r && r.error) || 'Échec de l’enregistrement.');
     });
   }
@@ -514,7 +514,7 @@
       '<div class="g2" style="margin-top:10px"><label class="f">Date de publication<input type="date" id="pf_d" value="' + e(p.date) + '"></label><label class="f">Heure<input type="time" id="pf_h" value="' + e(p.heure) + '"></label></div>' +
       '<label class="f" style="margin-top:10px">Lien de la publication (une fois en ligne)<input id="pf_l" maxlength="500" value="' + e(p.lien) + '" placeholder="https://…"></label>' +
       (pVis ? '<p class="sub" style="margin:10px 0 0">✓ Un visuel est rattaché à cette publication (« ' + e(pVis.titre || '') + ' »).</p>' : '') +
-      '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter au planning') + '</button><button class="btn l" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
+      '<div class="row" style="margin-top:12px"><button class="btn" id="pf_save">' + (pEdit ? 'Enregistrer' : 'Ajouter') + '</button><button class="btn l" id="pf_cancel">Annuler</button></div><div id="pf_m" class="cmmsg"></div></div>';
   }
   function pCard(x, me, adm, net) {
     var r0 = RS[x.reseau] || RS.autre, mine = adm || x.par === me, pub = x.statut === 'publiee', u = urgent(x), sc = (SS.filter(function (z) { return z[0] === (x.statut === 'attente' ? 'idee' : x.statut); })[0] || SS[0])[2];
@@ -535,11 +535,11 @@
     h += '<div class="filters" id="pf_tabs"><button class="chip' + (pTab === 'tout' ? ' on' : '') + '" data-ptab="tout">Tout' + (nU ? '<i class="pfn">' + nU + '</i>' : '') + '</button>' + nets.map(function (k) { var n = pubs.filter(function (x) { return x.reseau === k && urgent(x); }).length; return '<button class="chip' + (pTab === k ? ' on' : '') + '" data-ptab="' + k + '">' + RS[k].lb + (n ? '<i class="pfn">' + n + '</i>' : '') + '</button>'; }).join('') + '</div>';
     var net = pTab === 'tout', all = net ? pubs : pubs.filter(function (x) { return x.reseau === pTab; });
     var ready = all.filter(function (x) { return x.statut === 'programmee'; }).sort(byDate), ideas = all.filter(function (x) { return x.statut === 'idee' || x.statut === 'attente'; }).sort(byDate), done = all.filter(function (x) { return x.statut === 'publiee'; }).sort(function (a, z) { return (z.date || '').localeCompare(a.date || ''); });
-    h += '<div class="pbar"><span>' + (nU ? '<b style="color:var(--poppy)">' + nU + ' à publier</b> aujourd’hui, demain ou en retard' : 'Une publication passe en rouge la veille de sa date') + '</span><span class="pbtn"><button class="btn l s" id="pf_ics">Agenda (.ics)</button><button class="btn s" data-padd="' + (net ? 'linkedin' : pTab) + '">+ Ajouter</button></span></div>';
+    h += '<div class="pbar"><span>' + (nU ? '<b style="color:var(--poppy)">' + nU + ' à publier</b> aujourd’hui, demain ou en retard' : 'Les publications passent en rouge la veille de leur date de sortie') + '</span><span class="pbtn"><button class="btn l s" id="pf_ics">Agenda (.ics)</button><button class="btn s" data-padd="' + (net ? 'linkedin' : pTab) + '">+ Ajouter</button></span></div>';
     var sec = function (t, l, c) { return l.length ? '<h3 class="psec"><i style="background:' + c + '"></i>' + t + ' <span>' + l.length + '</span></h3><div class="pfg">' + l.map(function (x) { return pCard(x, me, adm, net); }).join('') + '</div>' : ''; };
     var body = sec('Prêtes à publier', ready, 'var(--rasp)') + sec('Idées', ideas, '#B9A9B4') + sec('Publiées', done, '#2F7D4F');
-    h += body || '<div class="empty" style="margin-top:8px"><b>' + (net ? 'Aucune publication pour le moment' : 'Rien pour ' + RS[pTab].lb + ' pour le moment') + '</b>Créez un visuel puis « Enregistrer dans le planning », ou ajoutez une idée avec « + Ajouter ».</div>';
-    h += '<p class="cap" style="margin-top:18px">Le planning vous rappelle ce qui est à publier (accueil et menu) mais ne publie rien tout seul : « Copier le texte », publiez sur le réseau, puis « Marquer publiée ».</p>';
+    h += body || '<div class="empty" style="margin-top:8px"><b>' + (net ? 'Aucune publication pour le moment' : 'Rien pour ' + RS[pTab].lb + ' pour le moment') + '</b>Créez un visuel puis « Enregistrer pour publier », ou ajoutez une idée avec « + Ajouter ».</div>';
+    h += '<p class="cap" style="margin-top:18px">Cet onglet vous rappelle ce qui est à publier (accueil et menu) mais ne publie rien tout seul : « Copier le texte », publiez sur le réseau, puis « Marquer publiée ».</p>';
     $('cmplan').innerHTML = h; lastF = Date.now(); drawRappels();
   }
   function pMsg(t) { var m = $('pf_m'); if (m) m.textContent = t || ''; }
@@ -567,7 +567,7 @@
     R.addEventListener('click', function (ev) {
       var b = ev.target.closest('button'); if (!b) return;
       var g = function (k) { return pubs.filter(function (x) { return x.id === b.dataset[k]; })[0]; };
-      if (b.id === 'pf_save') pPush(pRead(), pEdit ? 'Publication modifiée.' : 'Ajoutée au planning.');
+      if (b.id === 'pf_save') pPush(pRead(), pEdit ? 'Publication modifiée.' : 'Publication ajoutée.');
       else if (b.id === 'pf_cancel') { pEdit = ''; pOpen = false; draftP = null; drawPubs(); }
       else if (b.dataset.ptab) { pTab = b.dataset.ptab; pOpen = false; draftP = null; pEdit = ''; drawPubs(); }
       else if (b.dataset.padd) { openForm({ reseau: b.dataset.padd, statut: 'idee', titre: '', texte: '', date: '', heure: '', lien: '' }); pEdit = ''; }
@@ -581,7 +581,7 @@
         var o = Object.assign({}, x4, { statut: nx }); if (nx === 'publiee' && !o.date) o.date = tdy(); pPush(o, nx === 'publiee' ? 'Marquée comme publiée.' : 'Statut mis à jour.');
       }
       else if (b.dataset.pe) { var x5 = g('pe'); if (x5) openForm(x5); }
-      else if (b.dataset.pr) { if (!confirm('Supprimer cette publication du planning ?')) return; api2({ action: 'pub_del', id: b.dataset.pr }).then(function (d) { if (d && d.ok) { pubs = d.publis; drawPubs(); } else note((d && d.error) || 'Suppression impossible.'); }); }
+      else if (b.dataset.pr) { if (!confirm('Supprimer cette publication ?')) return; api2({ action: 'pub_del', id: b.dataset.pr }).then(function (d) { if (d && d.ok) { pubs = d.publis; drawPubs(); } else note((d && d.error) || 'Suppression impossible.'); }); }
     });
   }
 
@@ -594,7 +594,7 @@
     var host = $('hstats'), card = $('hpub'); if (!host) return;
     if (!l.length) { if (card) card.remove(); return; }
     if (!card) { host.insertAdjacentHTML('afterend', '<div class="newc" id="hpub" style="margin-bottom:18px"></div>'); card = $('hpub'); }
-    var h = '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap"><b>Publications à faire <span style="color:var(--poppy)">· ' + l.length + '</span></b><button class="btn l s" id="hpub_go">Ouvrir le planning</button></div>';
+    var h = '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap"><b>Publications à faire <span style="color:var(--poppy)">· ' + l.length + '</span></b><button class="btn l s" id="hpub_go">Voir les publications</button></div>';
     Object.keys(RS).forEach(function (k) {
       var g = l.filter(function (x) { return x.reseau === k; }).sort(function (a, z) { return ((a.date || '') + (a.heure || '')).localeCompare((z.date || '') + (z.heure || '')); }); if (!g.length) return;
       h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><span class="lkb" style="background:' + RS[k].c + ';width:28px;height:28px;font-size:12px">' + e(RS[k].b) + '</span><div style="flex:1"><b style="font-size:13.5px">' + RS[k].lb + '</b>' +
