@@ -287,6 +287,7 @@ export default async (req) => {
       const { blobs } = await ac.list();
       return J({ ok: true, prin: await prin(), membres: (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) })), principaux: Object.keys(c) });
     }
+    if (b.action === "compte_delete" && ADMIN_FIXE.includes(n)) return J({ error: "Le compte Services techniques est permanent : il ne peut pas être supprimé." }, 400);
     if (b.action !== "comptes_list") {
       if (!NAME.test(n) || n in c) return J({ error: "Nom invalide (2 à 30 caractères : lettres, chiffres, . _ -) ou déjà réservé." }, 400);
       if (b.action === "compte_create" && b.role && !ROLES.includes(b.role)) return J({ error: "Statut inconnu." }, 400);
