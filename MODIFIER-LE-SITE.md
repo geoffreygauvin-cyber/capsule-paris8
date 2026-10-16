@@ -21,6 +21,8 @@ Onglet « Calendrier » de `/gestion` : 3 salles (Salle 1 à 3), créneaux d'1 h
 Planifier = invitation par mail (fichier .ics, s'ajoute à l'agenda) + rappel automatique la veille (`netlify/functions/rappels.mjs`, tous les jours vers 17-18 h).
 Mails : variables Netlify `MAIL_USER` (capsule-contact@gmail.com) et `MAIL_PASS` (mot de passe d'application Google). Flux d'agenda général : `/api/calendrier.ics?k=<CAL_TOKEN>`.
 
+Affichage des tuiles de rendez-vous (`gestion.html`, `gridHtml`, `fitOcc`) : chaque tuile montre l'initiale + numéro de patient·e, le numéro de séance et l'étudiant·e psy, et **tout doit y tenir**. La taille du texte suit la largeur du jour (`container-type:inline-size`, `clamp(9px,3.3cqw,12px)`), puis `fitOcc` réduit encore la police (plancher 7,5 px) si quelque chose déborde, après le chargement des polices, au redimensionnement et à l'ouverture de la fenêtre de planification (qui s'élargit pour cela, classe `wd`). Quand la zone du calendrier fait moins de 900 px de large, un seul jour est affiché, avec ses onglets. Au survol, la tuile affiche sa description complète. Un rendez-vous passé non encore clos affiche « à confirmer » : on le clôt avec « réalisée » ou « absence » depuis la fiche, ce qui le retire de la grille. La légende des couleurs ne liste que les étudiant·es psy (et toute personne qui porte encore un rendez-vous, ex. un ancien compte admin).
+
 ## Annuler ou reporter soi-même (lien dans les mails de rendez-vous)
 
 Les mails de confirmation, de déplacement et de rappel, ainsi que l'invitation d'agenda (champ « URL »), contiennent un lien personnel `…/rdv?t=…`. Il ouvre la page publique `rdv.html` (textes et couleurs dans ce fichier), servie à `/rdv` (`netlify.toml`, non indexée) :

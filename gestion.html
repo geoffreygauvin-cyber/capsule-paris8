@@ -160,6 +160,17 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .slot:disabled{border:0;background:#F4EEE8;cursor:default}
 .occ{border:0;text-align:left;font-weight:600;overflow:hidden;box-shadow:inset 3px 0 0 rgba(31,18,23,.25)}.occ small{display:block;font-weight:400;opacity:.75;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .occ.mine{box-shadow:inset 3px 0 0 var(--purple),0 0 0 2px var(--purple)}
+/* tuiles de rendez-vous : tout tient dans la case, le texte rétrécit avec la carte du jour */
+.day{container-type:inline-size}
+.occ{display:flex;flex-direction:column;justify-content:center;font-size:12px;font-size:clamp(9px,3.3cqw,12px)}
+.occ .ol{display:flex;align-items:baseline;gap:3px;min-width:0;white-space:nowrap}
+.occ .on{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.occ .no{flex:none;font-weight:500;opacity:.7}
+.occ .dw{flex:none}
+.occ small{font-size:.92em}
+#v2{container-type:inline-size}
+@container (max-width:900px){#v2 .days{display:block}#v2 .day{display:none}#v2 .days.d0 .day:nth-child(1),#v2 .days.d1 .day:nth-child(2),#v2 .days.d2 .day:nth-child(3){display:block}#v2 .dtabs{display:flex}}
+.occ.todo::after{font-size:.84em;white-space:nowrap}
 .feed{margin-top:18px}.feed input{margin-top:6px;background:var(--paper)}
 /* équipe */
 .tm{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:8px 16px;margin-bottom:18px}
@@ -169,7 +180,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 /* fenêtre */
 #ov{position:fixed;inset:0;background:rgba(31,18,23,.55);backdrop-filter:blur(2px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 #md{background:var(--cream);border-radius:26px;padding:24px;width:100%;max-width:880px;max-height:calc(100vh - 32px);overflow:auto}
-#md.sm{max-width:480px}#md h3{margin:0 0 2px;font-size:20px}#md .sub{margin:0 0 14px;color:var(--muted);font-size:14px}
+#md.sm{max-width:480px}#md.wd{max-width:1120px}#md h3{margin:0 0 2px;font-size:20px}#md .sub{margin:0 0 14px;color:var(--muted);font-size:14px}
 #md .days{grid-template-columns:repeat(3,1fr)}
 .ck{display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-size:14px}.ck span{flex:1}
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;z-index:60;max-width:92%;font-weight:500;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -652,21 +663,24 @@ function gridHtml(wk,picking){
  cfg.jours.forEach(function(j){var d=addDays(wk,j-1),n=occs().filter(function(o){return o.rdvDate===d}).length;
   h+='<div class="day'+(d===today?' today':'')+'"><h4>'+esc(fday(d))+'<em>'+(d===today?'Aujourd’hui':n?n+' RDV':'')+'</em></h4><table><tr><th></th>'+cfg.salles.map(function(s){return '<th>'+esc(s.replace('Salle ','S'))+'</th>'}).join('')+'</tr>';
   cfg.heures.forEach(function(hh){h+='<tr><td class="h'+(d===today&&parseInt(hh,10)===new Date().getHours()?' now':'')+'">'+fh(hh)+'</td>'+cfg.salles.map(function(s){var o=occ(d,hh,s);
-   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" '+(isSup?'':'data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'" ')+'style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'" title="RDV '+o.no+'">'+esc(o.prenom)+' <span style="font-weight:500;opacity:.7">#'+o.no+'</span>'+(dupSem(o).some(function(x){return x.sem===monday(o.rdvDate)})?' ⚠':'')+'<small>'+esc(cap(o.therapeute))+'</small></button></td>'}
+   if(o){var dim=mineOnly&&!picking&&o.therapeute!==moi;return '<td><button class="occ'+(o.therapeute===moi?' mine':'')+(aConfirmer(o)?' todo':'')+'" '+(isSup?'':'data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'" ')+'style="background:'+col(o.therapeute)+(dim?';opacity:.28':'')+'" title="'+esc(o.prenom+' · RDV '+o.no+' · '+cap(o.therapeute)+(aConfirmer(o)?' · à confirmer':''))+'"><span class="ol"><span class="on">'+esc(o.prenom)+'</span><span class="no">#'+o.no+'</span>'+(dupSem(o).some(function(x){return x.sem===monday(o.rdvDate)})?'<span class="dw">⚠</span>':'')+'</span><small>'+esc(cap(o.therapeute))+'</small></button></td>'}
    if(isSup)return '<td></td>';return '<td><button class="slot" data-d="'+d+'" data-h="'+hh+'" data-s="'+esc(s)+'"'+(past(d,hh)?' disabled':' aria-label="Planifier le '+esc(fday(d))+' à '+fh(hh)+', '+esc(s)+'"')+'>'+(past(d,hh)?'':'+')+'</button></td>'}).join('')+'</tr>'});
   h+='</table></div>'});return h}
+/* Tout doit tenir dans la tuile : on réduit la police de chaque tuile (jusqu'à 7,5 px) tant que la personne, le ou la thérapeute ou « à confirmer » débordent. */
+function fitOcc(root){Array.prototype.forEach.call((root||document).querySelectorAll('.occ'),function(b){if(!b.offsetWidth)return;b.style.fontSize='';var fs=parseFloat(getComputedStyle(b).fontSize),on=b.querySelector('.on'),sm=b.querySelector('small');function over(){return on.scrollWidth>on.clientWidth+.5||sm.scrollWidth>sm.clientWidth+.5||b.scrollWidth>b.clientWidth+.5||b.scrollHeight>b.clientHeight+.5}while(fs>7.5&&over()){fs-=.5;b.style.fontSize=fs+'px'}})}
+var fitT=0;window.addEventListener('resize',function(){clearTimeout(fitT);fitT=setTimeout(function(){fitOcc(document)},150)});
 function drawCal(){
  $('wt').textContent='Semaine du '+fday(week);
- $('cal').className='days d'+dayIdx;$('cal').innerHTML=gridHtml(week,false);
+ $('cal').className='days d'+dayIdx;$('cal').innerHTML=gridHtml(week,false);fitOcc($('cal'));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){fitOcc($('cal'))});
  $('dtabs').innerHTML=cfg.jours.map(function(j,k){return '<button data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('');
- $('leg').innerHTML=equipe.map(function(e){return '<span style="background:'+col(e)+'">'+esc(cap(e))+'</span>'}).join('');
+ var lg=etuL().slice();occs().forEach(function(o){if(o.therapeute&&lg.indexOf(o.therapeute)<0)lg.push(o.therapeute)});$('leg').innerHTML=lg.map(function(e){return '<span style="background:'+col(e)+'">'+esc(cap(e))+'</span>'}).join('');
  var f=$('feed');if(cfg.calUrl){f.classList.remove('hide');f.innerHTML='<b>Agenda général</b> pour Google Agenda ou Outlook (initiale et numéro de la personne, salle, thérapeute : jamais son prénom). Copiez ce lien puis, dans Google Agenda : Autres agendas › À partir de l’URL.<input readonly value="'+esc(location.origin+cfg.calUrl)+'" onclick="this.select()"><small>Mis à jour environ une fois par jour ; ce calendrier-ci est toujours à jour.</small>'}}
 /* ---- fenêtre ---- */
-function openM(h,small){$('md').className=small?'sm':'';$('md').innerHTML='<button class="mx" data-m="x" aria-label="Fermer">×</button>'+h;$('ov').classList.remove('hide')}
+function openM(h,small,wide){$('md').className=small?'sm':wide?'wd':'';$('md').innerHTML='<button class="mx" data-m="x" aria-label="Fermer">×</button>'+h;$('ov').classList.remove('hide')}
 function closeM(){if(FICHE_OUV){delete FULL[FICHE_OUV];FICHE_OUV=null}$('ov').classList.add('hide');$('md').innerHTML=''}
 var plan={id:null,rdvId:null,week:''};
 function planner(id,rdvId){plan={id:id,rdvId:rdvId||null,week:week};var i=byId(id);
- openM('<h3>Quel créneau pour '+esc(i.prenom)+' ?'+(rdvId?' <small style="font-weight:500">(déplacer le RDV)</small>':'')+'</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Elle ou il est disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un <b>+</b>.</p><div class="wk"><button class="ib" data-m="wp" aria-label="Semaine précédente">‹</button><div class="t">Semaine du '+esc(fday(plan.week))+'</div><button class="ib" data-m="wn" aria-label="Semaine suivante">›</button><button class="btn l s" data-m="x">Fermer</button></div><div class="dtabs">'+cfg.jours.map(function(j,k){return '<button data-m="dk" data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(plan.week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('')+'</div><div class="days d'+dayIdx+'">'+gridHtml(plan.week,true)+'</div>')}
+ openM('<h3>Quel créneau pour '+esc(i.prenom)+' ?'+(rdvId?' <small style="font-weight:500">(déplacer le RDV)</small>':'')+'</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Elle ou il est disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un <b>+</b>.</p><div class="wk"><button class="ib" data-m="wp" aria-label="Semaine précédente">‹</button><div class="t">Semaine du '+esc(fday(plan.week))+'</div><button class="ib" data-m="wn" aria-label="Semaine suivante">›</button><button class="btn l s" data-m="x">Fermer</button></div><div class="dtabs">'+cfg.jours.map(function(j,k){return '<button data-m="dk" data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(plan.week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('')+'</div><div class="days d'+dayIdx+'">'+gridHtml(plan.week,true)+'</div>',false,true);fitOcc($('md'))}
 function confirmPick(d,hh,s,id,rid){
  var libres=items.filter(function(x){return x.statut!=='sans_suite'&&(x.droit||x.libre)}).sort(function(a,z){return (a.num||0)-(z.num||0)});
  var cur=id?byId(id):null;
