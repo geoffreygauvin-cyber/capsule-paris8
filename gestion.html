@@ -372,6 +372,26 @@ aside{overflow:hidden!important}
 .sact .nu b{display:block;font-size:21px;color:var(--rasp);line-height:1.15}.sact .nu span{font-size:12px;color:var(--muted);display:block}.sact .nu small{display:block;font-size:11.5px;margin-top:2px}
 .sact .wr{grid-column:1/-1;margin:0;font-size:13px;color:#5A3B00;background:#FFF1D6;border-radius:10px;padding:7px 12px}
 @media (max-width:900px){.sact{grid-template-columns:repeat(3,minmax(0,1fr))}.sact .nm{grid-column:1/-1}}
+/* Chaleur discrète : ombres très douces, fond des messages vides, soleil ou lune devant la date de l'Accueil, petite tasse les jours sans rendez-vous (voir gestion-chaleur.js) */
+.kpi.pastel,.stat,.stat.pastel,.ecard,.card,.dcard{box-shadow:0 1px 0 rgba(117,21,31,.04),0 12px 26px -20px rgba(117,21,31,.28)}
+.stat.pastel:hover{box-shadow:0 1px 0 rgba(117,21,31,.05),0 16px 30px -16px rgba(117,21,31,.34)}
+.empty{background:linear-gradient(180deg,#fffaf4,#fff);border-color:#ecd5cb}
+#hdate{display:flex;align-items:center;gap:7px}
+#hdate .tod{display:inline-grid;place-items:center;width:22px;height:22px;flex:none}
+#hdate .tod svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.eday .none::before{content:"";display:block;width:20px;height:20px;margin-bottom:6px;background:currentColor;opacity:.28;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10h11v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z'/%3E%3Cpath d='M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 4v2M12 4v2'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10h11v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z'/%3E%3Cpath d='M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 4v2M12 4v2'/%3E%3C/svg%3E") center/contain no-repeat}
+/* chiffres clés dans la zone libre à droite du titre (écrans larges, 1150 px et plus) : pas d'icône, cartes compactes, ~100 px gagnés */
+.stat>.bd,.kpi>.bd{display:none}
+@media (min-width:1150px){
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child)){display:grid;grid-template-columns:minmax(0,1fr)}
+#v5 #amy:not(.hide),#v17 #v17b{display:contents}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child))>header.ph0{grid-area:1/1;margin-bottom:30px;display:flex;flex-direction:column;justify-content:center;padding-right:calc(min(54%,540px) + 52px)}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child))>header.ph0 .sub{max-width:none}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child))>:is(.stats,.mkpis),#v5 #amy>.mkpis:first-child,#v17 #v17b>.stats:first-child{grid-area:1/1;justify-self:end;align-self:center;position:relative;z-index:1;width:min(54%,540px);margin:24px 28px 54px 0!important;display:grid;grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px!important}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child)) :is(.stats,.mkpis) :is(.stat,.kpi){padding:10px 12px!important;min-height:0!important;border-radius:14px;justify-content:flex-start!important}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child)) :is(.stats,.mkpis) :is(.stat,.kpi) b{font-size:22px!important;line-height:1.1}
+:is(#v1:not(.hide):has(> .ph0 + .stats:not(:empty)),#v4:not(.hide):has(> .ph0 + .mkpis:not(:empty)),#v5:not(.hide):has(> #amy:not(.hide) > .mkpis:first-child),#v17:not(.hide):has(> #v17b > .stats:first-child)) :is(.stats,.mkpis) :is(.stat,.kpi) :is(span,small){font-size:11.5px!important;line-height:1.3}
+}
 </style><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.png" sizes="180x180" type="image/png"><link rel="apple-touch-icon" href="/favicon.png">
 </head><body>
 <section id="login">
@@ -516,7 +536,7 @@ function load(cb){api({action:'list'}).then(function(d){
  items=d.items;CAP=d.capacite||null;photos=d.photos||{};titres=d.titres||{};bios=d.bios||{};contacts=d.contacts||{};ress=d.ressources||[];intervN=d.intervAttente||0;monDos=d.monDossier||null;alias=d.alias||{};var wasLocked=locked;locked=!!d.locked;setTimeout(navBadges,0);equipe=d.equipe;moi=d.compte;isAdmin=!!d.admin;cfg=d.cfg||cfg;
  role=d.role||(d.admin?'admin':'etudiant');isSup=role==='superviseur';roles=d.roles||{};superv=d.superviseurs||[];techs=d.techniques||[];isTech=!!d.technique;if(isTech&&viewMode==='etu'){role='etudiant';isAdmin=false}if(isTech&&viewMode==='sup'){role='superviseur';isAdmin=false;isSup=true}modeUI();buildNav();$('radd').classList.toggle('hide',!(isAdmin||isSup));Array.prototype.forEach.call(document.querySelectorAll('#v3 .newc'),function(x){x.classList.toggle('hide',!isAdmin)});
  $('login').classList.add('hide');$('app').classList.remove('hide');
- $('whoname').textContent=cap(moi);$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=whoLine();
+ $('whoname').textContent=cap(moi);$('whom').textContent=whoTxt();$('av').outerHTML=av(moi,'',"av");var ms=mesStats(moi);$('whoc').textContent=whoLine();
  if(!week)week=monday(iso(new Date()));
  clearTimeout(pollT);if(locked){pollT=setTimeout(function(){load()},40000);if(window.supDossier&&!$('v18').classList.contains('hide'))window.supDossier($('v18b'));if(cb)cb();return}
  if(wasLocked){setTimeout(function(){nav(11);toast('Votre dossier est validé : toute la plateforme est ouverte.')},0)}
@@ -689,6 +709,7 @@ function issue(id,iss,rid){api({action:'seance_issue',id:id,rdvId:rid,issue:iss}
  items=items.map(function(x){return x.id===id?r.item:x});closeM();draw();drawCal();refreshMe();
  if(iss==='realisee'){mesureForm(id,r.item.seances.length-1,true);return;var n=nS(r.item);openM('<h3>Séance enregistrée</h3><p class="sub">'+esc(r.item.prenom)+' : '+n+' séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+' sur '+cfg.seancesMax+' au maximum.</p><div class="row"><button class="btn" data-m="plan2" data-id="'+esc(id)+'">Planifier la suivante</button><button class="btn l" data-m="x">Plus tard</button></div>',true)}
  else toast('Absence enregistrée. La personne repasse « à recontacter ».')})}
+function whoTxt(){return 'Connecté·e : '+cap(moi)+' ('+(techs.indexOf(moi)>-1?'Services techniques':titre(moi))+')'}
 function refreshMe(){$('whoc').textContent=whoLine();drawHome()}
 /* ---- patients ---- */
 var pf='suivi';
@@ -732,7 +753,7 @@ function profil(){var ms=mesStats(moi);
  '<div class="kpis"><div class="kpi pastel"><b>'+fhh(ms.total)+'</b><span>de consultation au total</span></div><div class="kpi pastel"><b>'+fhh(ms.mois)+'</b><span>ce mois-ci</span></div><div class="kpi pastel"><b>'+ms.patients+'</b><span>personne'+(ms.patients>1?'s':'')+' accompagnée'+(ms.patients>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.total+'</b><span>séance'+(ms.total>1?'s':'')+' réalisée'+(ms.total>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.abs+'</b><span>absence'+(ms.abs>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+ms.avenir+'</b><span>RDV à venir</span></div></div>'+
  '<div class="row"><button class="btn l" data-m="x">Fermer</button><button class="btn l" data-m="reglement">Règlement intérieur</button><button class="btn l" data-m="releve">Mon relevé d’heures (CSV)</button><button class="link" data-m="logout">Se déconnecter</button></div>',true);
  if(isAdmin||isSup){var kk=document.querySelector('.kpis'),rl=document.querySelector('[data-m="releve"]');if(kk)kk.remove();if(rl)rl.remove()}
- $('pt').onchange=function(){var el=this,v=el.value.trim();api({action:'profil_titre',titre:v}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.titre)titres[moi]=r.titre;else delete titres[moi];el.placeholder=titre(moi);$('whoc').textContent=whoLine();$('whom').textContent='Connecté·e : '+cap(moi)+' ('+titre(moi)+')';toast(r.titre?'Titre enregistré.':'Titre par défaut rétabli.')})};
+ $('pt').onchange=function(){var el=this,v=el.value.trim();api({action:'profil_titre',titre:v}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.titre)titres[moi]=r.titre;else delete titres[moi];el.placeholder=titre(moi);$('whoc').textContent=whoLine();$('whom').textContent=whoTxt();toast(r.titre?'Titre enregistré.':'Titre par défaut rétabli.')})};
  $('pb').onchange=function(){var v=this.value.trim();api({action:'profil_bio',bio:v}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.bio)bios[moi]=r.bio;else delete bios[moi];toast(r.bio?'Présentation enregistrée.':'Présentation retirée.')})};
  $('pcm').onchange=$('pct').onchange=function(){api({action:'profil_contact',email:$('pcm').value,tel:$('pct').value}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}if(r.email||r.tel)contacts[moi]={email:r.email,tel:r.tel};else delete contacts[moi];toast('Contact enregistré.')})};
  $('pf').onchange=function(){var inp=this,f=inp.files[0];if(!f)return;toast('Envoi de la photo…');var rd=new FileReader();rd.onerror=function(){toast('Fichier illisible.')};rd.onload=function(){var im=new Image();im.onload=function(){var d='';try{var c=document.createElement('canvas');c.width=c.height=192;var x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,192,192);d=c.toDataURL('image/jpeg',.82)}catch(e){toast('Le navigateur bloque la lecture de l’image : '+(e&&e.message||e));return}if(d.indexOf('data:image/jpeg')!==0){toast('Le navigateur n’a pas pu préparer la photo (protection anti-pistage ?). Essaie avec un autre navigateur.');return}savePhoto(d)};im.onerror=function(){toast('Image illisible (format non pris en charge ?). Essaie une image JPG ou PNG.')};im.src=rd.result;try{inp.value=''}catch(e){}};rd.readAsDataURL(f)}}
@@ -1449,4 +1470,4 @@ if(token)load();
 <script src="/gestion-annonces.js"></script>
 <script src="/gestion-charte.js"></script>
 <script src="/gestion-equipe.js"></script><script src="/gestion-accueil.js"></script><script src="/gestion-reglement.js"></script><script src="/gestion-fiches.js"></script><script src="/gestion-juridique.js"></script>
-<script src="/gestion-rh.js"></script><script src="/gestion-interv.js"></script><script src="/gestion-budget.js"></script><script src="/gestion-sup.js"></script><script src="/gestion-dossier.js"></script><script src="/gestion-messagerie.js"></script></body></html>
+<script src="/gestion-rh.js"></script><script src="/gestion-interv.js"></script><script src="/gestion-budget.js"></script><script src="/gestion-sup.js"></script><script src="/gestion-dossier.js"></script><script src="/gestion-messagerie.js"></script><script src="/gestion-chaleur.js"></script></body></html>

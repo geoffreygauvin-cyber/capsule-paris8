@@ -259,3 +259,8 @@ Chaque compte (étudiant·e, superviseur·e validé·e, admin) a un **lien d'age
 - Encart « Une autre question ? » sous les questions fréquentes : titre et texte modifiables, l'adresse mail est celle du site.
 - Les icônes des raisons de venir, des questions et des numéros d'urgence sont choisies d'après les mots du texte (tableaux `IC_RAISON`, `IC_FAQ`, `IC_NUM` dans `site.js`) : pas besoin de les régler à la main si l'on change ou réordonne les textes. Icône par défaut : un cœur (raisons), une bulle d'aide (questions), un téléphone (numéros).
 - Les icônes elles-mêmes sont les symboles `i-…` en haut de `index.html`. Les couleurs, ombres et le relief au survol sont dans le bloc « chaleur » à la fin de la feuille de style.
+
+## Touches de chaleur de la plateforme (/gestion, discrètes)
+- Les icônes du menu de gauche sont inchangées. Ajouts très légers : ombres douces sur les cartes de chiffres, fond un peu plus chaud pour les messages « Rien ici pour le moment », petite tasse dans les jours sans rendez-vous de l'Accueil, soleil ou lune devant la date et « Bonsoir » à partir de 18 h (fichier `gestion-chaleur.js`, bloc « Chaleur discrète » de `gestion.html`).
+- Sur écran large (1150 px et plus), les cartes de chiffres des pages Demandes, Patients, Activité et Mon récap sont placées dans la zone libre à droite du titre, pour gagner de la hauteur. L'Accueil et les écrans plus étroits gardent les cartes sous le titre. Les cartes n'ont plus d'icône. Tout est dans le bloc CSS « chiffres clés dans la zone libre à droite du titre » de `gestion.html`.
+- Sur mobile, le bandeau du haut affiche « Connecté·e : Prénom (Services techniques) » pour les comptes techniques (fonction `whoTxt`), au lieu du libellé complet.
