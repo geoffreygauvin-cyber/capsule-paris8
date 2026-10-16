@@ -481,6 +481,9 @@ aside{overflow:hidden!important}
 <script>
 (function(){
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['attente','Liste d’attente'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
+/* Réception : cinq onglets. Terminées et Sans suite ne figurent plus ici : on les retrouve dans Patients (compte de l'étudiant·e, et vue des admins). Les statuts enregistrés ne changent pas. */
+var TABS=[['nouvelle','Nouvelles',['nouvelle']],['contactee','Contactées',['contactee']],['a_recontacter','À recontacter',['a_recontacter']],['attente','Liste d’attente',['attente']],['suivi','En suivi',['rdv_fixe','en_cours']]];
+function inTab(i){var g=TABS.filter(function(t){return t[0]===filtre})[0];return !g||g[2].indexOf(i.statut)>-1}
 var SL={nouvelle:'Nouvelle',a_recontacter:'À recontacter',attente:'Liste d’attente',contactee:'Contactée',rdv_fixe:'RDV fixé',en_cours:'En cours',terminee:'Terminée',sans_suite:'Sans suite'};
 /* Patient·es : la liste (items) ne contient que « M. · 42 », le statut et les rendez-vous. Prénom, mail, téléphone, message et notes viennent de patient_get à l'ouverture de la fiche (FULL, 5 min en mémoire). */
 var FULL={},FICHE_OUV=null;
@@ -570,7 +573,7 @@ function stats(){drawToday();
  var a=items.filter(function(i){return i.statut==='a_recontacter'}).length,cf=occs().filter(aConfirmer).length;
  var IC={inbox:'<path d="M4 13l2-8h12l2 8v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',tel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
  function tile(cls,ic,k,num,lab){return '<button class="stat pastel '+cls+'" data-s="'+k+'"><span class="bd"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg></span><b>'+num+'</b><span>'+lab+'</span></button>'}
- $('stats').innerHTML=tile('t1','inbox','nouvelle',n,'à traiter')+tile('t2','cal','rdv_fixe',r,'rendez-vous cette semaine')+tile('t3','tel','a_recontacter',a,'à recontacter')+(cf?tile('t1','ok','rdv_fixe',cf,'séance'+(cf>1?'s':'')+' à confirmer'):'');
+ $('stats').innerHTML=tile('t1','inbox','nouvelle',n,'à traiter')+tile('t2','cal','suivi',r,'rendez-vous cette semaine')+tile('t3','tel','a_recontacter',a,'à recontacter')+(cf?tile('t1','ok','suivi',cf,'séance'+(cf>1?'s':'')+' à confirmer'):'');
  var nb=$('nbn');if(nb){nb.textContent=n;nb.classList.toggle('hide',!n)}}
 function vu(id,modal){api({action:'update',id:id,patch:{retoursVus:true}}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});draw();if(modal)fiche(id)}else toast(d.error||'Erreur')})}
 /* annulations et demandes de report faites par la personne, depuis le lien de son mail */
@@ -640,9 +643,9 @@ function card(i){
 function draw(){
  stats();drawCap();drawPat();drawAct();drawRes();
  var q=$('q').value.toLowerCase();
- $('tabs').innerHTML=ST.map(function(s){var n=items.filter(function(i){return i.statut===s[0]}).length;return '<button class="chip'+(filtre===s[0]?' on':'')+'" data-s="'+s[0]+'">'+s[1]+(n?'<i>'+n+'</i>':'')+'</button>'}).join('')+'<button class="chip'+(filtre==='tous'?' on':'')+'" data-s="tous">Toutes'+(items.length?'<i>'+items.length+'</i>':'')+'</button>';
- var l=items.filter(function(i){return(filtre==='tous'||i.statut===filtre)&&(!q||i.prenom.toLowerCase().indexOf(q)>-1)});if(filtre==='attente')l.sort(attCmp);
- $('list').innerHTML=l.length?(filtre==='attente'?attNote():'')+l.map(card).join(''):'<div class="empty"><b>'+(q?'Aucun résultat':'Rien ici pour le moment')+'</b>'+(q?'Cherchez une initiale ou un numéro (par exemple « M. » ou « 42 »).':filtre==='nouvelle'?'Toutes les nouvelles demandes ont été traitées.':'Aucune demande avec ce statut.')+'</div>'}
+ $('tabs').innerHTML=TABS.map(function(g){var n=items.filter(function(i){return g[2].indexOf(i.statut)>-1}).length;return '<button class="chip'+(filtre===g[0]?' on':'')+'" data-s="'+g[0]+'">'+g[1]+(n?'<i>'+n+'</i>':'')+'</button>'}).join('');
+ var l=items.filter(function(i){return q?i.prenom.toLowerCase().indexOf(q)>-1:inTab(i)});if(filtre==='attente'&&!q)l.sort(attCmp);
+ $('list').innerHTML=l.length?(filtre==='attente'&&!q?attNote():'')+l.map(card).join(''):'<div class="empty"><b>'+(q?'Aucun résultat':'Rien ici pour le moment')+'</b>'+(q?'Cherchez une initiale ou un numéro (par exemple « M. » ou « 42 »).':filtre==='nouvelle'?'Toutes les nouvelles demandes ont été traitées.':'Aucune demande avec ce statut.')+'</div>'}
 /* ---- calendrier ---- */
 function gridHtml(wk,picking){
  var today=iso(new Date()),h='';
@@ -1086,7 +1089,7 @@ function drawHome(){
  if(conf.length)h+='<h3 class="hh">À confirmer</h3><p class="sub" style="margin:-4px 0 8px">Ces rendez-vous ont eu lieu : indiquez s’ils ont été réalisés.</p><div class="hl">'+conf.map(function(o){return '<button class="hrow r todo" data-id="'+esc(o.id)+'" data-r="'+esc(o.rdvId)+'"><b>'+esc(fday(o.rdvDate))+'</b><span>'+esc(o.prenom)+' · '+fh(o.rdvHeure)+'</span><small>'+esc(cap(o.therapeute))+'</small></button>'}).join('')+'</div>';
  var nl=upS.slice(0,4);if(nl.length)h+='<h3 class="hh">Prochaines supervisions et réunions</h3><div class="hl">'+nl.map(function(x){return '<div class="hrow s"><b>'+esc(fday(x.date))+'</b><span>'+fh(x.heure)+' – '+fh(supEnd(x))+' · '+typeLb(x)+(x.titre?' · '+esc(x.titre):'')+'</span><small>'+esc(x.lieu||'')+' · '+esc(cap(x.superviseur))+'</small></div>'}).join('')+'</div>';
  $('hbody').innerHTML=h;drawEmp()}
-$('hstats').onclick=function(e){var b=e.target.closest('.stat');if(!b)return;var k=b.dataset.h;if(!k)return;if(k==='dem'){filtre='nouvelle';nav(1);draw()}else if(k==='conf'){filtre='rdv_fixe';nav(1);draw()}else if(k==='sup')nav(10)};
+$('hstats').onclick=function(e){var b=e.target.closest('.stat');if(!b)return;var k=b.dataset.h;if(!k)return;if(k==='dem'){filtre='nouvelle';nav(1);draw()}else if(k==='conf'){filtre='suivi';nav(1);draw()}else if(k==='sup')nav(10)};
 $('hcap').onclick=function(e){var b=e.target.closest('button[data-cap]');if(b){filtre='attente';nav(1);draw()}};
 $('capbar').onclick=function(e){if(e.target.closest('button[data-cap=set]'))capModal()};
 $('hret').onclick=function(e){var f=e.target.closest('.hrow[data-fid]');if(f)fiche(f.dataset.fid)};
@@ -1485,7 +1488,7 @@ $('tl').onclick=function(e){var b=e.target.closest('button[data-t]');if(!b)retur
 $('tabs').onclick=function(e){var s=e.target.closest('.chip');if(s){filtre=s.dataset.s;openId=null;draw()}};
 $('stats').onclick=function(e){var s=e.target.closest('.stat');if(s){filtre=s.dataset.s;openId=null;draw()}};
 $('list').onchange=function(e){var sel=e.target.closest('select[data-a="mv"]');if(!sel||!sel.value)return;var c=sel.closest('.req'),id=c.dataset.id,v=sel.value;
- api({action:'update',id:id,patch:{statut:v}}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});openId=null;draw();drawCal();toast(d.item.prenom+' a été déplacé·e vers « '+SL[v]+' ».'+(v==='attente'?' Pensez à la prévenir : Messages › modèle « Liste d’attente ».':''))}else toast(d.error||'Erreur')})};
+ api({action:'update',id:id,patch:{statut:v}}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});openId=null;draw();drawCal();toast(d.item.prenom+' a été déplacé·e vers « '+SL[v]+' ».'+(TABS.some(function(t){return t[2].indexOf(v)>-1})?'':' Vous la retrouverez dans Patients.')+(v==='attente'?' Pensez à la prévenir : Messages › modèle « Liste d’attente ».':''))}else toast(d.error||'Erreur')})};
 $('list').onclick=function(e){
  if(e.target.closest('select'))return;
  var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.req'),id=c.dataset.id,a=b.dataset.a,rid=b.dataset.r;
@@ -1499,7 +1502,7 @@ $('list').onclick=function(e){
  var p={};Array.prototype.forEach.call(c.querySelectorAll('[data-f]'),function(f){p[f.dataset.f]=f.value});
  var ok=c.querySelector('.ok');ok.textContent='…';
  api({action:'update',id:id,patch:p}).then(function(d){
-  if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(d.item.statut!==filtre&&filtre!=='tous'){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
+  if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});ok.textContent='Enregistré ✓';stats();setTimeout(function(){if(!inTab(d.item)){openId=null}draw();drawCal()},600)}else ok.textContent=d.error||'Erreur'})};
 window.CAPSULE={closeM:function(){closeM()},me:function(){return moi},setDos:function(d){monDos=d},role:function(){return role},cap:function(s){return cap(s)},dos:function(){return monDos},xlsxDl:function(sh,name){var a=document.createElement('a');a.href=URL.createObjectURL(xlsx(sh));a.download=name;document.body.appendChild(a);a.click();a.remove()},sup:function(){return supItems},etu:function(){return etuL()},stOf:function(x,n){return stOf(x,n)},stat:function(n){return stat(n)},presForm:function(id){presForm(id)},entForm:function(id,n){entForm(id,n)},gest:function(t){if(RBOX[t]){rtab=t;nav(15)}else{gtab=t;nav(10)}},redraw:function(){drawGest()},fday:function(d){return fday(d)},fh:function(h){return fh(h)},supEnd:function(x){return supEnd(x)},typeLb:function(x){return typeLb(x)},past:function(d,h){return past(d,h)},av:function(n,c){return av(n,c)},csv:function(r,n){csv(r,n)},rc:function(){return rc},resDraw:function(){drawRes()},modal:function(h,sm){openM(h,sm)},closeModal:function(){closeM()},profil:function(){profil()},nav:function(n){nav(n)},api:function(b){return api(b)},toast:function(t){toast(t)},moi:function(){return moi},admin:function(){return isAdmin},data:function(){return {items:items,roles:roles,equipe:equipe,photos:photos,titres:titres,bios:bios,contacts:contacts,titre:titre,techs:techs}}};
 if(token)load();
 })();
