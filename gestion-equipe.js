@@ -34,7 +34,7 @@
   }
   function card(n, d, adm) {
     var t = tone(n), ph = d.photos[n], me = n === window.CAPSULE.moi(), bio = d.bios[n];
-    var c = (d.contacts || {})[n] || {}, ct = (c.email || c.tel) ? '<div class="eqct">' + (c.email ? '<a href="mailto:' + e(c.email) + '">' + e(c.email) + '</a>' : '') + (c.tel ? '<a href="tel:' + e(c.tel.replace(/[^0-9+]/g, '')) + '">' + e(c.tel) + '</a>' : '') + '</div>' : (me ? '<div class="eqct none">Ajoute ton mail pour qu’on puisse te joindre.</div>' : '');
+    var c = (d.contacts || {})[n] || {}, ct = (c.email || c.tel) ? '<div class="eqct">' + (c.email ? '<a href="mailto:' + e(c.email) + '">' + e(c.email) + '</a>' : '') + (c.tel ? '<a href="tel:' + e(c.tel.replace(/[^0-9+]/g, '')) + '">' + e(c.tel) + '</a>' : '') + '</div>' : (me && (window.CAPSULE.data().techs || []).indexOf(n) < 0 ? '<div class="eqct none">Ajoute ton mail pour qu’on puisse te joindre.</div>' : '');
     return '<div class="eqc' + (adm ? ' adm pastel t1' : '') + '">' + (me ? '<span class="eqme">C’est toi</span>' : '') +
       '<div class="eqa" style="background-color:' + t[0] + ';color:' + t[1] + (ph ? ';background-image:url(' + e(ph) + ')' : '') + '">' + (ph ? '' : e(cap(n).charAt(0))) + '</div>' +
       '<div class="eqn">' + e(cap(n)) + '</div><span class="eqt">' + e(d.titre(n)) + '</span>' +

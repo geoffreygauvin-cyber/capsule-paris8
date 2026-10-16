@@ -448,9 +448,10 @@ export default async (req) => {
     const ps = profils(); const { blobs: pb } = await ps.list();
     const profs = await Promise.all(pb.map(async (x) => [x.key, (await ps.get(x.key, { type: "json" })) || {}]));
     const photos = Object.fromEntries(profs.filter((x) => x[1].photo).map((x) => [x[0], x[1].photo]));
-    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre])); for (const n of TECH) titres[n] = TECH_LB;
+    const titres = Object.fromEntries(profs.filter((x) => x[1].titre).map((x) => [x[0], x[1].titre]));
     const bios = Object.fromEntries(profs.filter((x) => x[1].bio).map((x) => [x[0], x[1].bio]));
     const contacts = Object.fromEntries(profs.filter((x) => x[1].email || x[1].tel).map((x) => [x[0], { email: x[1].email || "", tel: x[1].tel || "" }]));
+    for (const n of TECH) delete contacts[n]; // Service technique : photo, titre et présentation seulement, pas de coordonnées
     const roles = await rolesMap();
     const IVP = admin ? await IV.chargerPieces().catch(() => IV.PIECES_DEFAUT) : null;
     return J({ ok: true, items, capacite, compte: user, alias: await aliasMap(), admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
@@ -543,6 +544,7 @@ export default async (req) => {
     return J({ ok: true, item: r, mail });
   }
 
+  if (b.action === "profil_contact" && TECH.includes(user)) return J({ error: "Le compte Service technique n’a pas de coordonnées : photo, titre et présentation seulement." }, 400);
   if (b.action === "profil_photo") {
     const ps = profils(), ph = String(b.photo || "");
     const prev = (await ps.get(user, { type: "json" })) || {};
@@ -551,7 +553,6 @@ export default async (req) => {
     await ps.setJSON(user, { ...prev, photo: ph }); return J({ ok: true, photo: ph });
   }
   if (b.action === "profil_titre") {
-    if (TECH.includes(user)) return J({ error: "Ton titre est lié au statut Service technique : il ne se change pas." }, 400);
     const ps = profils(), t = clean(b.titre, 40).replace(/\s+/g, " ").trim();
     const prev = (await ps.get(user, { type: "json" })) || {};
     const next = { ...prev }; if (t) next.titre = t; else delete next.titre;
