@@ -184,6 +184,9 @@ export default async (req) => {
     };
   };
   const sortie = (r) => ({ item: pub(r), ...(droit(r) ? { fiche: r } : {}) });
+  // Les admins sont les enseignant·es : accès à tout, mais aucun suivi à leur nom. Un suivi ne s'attribue qu'à un·e étudiant·e psy.
+  const REFUS_ADMIN = "Les admins ne suivent pas de patient·es : choisissez un·e étudiant·e psy.";
+  const suiveur = async (n, r, ex) => !n || n === (r && r.assigne) || (ex && ex.therapeute === n) || (await CP.etudiants()).includes(n);
   const nonAutorise = (r) => J({ error: proprio(r) ? "Cette fiche est suivie par " + cap(proprio(r)) + "." : "Cette fiche n’est à personne : cliquez d’abord sur « Prendre en charge »." }, 403);
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del", "res_add", "res_upd", "res_del", "msg_conv", "msg_new", "msg_list", "msg_send", "msg_del", "agenda_lien", "agenda_lien_reset"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
@@ -497,6 +500,7 @@ export default async (req) => {
     return J({ ok: true, fiche: r });
   }
   if (b.action === "prendre") { // prendre en charge une personne que personne n'a encore prise : donne accès à sa fiche
+    if (admin) return J({ error: "Les admins ne prennent pas de suivi : ils voient toutes les fiches, sans en être le ou la thérapeute." }, 403);
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
     const r = cur.rec;
     if (proprio(r) && proprio(r) !== user) return J({ error: etiquette(r) + " est déjà suivi·e par " + cap(proprio(r)) + "." }, 409);
@@ -522,6 +526,7 @@ export default async (req) => {
     if (!(droit(r) || (libre(r) && th === user))) return proprio(r) ? nonAutorise(r) : J({ error: "Pour planifier une personne que personne n’a prise en charge, il faut en être le ou la thérapeute." }, 403);
     const ex = b.rdvId ? r.rdvs.find((y) => y.id === String(b.rdvId)) : null;
     if (b.rdvId && !ex) return J({ error: "Rendez-vous introuvable." }, 404);
+    if (!(await suiveur(th, r, ex))) return J({ error: REFUS_ADMIN }, 400);
     const meme = (y) => y.date === date && y.heure === heure;
     if (r.rdvs.some((y) => y !== ex && meme(y))) return J({ error: etiquette(r) + " a déjà un rendez-vous à cette heure." }, 409);
     const autres = all.filter((x) => x.rec.id !== r.id).flatMap((x) => x.rec.rdvs.filter(meme));
@@ -1142,7 +1147,7 @@ export default async (req) => {
       r.statut = p.statut;
     }
     if (r.statut === "attente") r.attenteLe ||= new Date().toISOString(); else delete r.attenteLe;
-    if ("assigne" in p) r.assigne = clean(p.assigne, 40);
+    if ("assigne" in p) { const a = clean(p.assigne, 40).toLowerCase(); if (!(await suiveur(a, r))) return J({ error: REFUS_ADMIN }, 400); r.assigne = a; }
     if ("notes" in p) r.notes = clean(p.notes, 1000);
     if (p.retoursVus === true && Array.isArray(r.retours)) for (const x of r.retours) x.vu = true;
     if ("prenom" in p && clean(p.prenom, 60).trim()) r.prenom = clean(p.prenom, 60).trim();

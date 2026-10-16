@@ -379,7 +379,6 @@ aside{overflow:hidden!important}
 #hdate{display:flex;align-items:center;gap:7px}
 #hdate .tod{display:inline-grid;place-items:center;width:22px;height:22px;flex:none}
 #hdate .tod svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.eday .none::before{content:"";display:block;width:20px;height:20px;margin-bottom:6px;background:currentColor;opacity:.28;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10h11v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z'/%3E%3Cpath d='M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 4v2M12 4v2'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10h11v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z'/%3E%3Cpath d='M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 4v2M12 4v2'/%3E%3C/svg%3E") center/contain no-repeat}
 /* chiffres clés dans la zone libre à droite du titre (écrans larges, 1150 px et plus) : pas d'icône, cartes compactes, ~100 px gagnés */
 .stat>.bd,.kpi>.bd{display:none}
 @media (min-width:1150px){
@@ -433,7 +432,7 @@ aside{overflow:hidden!important}
 <div class="filters" id="tabs"></div>
 <div class="tools"><input id="q" type="search" placeholder="Rechercher une initiale ou un numéro…" aria-label="Rechercher"></div>
 <div id="list"></div>
-<p class="note" style="margin-top:18px">Données sensibles : les personnes apparaissent sous une initiale et un numéro ; leurs coordonnées ne s’ouvrent qu’après « Prendre en charge ». Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
+<p class="note" style="margin-top:18px">Données sensibles : les personnes apparaissent sous une initiale et un numéro ; leurs coordonnées ne s’ouvrent qu’après « Prendre en charge » (les admins voient tout, mais ne prennent pas de suivi). Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
 
 <section id="v2" class="hide"><header class="ph0 pastel t2"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p></header>
 <div class="wk"><button class="ib" id="wp" aria-label="Semaine précédente">‹</button><div class="t" id="wt"></div><button class="ib" id="wn" aria-label="Semaine suivante">›</button><button class="btn l s" id="wt0">Aujourd’hui</button></div>
@@ -529,6 +528,7 @@ function fhh(n){return n+' h'}
 var MOTIF={feedback:'Feedback',recadrage:'Recadrage',point:'Point d’étape',autre:'Autre'};
 function typeLb(x){return x.type==='entretien'?'Entretien individuel':x.type==='reunion'?'Réunion':'Supervision '+(x.type==='individuelle'?'individuelle':'de groupe')}
 function etuL(){return equipe.filter(function(n){return roles[n]==='etudiant'})}
+function thL(cur){var l=etuL().slice();if(cur&&l.indexOf(cur)<0)l.push(cur);return l}
 function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),avenir=0;
  items.forEach(function(i){(i.seances||[]).forEach(function(s){if(s.therapeute!==name)return;if(s.issue==='realisee'){t++;pat[i.id]=1;if(s.date.slice(0,7)===mois)m++}else a++});});occs().forEach(function(o){if(o.therapeute===name&&!past(o.rdvDate,o.rdvHeure))avenir++});
  return{total:t,mois:m,abs:a,patients:Object.keys(pat).length,avenir:avenir}}
@@ -619,7 +619,7 @@ function card(i){
  (m.creneaux&&m.creneaux.length?'<div class="dispo" title="Jours qui conviennent">'+m.creneaux.map(function(c){return '<span>'+esc(c)+'</span>'}).join('')+'</div>':'')+
  (m.message?'<div class="quote">'+esc(m.message)+'</div>':'')+retBan(m)+rdvBox(m)+
  '<div class="g2"><label class="f">Statut<select data-f="statut">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===m.statut?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></label>'+
- '<label class="f">Pris en charge par<select data-f="assigne"><option value="">—</option>'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===m.assigne?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Pris en charge par<select data-f="assigne"><option value="">—</option>'+thL(m.assigne).map(function(e){return '<option value="'+esc(e)+'"'+(e===m.assigne?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
  '<label class="f w">Notes organisationnelles<textarea rows="2" maxlength="1000" data-f="notes">'+esc(m.notes)+'</textarea></label></div>'+
  '<div class="row"><button class="btn l s" data-a="save">Enregistrer</button><span class="ok"></span><button class="link" data-a="del">Supprimer définitivement</button></div></div>';
  else if(i.libre&&clos(i))body='<div class="rb"><p class="sub" style="margin:0">Suivi clos, sans thérapeute : il n’y a rien à prendre en charge. Un·e admin peut ouvrir la fiche.</p></div>';
@@ -659,7 +659,7 @@ function confirmPick(d,hh,s,id,rid){
  var cur=id?byId(id):null;
  openM('<h3>'+esc(cap(fday(d)))+', '+fh(hh)+'</h3><p class="sub">'+esc(s)+' · durée 1 h</p><div class="g2">'+
  (cur?'<label class="f">Personne<input readonly value="'+esc(cur.prenom)+'"></label>':'<label class="f">Personne<select id="pp">'+(libres.length?libres.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.prenom+' · '+(SL[x.statut]||'')+(x.libre?' · à prendre en charge':'')+(R(x).length?' · '+R(x).length+' RDV à venir':''))+'</option>'}).join(''):'<option value="">Aucune demande à planifier</option>')+'</select></label>')+
- '<label class="f">Thérapeute<select id="pt">'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===((cur&&cur.assigne)||moi)?' selected':'')+'>'+esc(cap(e))+(function(){var c=capLive(),p=c&&c.actif&&c.parEtudiant[e];return p?' ('+p.n+'/'+p.max+')':''})()+'</option>'}).join('')+'</select></label></div>'+
+ '<label class="f">Thérapeute<select id="pt">'+thL(cur&&cur.assigne).map(function(e){return '<option value="'+esc(e)+'"'+(e===((cur&&cur.assigne)||moi)?' selected':'')+'>'+esc(cap(e))+(function(){var c=capLive(),p=c&&c.actif&&c.parEtudiant[e];return p?' ('+p.n+'/'+p.max+')':''})()+'</option>'}).join('')+'</select></label></div>'+
  '<label class="ck"><input type="checkbox" id="pm"'+(cfg.mail?' checked':' disabled')+'><span>Envoyer l’invitation par mail<br><small style="color:var(--muted)">Elle s’ajoute à l’agenda de la personne, avec un rappel la veille.</small>'+(cfg.mail?'':'<br><small style="color:var(--rasp)">Envoi de mails non configuré : le rendez-vous sera seulement enregistré.</small>')+'</span></label>'+
  '<div class="row"><button class="btn" id="pgo"'+(cur||libres.length?'':' disabled')+'>Confirmer le rendez-vous</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="perr" style="margin-top:10px"></div>',true);
  var fS=false,fC=false,go=function(){var pid=cur?cur.id:$('pp').value;$('pgo').disabled=true;
@@ -755,7 +755,7 @@ function fiche(id){var i0=byId(id);if(!i0)return;if(!i0.droit){toast(refus(i0));
  '<div class="prog"><i style="width:'+pc+'%"></i><u style="left:'+mk+'%"></u></div><p class="sub" style="font-size:12.5px">Suivi habituel : 6 à 8 séances (repère à 6).</p>'+
  retBan(i,true)+rdvBox(i,true)+
  '<div class="g2"><label class="f">Prénom<input id="fp" value="'+esc(i.prenom)+'" maxlength="60"></label><label class="f">Mail<input id="fm" value="'+esc(i.email)+'"></label><label class="f">Téléphone<input id="ft" value="'+esc(i.tel||'')+'"></label>'+
- '<label class="f">Thérapeute<select id="fa"><option value="">—</option>'+equipe.map(function(e){return '<option value="'+esc(e)+'"'+(e===(i.assigne||i.therapeute)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
+ '<label class="f">Thérapeute<select id="fa"><option value="">—</option>'+thL(i.assigne||i.therapeute).map(function(e){return '<option value="'+esc(e)+'"'+(e===(i.assigne||i.therapeute)?' selected':'')+'>'+esc(cap(e))+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Statut<select id="fs">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===i.statut?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></label>'+
  '<label class="f w">Notes organisationnelles<textarea id="fn" rows="2" maxlength="1000">'+esc(i.notes)+'</textarea></label></div>'+
  '<h4 style="margin:18px 0 0">Historique des séances</h4>'+(hist.length?'<ul class="hist">'+hist.map(function(h){return '<li><span class="mchip">RDV '+(h.k+1)+'</span><b>'+esc(cap(fday(h.s.date)))+'</b><span style="color:var(--muted)">'+fh(h.s.heure)+' · '+esc(h.s.salle)+' · '+esc(cap(h.s.therapeute))+'</span><span class="pill '+(h.s.issue==='realisee'?'s-rdv_fixe':'s-sans_suite')+'">'+(h.s.issue==='realisee'?'Réalisée':'Absence')+'</span>'+(h.s.issue==='realisee'?(h.s.bienEtre!=null||h.s.satisfaction!=null?'<span class="mchip">'+(h.s.bienEtre!=null?'Bien-être '+h.s.bienEtre+'/10':'')+(h.s.bienEtre!=null&&h.s.satisfaction!=null?' · ':'')+(h.s.satisfaction!=null?'Satisf. '+h.s.satisfaction+'/10':'')+'</span><button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">modifier</button>':'<button class="link" data-m="mes" data-id="'+esc(id)+'" data-k="'+h.k+'" style="margin-left:0">+ mesures</button>'):'')+'<button class="link" data-m="rm" data-id="'+esc(id)+'" data-k="'+h.k+'">retirer</button></li>'}).join('')+'</ul>':'<p class="sub">Aucune séance enregistrée pour le moment.</p>')+ 
