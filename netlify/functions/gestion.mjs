@@ -139,7 +139,7 @@ export default async (req) => {
   const rls = getStore("roles"), SEED = { violette: "etudiant", alfred: "etudiant" };
   // Statut spécial « Service technique » : droits admin permanents, titre fixe, onglet Plateformes (voir les deux espaces côte à côte).
   const TECH = ["violette", "alfred"]; // compte partagé « SERVICES TECHNIQUES » (identifiant historique « violette », affiché « Alfred » via le nom affiché ; « alfred » reconnu aussi s'il est créé) : admin + interrupteur de mode
-  const TECH_LB = "SERVICES TECHNIQUES · À UTILISER POUR PASSER EN MODE ADMIN - ÉTUDIANTS - SUPERVISEUR";
+  const TECH_LB = "SERVICES TECHNIQUES · POUR CHANGER DE MODE";
   const ADMIN_FIXE = TECH;
   const prinRole = async (n) => { if (ADMIN_FIXE.includes(n)) return "admin"; const v = await rls.get(n, { type: "json" }); return ["admin", "etudiant"].includes(v?.role) ? v.role : SEED[n] || "admin"; };
   const tk = checkToken(b.token);
