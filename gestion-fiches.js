@@ -206,7 +206,7 @@
   var H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
   function nomPdf(f) { return 'capsule-fiche-' + (String(f.titre || 'fiche').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'fiche') + '.pdf'; }
   function pdfJpeg(canvas) {
-    var bin = atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]), jpg = new Uint8Array(bin.length);
+    var bin = atob(canvas.toDataURL('image/jpeg', 0.95).split(',')[1]), jpg = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
     var PW = 595.28, PH = 841.89, mm = 72 / 25.4, iw = 188 * mm, ih = iw * canvas.height / canvas.width;
     if (ih > PH - 20 * mm) { ih = PH - 20 * mm; iw = ih * canvas.width / canvas.height; }
@@ -240,7 +240,7 @@
         sc.onerror = function () { clearTimeout(minuteur); repli(); };
         sc.onload = function () {
           try {
-            w.html2canvas(w.document.body, { scale: 2.5, backgroundColor: '#ffffff', logging: false }).then(function (c) {
+            w.html2canvas(w.document.body, { scale: 3, backgroundColor: '#ffffff', logging: false, x: 0, y: 0, width: w.document.body.offsetWidth, height: w.document.body.scrollHeight, windowWidth: w.document.body.offsetWidth, scrollX: 0, scrollY: 0 }).then(function (c) {
               if (fini) return; clearTimeout(minuteur); fini = true;
               var a = document.createElement('a'); a.href = URL.createObjectURL(pdfJpeg(c)); a.download = nomPdf(f);
               document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
