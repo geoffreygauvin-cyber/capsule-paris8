@@ -225,6 +225,19 @@ Export Excel : feuilles Synthèse, Dépenses, Supervisions, Stagiaires. Code : `
 ## Changer le nom affiché d'un compte (Comptes › Actions › « Changer le nom affiché »)
 Le nom affiché est un **alias** : il remplace l'identifiant partout dans la plateforme (listes, calendrier, supervisions, messages, budget…) mais l'identifiant technique reste le même, donc aucune donnée (séances, patient·es, historique) n'est perdue ni à migrer. On peut aussi **se connecter avec le nom affiché**. Valable pour tous les comptes, y compris principaux. Un nom déjà pris par un autre compte est refusé ; vider le champ revient au nom d'origine. Stockage : store `config`, clé `alias` ({identifiant: nom}) ; action `compte_alias` de `gestion.mjs`.
 
+## Archives et clôture d'année (Comptes › Archives et clôture d'année)
+Une fois par an, quand l'équipe change : **Clôturer l'année…** archive les données de l'année, supprime les comptes étudiant·es et superviseur·es, et remet la plateforme à zéro. Réservé aux admins.
+- **Ce qui est archivé** (par personne, lisible ensuite par les admins) : profil sans photo, mail, parcours d'accueil, signature du règlement, statistiques de consultations et de supervisions, fiche d'intervenant·e et ses pièces (RIB, pièce d'identité…).
+- **Patient·es** : les suivis terminés ou sans suite sont **anonymisés** (« P001 » : ni nom, ni mail, ni téléphone, ni notes ; restent les dates de séances, les issues et les scores) puis supprimés. La liste d'attente et les suivis en cours **restent** pour la nouvelle équipe : thérapeute retiré, rendez-vous avec un compte supprimé annulés, « rdv fixé » sans rendez-vous repassé en « à recontacter ».
+- **Supprimés sans archive** : les discussions où figure un compte supprimé (les discussions réservées aux admins restent) et le journal des mails aux patient·es.
+- **Ne bougent pas** : les comptes admin, les comptes principaux et les Services techniques.
+- **Mode d'emploi** : lire le récapitulatif, télécharger la sauvegarde JSON (nominative : à ranger en lieu sûr), retaper l'année (ex. 2026-2027) deux fois, valider. Aucun retour en arrière.
+- **Consulter** : liste des archives dans la même carte (lecture seule, admins), export Excel, téléchargement des pièces.
+- **Budget** : les honoraires de supervision sont calculés d'après le planning, donc les supervisions supprimées disparaissent du Budget. Exporter le Budget en Excel avant la clôture.
+- **Si le serveur s'interrompt** (limite de durée Netlify) : l'archive est marquée « interrompue » (alerte rouge dans la liste). Relancer la clôture avec la même année reprend le nettoyage là où il s'est arrêté. Une année terminée ne peut pas être refaite.
+- Fichiers : `netlify/lib/archive.mjs` (logique), actions `archive_*` dans `netlify/functions/gestion.mjs`, `gestion-archives.js` (interface), carte `<div id="arch">` dans `gestion.html`. Les archives sont dans le store Netlify `archives` (clé `a/<année>`, plus les pièces).
+- Durée de conservation (RGPD) : c'est une décision de l'association ; l'archive nominative n'a pas de purge automatique.
+
 ## Annonces par public et programmation des supervisions
 **Annonces** : chaque annonce a un public (« Pour qui ? ») : étudiant·es psy (par défaut, y compris pour les anciennes annonces), superviseur·es, ou les deux (champ `pour` : `etudiants`, `superviseurs`, `tous`). Le filtrage se fait côté serveur (`annonce_list`, bloc annonces de `gestion.mjs`) ; les comptes superviseur peuvent lire les annonces et les marquer lues. Le suivi « lu par X sur N » se calcule sur le public visé.
 

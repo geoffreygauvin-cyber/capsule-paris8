@@ -12,6 +12,7 @@ import * as CO from "../lib/compteur.mjs";
 import * as IV from "../lib/interv.mjs";
 import * as BU from "../lib/budget.mjs";
 import * as AG from "../lib/agenda.mjs";
+import * as ARC from "../lib/archive.mjs";
 
 export const config = { path: "/api/gestion" };
 
@@ -257,6 +258,29 @@ export default async (req) => {
     const { blobs } = await ac.list();
     const membres = (await Promise.all(blobs.map((x) => ac.get(x.key, { type: "json" })))).filter(Boolean).map((v) => ({ nom: v.nom, creeLe: v.creeLe, creePar: v.creePar, role: ADMIN_FIXE.includes(v.nom) ? "admin" : rlv(v) }));
     return J({ ok: true, membres, principaux: Object.keys(c), prin: await prin() });
+  }
+
+  // ---- Archives et clôture d'année : réservé aux admins (voir netlify/lib/archive.mjs) ----
+  if (typeof b.action === "string" && b.action.startsWith("archive_")) {
+    if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
+    const env = { ac, profils: profils(), principaux: Object.keys(comptes()), TECH, alias: await aliasMap(), revoquer: (n) => AG.revoquer(n) };
+    if (b.action === "archive_liste") return J({ ok: true, archives: await ARC.liste() });
+    if (b.action === "archive_apercu") return J(await ARC.apercu(env));
+    if (b.action === "archive_sauvegarde") return J({ ok: true, sauvegarde: await ARC.sauvegarde(env) });
+    if (b.action === "archive_get") { const a = await ARC.lire(b.annee); return a ? J({ ok: true, archive: a }) : J({ error: "Archive introuvable." }, 404); }
+    if (b.action === "archive_piece") {
+      const a = await ARC.lire(b.annee), pid = String(b.piece), id = String(b.id);
+      const iv = a && ((a.personnes || []).map((x) => x.intervenant).filter(Boolean).concat(a.intervenantsSansCompte || [])).find((x) => x.id === id), f = iv?.docs?.[pid];
+      const buf = f ? await ARC.piece(b.annee, id, pid) : null;
+      return buf ? J({ ok: true, nom: f.nom, mime: f.mime, data: buf.toString("base64") }) : J({ error: "Pièce introuvable." }, 404);
+    }
+    if (b.action === "archive_cloturer") {
+      const annee = String(b.annee || "").trim();
+      if (String(b.confirmation || "").trim() !== annee) return J({ error: "Tapez l'année exacte pour confirmer." }, 400);
+      if (b.sauvegarde !== true) return J({ error: "Téléchargez d'abord la sauvegarde." }, 400);
+      return J(await ARC.cloturer(env, { annee, par: user }), 200);
+    }
+    return J({ error: "Action inconnue." }, 400);
   }
 
   // ---- Budget : réservé aux admins (voir netlify/lib/budget.mjs) ----
