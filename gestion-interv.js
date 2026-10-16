@@ -127,7 +127,7 @@
   }
 
   function valider(r) {
-    C().modal('<h3>Ouvrir l’accès de ' + e(r.nom) + '</h3><p>Le dossier est complet. Vérifiez les pièces (voir) avant de valider. Après validation, ' + e(r.nom) + ' accède à toute la plateforme « superviseur » : accueil, supervisions et réunions, calendrier (sans coordonnées de patients), ressources, et ses chiffres dans « Mon dossier ».</p>' +
+    C().modal('<h3>Ouvrir l’accès de ' + e(r.nom) + '</h3><p>Le dossier est complet. Vérifiez les pièces (voir) avant de valider. Après validation, ' + e(r.nom) + ' accède à toute la plateforme « superviseur » : accueil, supervisions et réunions, ressources, et ses chiffres dans « Mon dossier ».</p>' +
       (r.email && D.mail ? '<label class="cmck"><input type="checkbox" id="ivsend" checked> Prévenir ' + e(r.nom) + ' par mail (' + e(r.email) + ')</label>' : '') +
       '<div class="row" style="margin-top:12px"><button class="btn" id="ivgo">Valider et ouvrir l’accès</button><button class="btn l" data-m="x">Annuler</button></div><div class="err" id="iverr" style="margin-top:10px"></div>');
     $('ivgo').onclick = function () {

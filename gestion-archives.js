@@ -20,6 +20,8 @@
     return m >= 9 ? y + '-' + (y + 1) : (y - 1) + '-' + y;
   }
 
+  function nb(h) { return String(h).replace(/ ([:;?!»])/g, '\u00a0$1').replace(/« /g, '«\u00a0'); }
+
   function css() {
     if ($('arcss')) return;
     var s = document.createElement('style'); s.id = 'arcss';
@@ -28,7 +30,7 @@
       '.arc .al{margin-top:14px;border-top:1px solid var(--line)}.arc .ar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}' +
       '.arc .ar b{font-size:15px}.arc .ar span{color:var(--muted);font-size:13px;flex:1;min-width:200px}' +
       '.arm h3{margin:0 0 4px}.arm .ul{margin:10px 0;padding:0;list-style:none}.arm .ul li{padding:7px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5}.arm .ul li:first-child{border-top:0}' +
-      '.arm .ul b{color:var(--rasp)}.arm .wn{background:#FFF1D6;border:1px solid #E0AA3E;color:#5A3B00;border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.5;margin:10px 0}' +
+      '.arm .ul b{color:var(--rasp)}.arm .wn{background:#FFF1D6;border:1px solid #E0AA3E;color:#5A3B00;border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.5;margin:10px 0}.arm .wn ul{margin:6px 0 0;padding-left:18px}.arm .wn li{padding:3px 0}' +
       '.arm .st{display:flex;gap:12px;align-items:flex-start;margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line)}.arm .st .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--rose);color:var(--rasp);font-weight:700;display:grid;place-items:center;font-size:13px}' +
       '.arm .st>div{flex:1;min-width:0}.arm .st .sub{margin:2px 0 8px;font-size:13px}.arm .ok{color:#1F5E24;font-size:13.5px;margin-top:6px}' +
       '.arm .gone{background:#7a1520!important}.arm .gone[disabled]{opacity:.4;cursor:not-allowed}' +
@@ -79,16 +81,20 @@
       '<li><b>' + pl(r.patientsTermines, 'patient·e terminé·e', 'patient·es terminé·es') + '</b> anonymisé·es : ni nom, ni mail, ni téléphone, ni notes ; seules restent les dates de séances, les issues et les scores.</li>' +
       '<li><b>' + pl(r.patientsGardes, 'suivi en cours ou demande en attente', 'suivis en cours ou demandes en attente') + '</b> conservé·es, sans thérapeute, à réaffecter' + (r.rdvAnnules ? ' ; <b>' + pl(r.rdvAnnules, 'rendez-vous à venir') + '</b> avec les comptes supprimés annulé' + (r.rdvAnnules > 1 ? 's' : '') + ' (sans mail)' : '') + '.</li>' +
       '<li><b>' + pl(r.supervisions, 'supervision, réunion ou entretien', 'supervisions, réunions ou entretiens') + '</b> et <b>' + pl(r.evenements, 'retard ou absence saisi', 'retards ou absences saisis') + ' à la main</b> : archivés puis retirés du planning.</li>' +
-      '<li><b>' + pl(r.intervenants, 'dossier d’intervenant·e', 'dossiers d’intervenant·es') + '</b> (' + pl(r.pieces, 'pièce') + ') : déplacés dans l’archive, lisibles par les admins.</li>' +
-      '<li><b>' + pl(r.discussions, 'discussion') + '</b> avec ces comptes et <b>' + pl(r.journalMails, 'mail') + ' du journal des mails aux patient·es</b> : supprimés sans archive.</li></ul>' +
-      '<div class="wn"><b>Avant de continuer :</b> le Budget calcule les honoraires de supervision d’après le planning. Exportez le Budget en Excel (onglet Vue d’ensemble) si vous avez besoin des chiffres de cette année, puis redéfinissez la période dans Réglages.</div>' +
-      '<div class="st"><span class="n">1</span><div><b>Télécharger la sauvegarde</b><p class="sub">Un fichier complet des données qui vont être archivées ou supprimées, au cas où. Il contient des données nominatives : rangez-le en lieu sûr et détruisez-le une fois la clôture vérifiée. Les fichiers des pièces d’intervenant·es sont gardés dans l’archive et le texte des discussions n’est pas sauvegardé.</p>' +
+      '<li><b>' + pl(r.intervenants, 'dossier d’intervenant·e', 'dossiers d’intervenant·es') + '</b> (' + pl(r.pieces, 'pièce') + ') : déplacés dans l’archive, lisibles par les admins.</li></ul>' +
+      '<div class="wn"><b>À savoir avant de clôturer</b><ul>' +
+      '<li><b>Budget :</b> les honoraires de supervision sont calculés d’après le planning, donc les supervisions supprimées disparaissent du Budget. Exportez le Budget en Excel (onglet Vue d’ensemble) avant la clôture, puis redéfinissez la période dans Réglages.</li>' +
+      '<li><b>Supprimés sans archive :</b> les discussions où figure un compte supprimé (' + pl(r.discussions, 'concernée') + ' ; celles réservées aux admins restent) et le journal des mails aux patient·es (' + pl(r.journalMails, 'mail') + ').</li>' +
+      '<li><b>Sauvegarde nominative :</b> le fichier JSON contient des noms, donc à ranger en lieu sûr. Il ne contient ni le texte des discussions ni les fichiers des pièces, qui sont dans l’archive.</li>' +
+      '<li><b>Interruption :</b> si Netlify coupe l’opération en route (limite de durée), l’archive apparaît avec une alerte rouge. Relancer la clôture avec la même année reprend le nettoyage là où il s’est arrêté.</li>' +
+      '<li><b>Durée de conservation :</b> l’archive nominative n’a pas de purge automatique. Combien de temps la garder est une décision RGPD qui revient à l’équipe.</li></ul></div>' +
+      '<div class="st"><span class="n">1</span><div><b>Télécharger la sauvegarde</b><p class="sub">Un fichier complet des données qui vont être archivées ou supprimées, au cas où. Détruisez-le une fois la clôture vérifiée.</p>' +
       '<button class="btn l" id="arcsave">Télécharger la sauvegarde</button><div class="ok" id="arcsaved"></div></div></div>' +
       '<div class="st"><span class="n">2</span><div><b>Confirmer</b><p class="sub">Année scolaire à archiver, puis retapez-la pour confirmer. Il n’y a pas de retour en arrière.</p>' +
       '<div class="g2"><label class="f">Année scolaire<input id="arcan" maxlength="9" value="' + anneeDefaut() + '" placeholder="2026-2027"></label><label class="f">Retapez l’année pour confirmer<input id="arcco" maxlength="9" autocomplete="off" placeholder="2026-2027"></label></div>' +
       '<div class="err" id="arcerr" style="margin-top:8px"></div></div></div>' +
       '<div class="row"><button class="btn gone" id="arcdo" disabled>Archiver et remettre à zéro</button><button class="btn l" data-m="x">Annuler</button></div></div>';
-    C().modal(h);
+    C().modal(nb(h));
     var an = $('arcan'), co = $('arcco'), go = $('arcdo');
     function maj() { go.disabled = !(saved && /^\d{4}-\d{4}$/.test(an.value.trim()) && co.value.trim() === an.value.trim()); }
     an.oninput = co.oninput = maj;
@@ -146,7 +152,7 @@
         }).join('') + '</tbody></table></div>' +
         '<p class="sub">Patient·es anonymisé·es : bien-être moyen ' + (moy([].concat.apply([], pa.map(function (p) { return (p.seances || []).map(function (s) { return s.bienEtre; }); }))) || '—') + ' / 10, satisfaction moyenne ' + (moy([].concat.apply([], pa.map(function (p) { return (p.seances || []).map(function (s) { return s.satisfaction; }); }))) || '—') + ' / 10. Le détail des séances, des supervisions et des présences est dans l’export Excel.</p>' +
         '<div class="row"><button class="btn" data-arc="xls" data-a="' + e(a.annee) + '">Télécharger en Excel</button><button class="btn l" data-m="x">Fermer</button></div></div>';
-      C().modal(h);
+      C().modal(nb(h));
     });
   }
   function piece(annee, id, pid) {
