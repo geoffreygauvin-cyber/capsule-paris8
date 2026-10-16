@@ -285,13 +285,11 @@ Chaque compte (étudiant·e, superviseur·e validé·e, admin) a un **lien d'age
 - Il n'y a pas d'invitation par mail : l'agenda est un abonnement, pas une synchronisation écrite dans les agendas Google.
 
 
-## Touches de chaleur du site public (pastilles, icônes, ombres douces)
-- Pastilles sous le titre d'accueil (Gratuit, Confidentiel, Sans justificatif, Sur le campus) : modifiables en mode édition (`?edit`), comme le reste. Elles sont créées automatiquement si le contenu enregistré ne les a pas encore (fonction `defaults` de `site.js`).
-- Encart « Une autre question ? » sous les questions fréquentes : titre et texte modifiables, l'adresse mail est celle du site.
-- Les icônes des raisons de venir, des questions et des numéros d'urgence sont choisies d'après les mots du texte (tableaux `IC_RAISON`, `IC_FAQ`, `IC_NUM` dans `site.js`) : pas besoin de les régler à la main si l'on change ou réordonne les textes. Icône par défaut : un cœur (raisons), une bulle d'aide (questions), un téléphone (numéros).
-- Les icônes elles-mêmes sont les symboles `i-…` en haut de `index.html`. Les couleurs, ombres et le relief au survol sont dans le bloc « chaleur » à la fin de la feuille de style.
+## Touches de chaleur du site public (discrètes)
+- Aucune icône ajoutée : une forme pêche derrière l'illustration de l'accueil, des ombres très douces sur les cartes et un encart rose « Une autre question ? » sous les questions fréquentes. Le titre et le texte de l'encart sont modifiables en mode édition (`?edit`) ; l'adresse mail est celle du site. Si le contenu enregistré n'a pas encore cet encart, il est créé automatiquement (voir `site.js`).
+- Les couleurs et ombres sont dans le bloc « chaleur discrète » à la fin de la feuille de style de `index.html`.
 
 ## Touches de chaleur de la plateforme (/gestion, discrètes)
-- Les icônes du menu de gauche sont inchangées. Ajouts très légers : ombres douces sur les cartes de chiffres, fond un peu plus chaud pour les messages « Rien ici pour le moment », petite tasse dans les jours sans rendez-vous de l'Accueil, soleil ou lune devant la date et « Bonsoir » à partir de 18 h (fichier `gestion-chaleur.js`, bloc « Chaleur discrète » de `gestion.html`).
+- Les icônes du menu de gauche sont inchangées. Ajouts très légers : ombres douces sur les cartes de chiffres, fond un peu plus chaud pour les messages « Rien ici pour le moment », soleil ou lune devant la date et « Bonsoir » à partir de 18 h (fichier `gestion-chaleur.js`, bloc « Chaleur discrète » de `gestion.html`).
 - Sur écran large (1150 px et plus), les cartes de chiffres des pages Demandes, Patients, Activité et Mon récap sont placées dans la zone libre à droite du titre, pour gagner de la hauteur. L'Accueil et les écrans plus étroits gardent les cartes sous le titre. Les cartes n'ont plus d'icône. Tout est dans le bloc CSS « chiffres clés dans la zone libre à droite du titre » de `gestion.html`.
 - Sur mobile, le bandeau du haut affiche « Connecté·e : Prénom (Services techniques) » pour les comptes techniques (fonction `whoTxt`), au lieu du libellé complet.

@@ -21,33 +21,18 @@
   function ic(name, cls) {
     return '<span class="ic ' + (cls || '') + '" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-' + esc(name) + '"/></svg></span>';
   }
-  function arr() { return '<span class="arr" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg></span>'; }
-  /* choisit une icône d'après les mots du texte (reste juste si l'ordre change dans l'éditeur) */
-  function pick(txt, table, dflt) {
-    var t = String(txt == null ? '' : txt).toLowerCase();
-    for (var i = 0; i < table.length; i++) if (table[i][0].test(t)) return table[i][1];
-    return dflt;
-  }
-  var IC_RAISON = [[/exam|stress/, 'book'], [/fatigue|épuis/, 'battery'], [/moral|humeur|dents de scie/, 'wave'], [/organis|planning/, 'calendar'], [/solitude|seul|isol/, 'user'], [/relation|famil|couple|\bami/, 'users'], [/décision|choix|orient/, 'signpost'], [/parler|écoute|besoin/, 'chat']];
-  var IC_FAQ = [[/gratuit|prix|coût|payer/, 'euro'], [/séance|combien|durée|rendez/, 'calendar'], [/qui |reçoi|psychologue/, 'user'], [/très mal|aller|mal /, 'heart'], [/confidenti|secret|discr/, 'lock'], [/suivi|long|après|ensuite/, 'route'], [/urgence|danger/, 'alert']];
-  var IC_NUM = [[/^3114$/, 'heart'], [/^15$/, 'cross'], [/^112$/, 'phone']];
-  /* contenus ajoutés après coup : valeurs par défaut si le contenu enregistré ne les a pas encore */
-  function defaults() {
-    if (C.accueil && !C.accueil.puces) C.accueil.puces = [{ icone: 'euro', texte: 'Gratuit' }, { icone: 'lock', texte: 'Confidentiel' }, { icone: 'file', texte: 'Sans justificatif' }, { icone: 'pin', texte: 'Sur le campus' }];
-    if (C.questions && !C.questions.aide) C.questions.aide = { titre: 'Une autre question ?', texte: 'Écrivez-nous, on vous répond volontiers.' };
-  }
 
   function render() {
     var email = (C.contact && C.contact.email) || '';
     var rdvUrl = (C.contact && C.contact.lienRendezVous) || '';
     var rdvHref = rdvUrl ? safeUrl(rdvUrl) : '#demande';
     var rdvExt = rdvUrl ? ' target="_blank" rel="noopener"' : '';
-    function rdvBtn(label, p) { return '<a class="btn" href="' + rdvHref + '"' + rdvExt + '>' + E(p, label) + arr() + '</a>'; }
+    function rdvBtn(label, p) { return '<a class="btn" href="' + rdvHref + '"' + rdvExt + '>' + E(p, label) + '</a>'; }
     function head(titre, texte, p) {
       return '<div class="head"><div class="rule"><i></i><i></i><i></i></div><h2>' + E(p + '.titre', titre) + '</h2>' + (texte ? '<p>' + E(p + '.texte', texte) + '</p>' : '') + '</div>';
     }
     var imgs = {
-      ruban: '<div class="ill ill-hero"><img class="il" src="img/ruban.webp" alt="" width="800" height="1000"><span class="spark s1" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span><span class="spark s2" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span></div>',
+      ruban: '<div class="ill ill-hero"><img class="il" src="img/ruban.webp" alt="" width="800" height="1000"></div>',
       pluie: '<div class="ill ill-venir"><img class="il" src="img/pluie.webp" alt="" width="250" height="298"></div>',
       echange: '<div class="ill ill-echange"><img class="il" src="img/echange.webp" alt="" width="150" height="187"></div>',
       pas: '<div class="ill ill-pas"><img class="il" src="img/pas.webp" alt="" width="300" height="200"></div>'
@@ -56,14 +41,13 @@
     var m = C.marque, a = C.accueil;
     h += '<header class="top"><a class="brand" href="#top" aria-label="' + esc(m.nom) + ', accueil"><span data-logo="50"></span><span class="wm">' + E('marque.nom', m.nom) + '<small>' + E('marque.sousTitre', m.sousTitre) + '</small></span></a>' +
       '<nav aria-label="Navigation">' + C.menu.map(function (l, i) { return '<a href="' + esc(safeUrl(l.lien)) + '">' + E('menu.' + i + '.texte', l.texte) + '</a>'; }).join('') + rdvBtn(C.boutonRendezVous, 'boutonRendezVous') + '</nav></header>';
-    h += '<main id="top"><div class="hero"><div><p class="kicker">' + ic('campus') + '<span>' + E('accueil.surtitre', a.surtitre) + '</span></p><h1>' + E('accueil.titre', a.titre) + '</h1><p class="lead">' + E('accueil.intro', a.intro) + '</p>' +
-      '<div class="actions"><a class="btn" href="#rdv">' + E('accueil.boutonPrincipal', a.boutonPrincipal) + arr() + '</a><a class="textlink" href="#dispositif">' + E('accueil.lienSecondaire', a.lienSecondaire) + '</a></div>' +
-      '<ul class="chips" aria-label="L’essentiel en bref">' + (a.puces || []).map(function (c, i) { return '<li>' + ic(c.icone) + '<span>' + E('accueil.puces.' + i + '.texte', c.texte) + '</span></li>'; }).join('') + '</ul></div>' + imgs.ruban + '</div></main>';
+    h += '<main id="top"><div class="hero"><div><p class="kicker">' + E('accueil.surtitre', a.surtitre) + '</p><h1>' + E('accueil.titre', a.titre) + '</h1><p class="lead">' + E('accueil.intro', a.intro) + '</p>' +
+      '<div class="actions"><a class="btn" href="#rdv">' + E('accueil.boutonPrincipal', a.boutonPrincipal) + '</a><a class="textlink" href="#dispositif">' + E('accueil.lienSecondaire', a.lienSecondaire) + '</a></div></div>' + imgs.ruban + '</div></main>';
     var d = C.dispositif;
     h += '<section id="dispositif" style="padding-top:24px">' + head(d.titre, d.texte, 'dispositif') + '<div class="points">' +
       d.cartes.map(function (c, i) { var p = 'dispositif.cartes.' + i; return '<article class="point">' + ic(c.icone) + '<span class="tag">' + E(p + '.etiquette', c.etiquette) + '</span><h3>' + E(p + '.titre', c.titre) + '</h3><p>' + E(p + '.texte', c.texte) + '</p></article>'; }).join('') + '</div></section>';
     var r = C.raisons;
-    h += '<section id="venir">' + imgs.pluie + head(r.titre, r.texte, 'raisons') + '<ul class="reasons">' + r.liste.map(function (x, i) { return '<li>' + ic(pick(x, IC_RAISON, 'heart')) + '<span>' + E('raisons.liste.' + i, x) + '</span></li>'; }).join('') + '</ul></section>';
+    h += '<section id="venir">' + imgs.pluie + head(r.titre, r.texte, 'raisons') + '<ul class="reasons">' + r.liste.map(function (x, i) { return '<li>' + E('raisons.liste.' + i, x) + '</li>'; }).join('') + '</ul></section>';
     var v = C.rendezVous;
     h += '<section id="rdv" style="padding-top:24px">' + head(v.titre, v.texte, 'rendezVous') + '<ol class="steps">' +
       v.etapes.map(function (e, i) { var p = 'rendezVous.etapes.' + i; return '<li>' + ic(e.icone) + '<h3>' + E(p + '.titre', e.titre) + '</h3><p>' + E(p + '.texte', e.texte) + '</p></li>'; }).join('') + '</ol>' +
@@ -81,7 +65,7 @@
       '<label>Un mot si vous le souhaitez <small>(facultatif, évitez les détails personnels : on en parlera ensemble)</small><textarea name="message" rows="3" maxlength="400"></textarea></label>' +
       '<input class="hp" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<label class="ck"><input type="checkbox" name="consentement" required> J’accepte que mes coordonnées soient conservées par l’équipe CAPSULE uniquement pour me recontacter, et supprimées ensuite.</label>' +
-      '<div class="actions"><button class="btn" type="submit">Envoyer ma demande' + arr() + '</button><span id="demmsg" role="status"></span></div>' +
+      '<div class="actions"><button class="btn" type="submit">Envoyer ma demande</button><span id="demmsg" role="status"></span></div>' +
       '<p class="fine">En cas d’urgence, ne passez pas par ce formulaire : voir les numéros en bas de page.</p></form></section>';
     h += '<section id="infos" style="padding-top:24px"><div class="info"><div class="ig">' + C.infosPratiques.map(function (t, i) {
       var p = 'infosPratiques.' + i;
@@ -102,15 +86,15 @@
       q.liste.map(function (x, i) {
         var p = 'questions.liste.' + i;
         return EDIT ? '<div class="edq"><p class="sm">' + E(p + '.q', x.q) + '</p><p>' + E(p + '.r', x.r) + '</p></div>'
-                    : '<details><summary>' + ic(pick(x.q, IC_FAQ, 'question')) + '<span class="qt">' + f(x.q) + '</span></summary><p>' + f(x.r) + '</p></details>';
-      }).join('') + (q.aide ? '<div class="faqhelp">' + ic('mail') + '<div><h3>' + E('questions.aide.titre', q.aide.titre) + '</h3><p>' + E('questions.aide.texte', q.aide.texte) + (email ? ' <a class="textlink" href="mailto:' + esc(email) + '">' + esc(email) + '</a>' : '') + '</p></div></div>' : '') + '</div>' + imgs.pas + '</div></section>';
+                    : '<details><summary>' + f(x.q) + '</summary><p>' + f(x.r) + '</p></details>';
+      }).join('') + (q.aide ? '<div class="faqhelp"><h3>' + E('questions.aide.titre', q.aide.titre) + '</h3><p>' + E('questions.aide.texte', q.aide.texte) + (email ? ' <a class="textlink" href="mailto:' + esc(email) + '">' + esc(email) + '</a>' : '') + '</p></div>' : '') + '</div>' + imgs.pas + '</div></section>';
     var p = C.porteur;
     h += '<section id="porteur" style="padding-top:24px"><div class="owner"><div class="endorse" aria-label="' + esc(m.nom) + ', ' + esc(p.entite.replace(/\n/g, ' ')) + '">' +
       '<span class="lk"><span data-logo="84"></span><span class="wm" style="font-size:24px">' + f(m.nom) + '</span></span><span class="bar" aria-hidden="true"></span><img class="ent-logo" src="img/partenaires/paris8.png" alt="Université Paris 8" width="110" height="58"></div>' +
       '<div><h2>' + E('porteur.titre', p.titre) + '</h2><p>' + E('porteur.texte', p.texte) + '</p></div></div></section>';
     var u = C.urgence;
     h += '<section id="urgence" style="padding-top:24px"><div class="alert" role="note"><div><h2>' + E('urgence.titre', u.titre) + '</h2><p>' + E('urgence.texte', u.texte) + '</p></div><div class="nums">' +
-      u.numeros.map(function (n, i) { return '<div>' + ic(pick(n.numero, IC_NUM, 'phone')) + '<b>' + E('urgence.numeros.' + i + '.numero', n.numero) + '</b><span>' + E('urgence.numeros.' + i + '.texte', n.texte) + '</span></div>'; }).join('') + '</div></div></section>';
+      u.numeros.map(function (n, i) { return '<div><b>' + E('urgence.numeros.' + i + '.numero', n.numero) + '</b><span>' + E('urgence.numeros.' + i + '.texte', n.texte) + '</span></div>'; }).join('') + '</div></div></section>';
     var fi = C.final;
     h += '<section style="padding-top:24px"><div class="final"><div><h2>' + E('final.titre', fi.titre) + '</h2><p>' + E('final.texte', fi.texte) + '</p><div class="actions">' + rdvBtn(C.boutonRendezVous, 'boutonRendezVous') + '</div></div><div class="lw" data-logo="170" data-mono="#FFFFFF"></div></div></section>';
     var PART = [
@@ -259,7 +243,8 @@
       .catch(function () { return fetch('contenu.json', { cache: 'no-store' }).then(function (r) { return r.json(); }); });
   }
   load().then(function (data) {
-    C = data; defaults(); render(); demCap();
+    C = data; if (C.questions && !C.questions.aide) C.questions.aide = { titre: 'Une autre question ?', texte: 'Écrivez-nous, on vous répond volontiers.' };
+    render(); demCap();
     if (/[?&]edit(=|&|$)/.test(location.search)) loginBar();
   }).catch(function () {
     app.innerHTML = '<p style="padding:24px">Le contenu du site n\'a pas pu être chargé. Écrivez-nous : capsule-contact@gmail.com</p>';
