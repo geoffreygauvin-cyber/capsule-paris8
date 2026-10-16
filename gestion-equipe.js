@@ -44,19 +44,19 @@
   function draw() {
     var host = document.getElementById('v14'); if (!host || !window.CAPSULE) return; css();
     var old = document.getElementById('eqbody'); if (old) old.remove();
-    var d = window.CAPSULE.data(), names = Object.keys(d.roles || {}).filter(function (n) { return d.roles[n] === 'admin' || d.roles[n] === 'etudiant'; });
+    var d = window.CAPSULE.data(), tc = d.techs || [];
+    /* Le compte « Services techniques » (Alfred) ne figure ni dans l'organigramme ni dans la liste : il n'est pas un membre de l'équipe. */
+    var names = Object.keys(d.roles || {}).filter(function (n) { return (d.roles[n] === 'admin' || d.roles[n] === 'etudiant') && tc.indexOf(n) < 0; });
     var byName = function (a, b) { return a.localeCompare(b, 'fr'); };
-    var tc = d.techs || [], tech = names.filter(function (n) { return tc.indexOf(n) > -1; }).sort(byName),
-      adm = names.filter(function (n) { return d.roles[n] === 'admin' && tc.indexOf(n) < 0; }).sort(byName), stu = names.filter(function (n) { return d.roles[n] !== 'admin' && tc.indexOf(n) < 0; }).sort(byName);
-    var h = '<div id="eqbody"><div class="eqbar"><span class="sub" style="margin:0">' + names.length + ' personne' + (names.length > 1 ? 's' : '') + ' · ' + adm.length + ' en coordination' + (tech.length ? ', ' + tech.length + ' au service technique' : '') + ', ' + stu.length + ' étudiant·e' + (stu.length > 1 ? 's' : '') + ' psychologue' + (stu.length > 1 ? 's' : '') + '</span>' +
+    var adm = names.filter(function (n) { return d.roles[n] === 'admin'; }).sort(byName), stu = names.filter(function (n) { return d.roles[n] !== 'admin'; }).sort(byName);
+    var h = '<div id="eqbody"><div class="eqbar"><span class="sub" style="margin:0">' + names.length + ' personne' + (names.length > 1 ? 's' : '') + ' · ' + adm.length + ' en coordination, ' + stu.length + ' étudiant·e' + (stu.length > 1 ? 's' : '') + ' psychologue' + (stu.length > 1 ? 's' : '') + '</span>' +
       '<span class="filters" style="margin:0"><button class="chip' + (mode === 'orga' ? ' on' : '') + '" data-eq="orga">Organigramme</button><button class="chip' + (mode === 'liste' ? ' on' : '') + '" data-eq="liste">Liste</button></span></div>';
     if (mode === 'orga') {
       h += '<div class="eqtier"><div class="eqlab">Coordination</div><div class="eqrow">' + (adm.length ? adm.map(function (n) { return card(n, d, true); }).join('') : '<p class="sub">Aucun compte admin.</p>') + '</div></div>';
       if (stu.length) h += '<div class="eqstem"></div><div class="eqgrp"><div class="eqlab">Étudiant·es psychologues</div><div class="eqrow">' + stu.map(function (n) { return card(n, d, false); }).join('') + '</div></div>';
-      if (tech.length) h += '<div class="eqtier"><div class="eqgrp"><div class="eqlab">Service technique · transversal</div><div class="eqrow">' + tech.map(function (n) { return card(n, d, true); }).join('') + '</div></div></div>';
       h += '<p class="sub" style="margin-top:14px;text-align:center">Chacun·e modifie son titre, sa photo et sa présentation en cliquant sur son nom en bas du menu.</p>';
     } else {
-      h += '<div class="eqgrid">' + adm.concat(tech, stu).map(function (n) { return card(n, d, d.roles[n] === 'admin'); }).join('') + '</div>';
+      h += '<div class="eqgrid">' + adm.concat(stu).map(function (n) { return card(n, d, d.roles[n] === 'admin'); }).join('') + '</div>';
     }
     host.insertAdjacentHTML('beforeend', h + '</div>');
     if (window.accAdmin) window.accAdmin();
