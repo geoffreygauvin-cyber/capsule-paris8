@@ -183,7 +183,32 @@ export default async (req) => {
       suivi: CP.enSuivi(r), email: "", tel: "", notes: "", message: "", masque: true, droit: mien, libre: libre(r),
     };
   };
-  const sortie = (r) => ({ item: pub(r), ...(droit(r) ? { fiche: r } : {}) });
+  // Clé d'ouverture d'une fiche : remise avec le code du compte (patient_get), liée au compte et à la fiche, valable 15 minutes.
+  // Les actions qui modifient une fiche n'en renvoient le contenu que si on leur présente cette clé ; sinon, seulement la version masquée.
+  const CLE_MS = 15 * 60 * 1000;
+  const cleFiche = (id) => { const p = Buffer.from(JSON.stringify({ u: user, i: id, e: Date.now() + CLE_MS })).toString("base64url"); return p + "." + sign("fiche|" + p); };
+  const cleOk = (id) => {
+    try {
+      const [p, s] = String(b.cle || "").split("."); if (!p || !s) return false;
+      const g = sign("fiche|" + p); if (s.length !== g.length || !timingSafeEqual(Buffer.from(s), Buffer.from(g))) return false;
+      const o = JSON.parse(Buffer.from(p, "base64url").toString()); return o.u === user && o.i === id && o.e > Date.now();
+    } catch { return false; }
+  };
+  const sortie = (r, ouvert) => ({ item: pub(r), ...(droit(r) && (ouvert || cleOk(r.id)) ? { fiche: r } : {}) });
+  // Le code du compte connecté (comptes principaux, code modifié, comptes créés dans l'onglet Comptes) : même vérification qu'à la connexion.
+  const codeBon = async (code) => {
+    const c = String(code ?? "").trim(); if (!c) return false;
+    try {
+      const pr = comptes();
+      if (user in pr) {
+        const ov = await getStore("codes").get(user, { type: "json" });
+        if (ov) return timingSafeEqual(Buffer.from(hashCode(c, ov.salt)), Buffer.from(ov.hash));
+        return timingSafeEqual(h(c), h(pr[user].trim()));
+      }
+      const a = await ac.get(user, { type: "json" });
+      return !!a && timingSafeEqual(Buffer.from(hashCode(c, a.salt)), Buffer.from(a.hash));
+    } catch { return false; }
+  };
   // Les admins sont les enseignant·es : accès à tout, mais aucun suivi à leur nom. Un suivi ne s'attribue qu'à un·e étudiant·e psy.
   const REFUS_ADMIN = "Les admins ne suivent pas de patient·es : choisissez un·e étudiant·e psy.";
   const suiveur = async (n, r, ex) => !n || n === (r && r.assigne) || (ex && ex.therapeute === n) || (await CP.etudiants()).includes(n);
@@ -496,8 +521,20 @@ export default async (req) => {
     let r = norm(await store.get(k, { type: "json" }));
     if (!Number.isInteger(r.num)) { await chargerTout(store); r = norm(await store.get(k, { type: "json" })); }
     if (!droit(r)) return nonAutorise(r);
-    try { const now = new Date().toISOString(); await getStore({ name: "acces", consistency: "strong" }).setJSON("a/" + now + "_" + randomUUID().slice(0, 8), { le: now, par: user, patient: r.id, ref: etiquette(r) }); } catch (e) { console.error("journal des accès", e.message); }
-    return J({ ok: true, fiche: r });
+    // Le code du compte est redemandé à chaque ouverture de fiche (admins compris) ; cinq erreurs de suite bloquent dix minutes.
+    const as = getStore({ name: "acces", consistency: "strong" }), kx = "x/" + user, t0 = Date.now(), FEN = 10 * 60 * 1000;
+    const st = (await as.get(kx, { type: "json" }).catch(() => null)) || { n: 0, t: 0 };
+    if (st.n >= 5 && t0 - st.t < FEN) return J({ error: "Trop d’essais : réessayez dans quelques minutes.", codeRequis: true }, 429);
+    const trace = async (extra) => { try { const now = new Date().toISOString(); await as.setJSON("a/" + now + "_" + randomUUID().slice(0, 8), { le: now, par: user, patient: r.id, ref: etiquette(r), ...extra }); } catch (e) { console.error("journal des accès", e.message); } };
+    if (!(await codeBon(b.code))) {
+      await new Promise((x) => setTimeout(x, 600));
+      try { await as.setJSON(kx, { n: (t0 - st.t < FEN ? st.n : 0) + 1, t: t0 }); } catch {}
+      await trace({ echec: true });
+      return J({ error: "Code incorrect.", codeRequis: true }, 403);
+    }
+    if (st.n) { try { await as.delete(kx); } catch {} }
+    await trace({});
+    return J({ ok: true, fiche: r, cle: cleFiche(r.id) });
   }
   if (b.action === "prendre") { // prendre en charge une personne que personne n'a encore prise : donne accès à sa fiche
     if (admin) return J({ error: "Les admins ne prennent pas de suivi : ils voient toutes les fiches, sans en être le ou la thérapeute." }, 403);
@@ -637,7 +674,7 @@ export default async (req) => {
     const id = randomUUID(), now = new Date().toISOString();
     const num = (await chargerTout(store)).reduce((m, x) => Math.max(m, x.rec.num || 0), 0) + 1;
     const rec = { id, num, creeLe: now, prenom, email, tel, creneaux: [], message: "", statut: "a_recontacter", assigne: admin ? "" : user, notes: "", source: "manuel", seances: [], maj: now, majPar: user };
-    await store.setJSON("d/" + now + "_" + id, rec); return J({ ok: true, ...sortie(rec) });
+    await store.setJSON("d/" + now + "_" + id, rec); return J({ ok: true, ...sortie(rec, true), cle: cleFiche(rec.id) }); // la personne vient de saisir ces données : pas de code à redemander
   }
   if (b.action === "seance_issue" || b.action === "seance_supprimer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
@@ -1095,6 +1132,7 @@ export default async (req) => {
     if (!droit(cur.rec)) return nonAutorise(cur.rec);
     const base = cur.rec, r = vue(base, base.rdvs[0]), m = (await chargerModeles())[String(b.modele)]; if (!m) return J({ error: "Modèle inconnu." }, 404);
     const v = variables(r);
+    if (b.action === "message_apercu" && !cleOk(base.id)) return J({ error: "Retapez votre code pour ouvrir cette fiche.", codeRequis: true }, 403); // l'aperçu montre le prénom et l'adresse
     if (b.action === "message_apercu") return J({ ok: true, objet: rendre(m.objet, v), corps: rendre(m.corps, v), manquants: [...new Set([...manquants(m.objet, v), ...manquants(m.corps, v)])], email: r.email });
     const objet = clean(b.objet, 200).trim(), corps = clean(b.corps, 4000).trim();
     if (!objet || !corps) return J({ error: "L'objet et le message sont obligatoires." }, 400);

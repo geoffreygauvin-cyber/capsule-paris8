@@ -432,7 +432,7 @@ aside{overflow:hidden!important}
 <div class="filters" id="tabs"></div>
 <div class="tools"><input id="q" type="search" placeholder="Rechercher une initiale ou un numéro…" aria-label="Rechercher"></div>
 <div id="list"></div>
-<p class="note" style="margin-top:18px">Données sensibles : les personnes apparaissent sous une initiale et un numéro ; leurs coordonnées ne s’ouvrent qu’après « Prendre en charge » (les admins voient tout, mais ne prennent pas de suivi). Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
+<p class="note" style="margin-top:18px">Données sensibles : les personnes apparaissent sous une initiale et un numéro ; leurs coordonnées ne s’ouvrent qu’après « Prendre en charge » (les admins voient tout, mais ne prennent pas de suivi), et le code de votre compte est redemandé à chaque ouverture de fiche. Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
 
 <section id="v2" class="hide"><header class="ph0 pastel t2"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p></header>
 <div class="wk"><button class="ib" id="wp" aria-label="Semaine précédente">‹</button><div class="t" id="wt"></div><button class="ib" id="wn" aria-label="Semaine suivante">›</button><button class="btn l s" id="wt0">Aujourd’hui</button></div>
@@ -483,14 +483,14 @@ aside{overflow:hidden!important}
 var ST=[['nouvelle','Nouvelles'],['a_recontacter','À recontacter'],['attente','Liste d’attente'],['contactee','Contactées'],['rdv_fixe','RDV fixé'],['en_cours','En cours'],['terminee','Terminées'],['sans_suite','Sans suite']];
 var SL={nouvelle:'Nouvelle',a_recontacter:'À recontacter',attente:'Liste d’attente',contactee:'Contactée',rdv_fixe:'RDV fixé',en_cours:'En cours',terminee:'Terminée',sans_suite:'Sans suite'};
 /* Patient·es : la liste (items) ne contient que « M. · 42 », le statut et les rendez-vous. Prénom, mail, téléphone, message et notes viennent de patient_get à l'ouverture de la fiche (FULL, 5 min en mémoire). */
-var FULL={},FLOAD={};
+var FULL={},FICHE_OUV=null;
 var locked=false,pollT=0,monDos=null,CAP=null,role='admin',isSup=false,roles={},superv=[],supItems=[],emp={who:'',wk:''},NVSRC=null,firstLoad=true,ress=[],rc='tous',photos={},titres={},bios={},contacts={},token='',items=[],equipe=[],filtre='nouvelle',moi='',isAdmin=false,cfg={salles:[],heures:[],jours:[1,2,3],mail:false,calUrl:''},week='',dayIdx=0,openId=null,mineOnly=false,techs=[],isTech=false,viewMode='admin';
 try{var cm=localStorage.getItem('cap_mode');if(cm==='etu'||cm==='sup')viewMode=cm}catch(e){}
 try{token=sessionStorage.getItem('cap_t')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var TECH_LB='SERVICES TECHNIQUES · POUR CHANGER DE MODE',alias={};function cap(s){s=String(s||'');if(alias[s])return alias[s];return s.charAt(0).toUpperCase()+s.slice(1)}
-function api(b){b.token=token;return fetch('/api/gestion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){d._s=r.status;if(d&&d.item&&d.item.id){if(d.fiche)FULL[d.item.id]={t:Date.now(),v:d.fiche};else delete FULL[d.item.id]}return d})}).catch(function(){return{error:'Connexion impossible.'}})}
+function api(b){b.token=token;if(b.id&&FULL[b.id]&&FULL[b.id].cle&&!b.cle)b.cle=FULL[b.id].cle;return fetch('/api/gestion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){d._s=r.status;if(d&&d.item&&d.item.id){var o=FULL[d.item.id];if(d.fiche)FULL[d.item.id]={t:d.cle?Date.now():(o?o.t:Date.now()),v:d.fiche,cle:d.cle||(o&&o.cle)||''};else delete FULL[d.item.id]}return d})}).catch(function(){return{error:'Connexion impossible.'}})}
 function toast(t){var e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.add('hide')},5000)}
 function pad(n){return(n<10?'0':'')+n}
 var RL={admin:'Administrateur·rice',superviseur:'Superviseur·e',etudiant:'Étudiant·e psy',desactive:'Désactivé'};
@@ -534,11 +534,22 @@ function mesStats(name){var t=0,m=0,a=0,pat={},mois=iso(new Date()).slice(0,7),a
  return{total:t,mois:m,abs:a,patients:Object.keys(pat).length,avenir:avenir}}
 function aConfirmer(i){return !!i.rdvDate&&past(i.rdvDate,i.rdvHeure)}
 function byId(id){return items.filter(function(x){return x.id===id})[0]}
-function fullOf(i){var f=FULL[i.id];return f&&Date.now()-f.t<3e5?f.v:null}
-function loadFull(id,cb){if(FLOAD[id])return;FLOAD[id]=1;api({action:'patient_get',id:id}).then(function(r){delete FLOAD[id];if(!r.ok){toast(r.error||'Erreur');return}FULL[id]={t:Date.now(),v:r.fiche};if(cb)cb(r.fiche)})}
+function fullOf(i){var f=FULL[i.id];return f&&Date.now()-f.t<84e4?f.v:null}
+/* Option B : le code du compte est redemandé à chaque ouverture de fiche, admins compris. La fiche se referme (et se reverrouille) quand on ferme la carte ou la fenêtre, ou qu'on change de page. */
+function ouvrir(id,cb){
+ var i=byId(id);if(!i||!i.droit)return;
+ openM('<h3>Ouvrir la fiche de '+esc(i.prenom)+'</h3><p class="sub">Par précaution, retapez le code de votre compte pour afficher ses coordonnées et ses notes. Il est redemandé à chaque ouverture.</p>'+
+  '<label class="f">Code de '+esc(cap(moi))+'<input id="fcode" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false"></label><div id="fcerr" class="err" style="min-height:20px"></div>'+
+  '<div class="row"><button class="btn" id="fcgo">Ouvrir la fiche</button><button class="btn l" data-m="x">Annuler</button></div>',true);
+ var inp=$('fcode'),go=$('fcgo'),busy=false;setTimeout(function(){inp.focus()},60);
+ function envoi(){if(busy||!inp.value.trim())return;busy=true;go.disabled=true;$('fcerr').textContent='';
+  api({action:'patient_get',id:id,code:inp.value}).then(function(r){busy=false;go.disabled=false;
+   if(!r.ok){$('fcerr').textContent=r.error||'Erreur';inp.value='';inp.focus();return}
+   FULL[id]={t:Date.now(),v:r.fiche,cle:r.cle};if(cb)cb(r.fiche)})}
+ go.onclick=envoi;inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();envoi()}}}
 function clos(i){return i.statut==='terminee'||i.statut==='sans_suite'}
 function refus(i){return i.libre?'Cette demande n’est à personne : cliquez d’abord sur « Prendre en charge ».':'Cette fiche est suivie par '+cap(i.suiviPar||i.assigne)+'.'}
-function logout(){token='';FULL={};try{sessionStorage.clear()}catch(e){}$('app').classList.add('hide');$('login').classList.remove('hide')}
+function logout(){token='';FULL={};FICHE_OUV=null;try{sessionStorage.clear()}catch(e){}$('app').classList.add('hide');$('login').classList.remove('hide')}
 function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
  if(!d.ok){toast(d.error||'Erreur');return}
@@ -612,9 +623,8 @@ function card(i){
  var mv='<select class="mv" data-a="mv" aria-label="Déplacer vers un autre onglet"><option value="">Déplacer ⇄</option>'+ST.filter(function(x){return x[0]!==i.statut}).map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'</select>';
  var qa='<div class="qa">'+(i.droit&&(i.statut==='nouvelle'||i.statut==='a_recontacter'||i.statut==='attente')?'<button class="btn s" data-a="plan" title="Planifier un rendez-vous">📅<span class="lbl"> Planifier</span></button><button class="btn l s" data-a="mail" title="Écrire un message">✉<span class="lbl"> Écrire</span></button>':'')+(i.libre&&!clos(i)?'<button class="btn s" data-a="prendre" title="Prendre en charge pour voir sa fiche">🙋<span class="lbl"> Prendre en charge</span></button>':'')+((i.droit||i.libre)&&(i.statut==='nouvelle'||i.statut==='a_recontacter')&&!R(i).length?'<button class="btn l s" data-a="att" title="Mettre en liste d’attente">⏳<span class="lbl"> Attente</span></button>':'')+(i.droit||i.libre?mv:'')+'</div>';
  var F=o&&i.droit?fullOf(i):null,m=F?Object.assign({},i,F):i;
- if(o&&i.droit&&!F)loadFull(i.id,function(){draw()});
  var body;
- if(i.droit&&!F)body='<div class="rb"><p class="sub" style="margin:0">Ouverture de la fiche…</p></div>';
+ if(i.droit&&!F)body='<div class="rb"><p class="sub" style="margin:0 0 12px">Fiche verrouillée : le code de votre compte est demandé à chaque ouverture.</p><div class="row"><button class="btn" data-a="ouvrir">Ouvrir la fiche</button></div></div>';
  else if(i.droit)body='<div class="rb"><div class="meta"><b>'+esc(m.prenom)+'</b><a href="mailto:'+esc(m.email)+'">✉ '+esc(m.email)+'</a>'+(m.tel?'<a href="tel:'+esc(m.tel)+'">☎ '+esc(m.tel)+'</a>':'')+'<span style="color:var(--muted)">reçue '+ago(m.creeLe)+(m.majPar?' · modifiée par '+(m.majPar==='la personne'?'la personne (lien du mail)':esc(cap(m.majPar))):'')+'</span></div>'+
  (m.creneaux&&m.creneaux.length?'<div class="dispo" title="Jours qui conviennent">'+m.creneaux.map(function(c){return '<span>'+esc(c)+'</span>'}).join('')+'</div>':'')+
  (m.message?'<div class="quote">'+esc(m.message)+'</div>':'')+retBan(m)+rdvBox(m)+
@@ -650,7 +660,7 @@ function drawCal(){
  var f=$('feed');if(cfg.calUrl){f.classList.remove('hide');f.innerHTML='<b>Agenda général</b> pour Google Agenda ou Outlook (initiale et numéro de la personne, salle, thérapeute : jamais son prénom). Copiez ce lien puis, dans Google Agenda : Autres agendas › À partir de l’URL.<input readonly value="'+esc(location.origin+cfg.calUrl)+'" onclick="this.select()"><small>Mis à jour environ une fois par jour ; ce calendrier-ci est toujours à jour.</small>'}}
 /* ---- fenêtre ---- */
 function openM(h,small){$('md').className=small?'sm':'';$('md').innerHTML='<button class="mx" data-m="x" aria-label="Fermer">×</button>'+h;$('ov').classList.remove('hide')}
-function closeM(){$('ov').classList.add('hide');$('md').innerHTML=''}
+function closeM(){if(FICHE_OUV){delete FULL[FICHE_OUV];FICHE_OUV=null}$('ov').classList.add('hide');$('md').innerHTML=''}
 var plan={id:null,rdvId:null,week:''};
 function planner(id,rdvId){plan={id:id,rdvId:rdvId||null,week:week};var i=byId(id);
  openM('<h3>Quel créneau pour '+esc(i.prenom)+' ?'+(rdvId?' <small style="font-weight:500">(déplacer le RDV)</small>':'')+'</h3><p class="sub">'+(i.creneaux&&i.creneaux.length?'Elle ou il est disponible : '+esc(i.creneaux.join(', '))+'. ':'')+'Cliquez sur un <b>+</b>.</p><div class="wk"><button class="ib" data-m="wp" aria-label="Semaine précédente">‹</button><div class="t">Semaine du '+esc(fday(plan.week))+'</div><button class="ib" data-m="wn" aria-label="Semaine suivante">›</button><button class="btn l s" data-m="x">Fermer</button></div><div class="dtabs">'+cfg.jours.map(function(j,k){return '<button data-m="dk" data-k="'+k+'" class="'+(k===dayIdx?'on':'')+'">'+esc(fday(addDays(plan.week,j-1)).split(' ').slice(0,2).join(' '))+'</button>'}).join('')+'</div><div class="days d'+dayIdx+'">'+gridHtml(plan.week,true)+'</div>')}
@@ -716,7 +726,7 @@ $('mine').onchange=function(){mineOnly=this.checked;drawCal()};
 /* ---- navigation ---- */
 function swSup(n){Array.prototype.forEach.call(document.querySelectorAll('.ssw'),function(w){var on=false;w.classList.toggle('hide',!on);if(on)w.innerHTML='<button class="chip'+(n===10?' on':'')+'" data-g="10">Supervisions & réunions</button><button class="chip'+(n===5?' on':'')+'" data-g="5">Activité équipe</button>'})}
 document.addEventListener('click',function(e){var b=e.target.closest('.ssw .chip');if(b)nav(+b.dataset.g)});
-function nav(n){navOpenFor(n);[1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',(b.dataset.vs?b.dataset.vs.split(',').indexOf(String(n))>-1:+b.dataset.v===n)||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===15)drawRH();if(n===16&&window.budAdmin)window.budAdmin($('v16b'));if(n===17&&window.supMe)window.supMe($('v17b'));if(n===19&&window.drawMsg)window.drawMsg($('v19b'));if(n===18&&window.supDossier)window.supDossier($('v18b'));if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte();if(n===14&&window.drawEquipe)drawEquipe();hubBar(n)}
+function nav(n){FULL=(n===7&&mto&&FULL[mto])?(function(){var o={};o[mto]=FULL[mto];return o})():{};if(openId){try{draw()}catch(e){}}navOpenFor(n);[1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19].forEach(function(k){$('v'+k).classList.toggle('hide',k!==n)});Array.prototype.forEach.call(document.querySelectorAll('.nv'),function(b){b.classList.toggle('on',(b.dataset.vs?b.dataset.vs.split(',').indexOf(String(n))>-1:+b.dataset.v===n)||(role==='admin'&&n===5&&+b.dataset.v===10))});swSup(n);window.scrollTo(0,0);if(n===2)drawCal();if(n===3)loadTeam();if(n===4)drawPat();if(n===5)drawAct();if(n===6)drawRes();if(n===7)msgs();if(n===8){drawEff();drawAct()}if(n===9)drawEmp();if(n===11)drawHome();if(n===10)drawSup();if(n===15)drawRH();if(n===16&&window.budAdmin)window.budAdmin($('v16b'));if(n===17&&window.supMe)window.supMe($('v17b'));if(n===19&&window.drawMsg)window.drawMsg($('v19b'));if(n===18&&window.supDossier)window.supDossier($('v18b'));if(n===12&&window.drawCom)drawCom();if(n===13&&window.drawCharte)drawCharte();if(n===14&&window.drawEquipe)drawEquipe();hubBar(n)}
 document.querySelector('aside').onclick=function(e){var b=e.target.closest('.nv');if(b)nav(+b.dataset.v)};
 
 /* ---- séances ---- */
@@ -748,7 +758,7 @@ function drawPat(){
 $('ptabs').onclick=function(e){var b=e.target.closest('.chip');if(b){pf=b.dataset.p;drawPat()}};
 $('pq').oninput=drawPat;
 $('ptbl').onclick=function(e){var b=e.target.closest('button[data-id]');if(b)fiche(b.dataset.id)};
-function fiche(id){var i0=byId(id);if(!i0)return;if(!i0.droit){toast(refus(i0));return}var f0=fullOf(i0);if(!f0){loadFull(id,function(){fiche(id)});return}var i=Object.assign({},i0,f0);var n=nS(i),a=nS(i,'absence'),pc=Math.min(100,Math.round(n/cfg.seancesMax*100)),mk=Math.round(6/cfg.seancesMax*100);
+function fiche(id){var i0=byId(id);if(!i0)return;if(!i0.droit){toast(refus(i0));return}var f0=fullOf(i0);if(!f0){ouvrir(id,function(){fiche(id)});return}FICHE_OUV=id;var i=Object.assign({},i0,f0);var n=nS(i),a=nS(i,'absence'),pc=Math.min(100,Math.round(n/cfg.seancesMax*100)),mk=Math.round(6/cfg.seancesMax*100);
  var hist=(i.seances||[]).map(function(s,k){return {s:s,k:k}}).reverse();
  openM('<div class="prof">'+av(i.prenom,'xl')+'<div style="flex:1"><h3 style="font-size:22px">'+esc(i.prenom)+'</h3><span class="pill s-'+i.statut+'">'+esc(SL[i.statut])+'</span><p class="sub" style="margin:6px 0 0">'+(i.source==='manuel'?'Ajouté à la main':'Demande reçue '+ago(i.creeLe))+'</p></div></div>'+
  '<div class="kpis"><div class="kpi pastel"><b>'+n+'</b><span>séance'+(n>1?'s':'')+' réalisée'+(n>1?'s':'')+'</span></div><div class="kpi pastel"><b>'+a+'</b><span>absence'+(a>1?'s':'')+'</span></div><div class="kpi pastel"><b style="font-size:16px;line-height:1.5">'+(R(i).length?esc(fday(R(i)[0].date))+'<br>'+fh(R(i)[0].heure):'—')+'</b><span>prochain rendez-vous</span></div></div>'+
@@ -765,10 +775,10 @@ function addPerson(){openM('<h3>Ajouter une personne</h3><p class="sub">Pour que
 $('padd').onclick=addPerson;
 $('pjrn').onclick=function(){api({action:'acces_journal'}).then(function(r){if(!r.ok){toast(r.error||'Erreur');return}
  var fd=function(t){return new Date(t).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})},td='padding:7px 10px;border-top:1px solid var(--line)';
- openM('<h3>Qui a ouvert quelle fiche</h3><p class="sub">'+r.total+' ouverture'+(r.total>1?'s':'')+' enregistrée'+(r.total>1?'s':'')+(r.total>r.acces.length?' (les '+r.acces.length+' plus récentes)':'')+'. Une ouverture = une fiche consultée avec ses coordonnées.</p>'+
-  (r.acces.length?'<div style="overflow:auto;max-height:50vh;border:1px solid var(--line);border-radius:12px;margin:8px 0 14px"><table style="border-collapse:collapse;width:100%;font-size:13px"><tr style="text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)"><th style="padding:8px 10px">Date</th><th style="padding:8px 10px">Compte</th><th style="padding:8px 10px">Patient·e</th></tr>'+r.acces.map(function(x){return '<tr><td style="'+td+'">'+esc(fd(x.le))+'</td><td style="'+td+'">'+esc(cap(x.par))+'</td><td style="'+td+'">'+esc(x.ref)+'</td></tr>'}).join('')+'</table></div>':'<p class="sub">Aucune ouverture pour le moment.</p>')+
+ openM('<h3>Qui a ouvert quelle fiche</h3><p class="sub">'+r.total+' ouverture'+(r.total>1?'s':'')+' enregistrée'+(r.total>1?'s':'')+(r.total>r.acces.length?' (les '+r.acces.length+' plus récentes)':'')+'. Une ouverture = une fiche consultée avec ses coordonnées, après saisie du code. Les codes erronés y figurent aussi.</p>'+
+  (r.acces.length?'<div style="overflow:auto;max-height:50vh;border:1px solid var(--line);border-radius:12px;margin:8px 0 14px"><table style="border-collapse:collapse;width:100%;font-size:13px"><tr style="text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)"><th style="padding:8px 10px">Date</th><th style="padding:8px 10px">Compte</th><th style="padding:8px 10px">Patient·e</th></tr>'+r.acces.map(function(x){return '<tr><td style="'+td+'">'+esc(fd(x.le))+'</td><td style="'+td+'">'+esc(cap(x.par))+'</td><td style="'+td+'">'+esc(x.ref)+(x.echec?' <span style="color:var(--rasp);font-weight:600">code erroné</span>':'')+'</td></tr>'}).join('')+'</table></div>':'<p class="sub">Aucune ouverture pour le moment.</p>')+
   '<div class="row">'+(r.acces.length?'<button class="btn l s" id="pjx">Télécharger (Excel)</button>':'')+'<button class="btn l" data-m="x">Fermer</button></div>');
- if($('pjx'))$('pjx').onclick=function(){var a=document.createElement('a');a.href=URL.createObjectURL(xlsx([{name:'Accès aux fiches',widths:[20,18,14],rows:[['Date','Compte','Patient·e']].concat(r.acces.map(function(x){return[fd(x.le),cap(x.par),x.ref]}))}]));a.download='acces-fiches-'+iso(new Date())+'.xlsx';a.click()}})};
+ if($('pjx'))$('pjx').onclick=function(){var a=document.createElement('a');a.href=URL.createObjectURL(xlsx([{name:'Accès aux fiches',widths:[20,18,14],rows:[['Date','Compte','Patient·e']].concat(r.acces.map(function(x){return[fd(x.le),cap(x.par),x.ref+(x.echec?' (code erroné)':'')]}))}]));a.download='acces-fiches-'+iso(new Date())+'.xlsx';a.click()}})};
 function csv(rows,name){var t=rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'}).join(';')}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download=name;a.click()}
 /* ---- profil ---- */
 function profil(){var ms=mesStats(moi);
@@ -883,12 +893,13 @@ function drawSend(){
  $('mbody').innerHTML=(mdata.mail?'':'<div class="note" style="color:var(--rasp)">L’envoi de mails n’est pas encore configuré : vous pouvez préparer le message puis l’ouvrir dans votre messagerie.</div>')+
  '<div class="msgbox"><div class="g2"><label class="f">Destinataire<select id="mp">'+peo.map(function(i){return '<option value="'+esc(i.id)+'"'+(i.id===mto?' selected':'')+'>'+esc(i.prenom+' · '+(SL[i.statut]||''))+'</option>'}).join('')+'</select></label>'+
  '<label class="f">Modèle<select id="mm">'+mdata.modeles.filter(function(m){return !m.auto}).concat(mdata.modeles.filter(function(m){return m.auto})).map(function(m){return '<option value="'+m.id+'"'+(m.id===mmod?' selected':'')+'>'+esc(m.nom)+(m.auto?' (automatique)':'')+'</option>'}).join('')+'</select></label></div><div id="mpv"></div></div>';
- $('mp').onchange=function(){mto=this.value;prev()};$('mm').onchange=function(){mmod=this.value;prev()};prev()}
+ $('mp').onchange=function(){delete FULL[mto];mto=this.value;prev()};$('mm').onchange=function(){mmod=this.value;prev()};prev()}
 var MV={date:'la date du rendez-vous',heure:'l’heure du rendez-vous',salle:'la salle',therapeute:'le thérapeute'};
 function prev(){
+ var pi=byId(mto);if(pi&&!fullOf(pi)){$('mpv').innerHTML='<div class="info" style="margin-top:14px">Le message contient le prénom de <b>'+esc(pi.prenom)+'</b> et part vers son adresse : retapez le code de votre compte pour le préparer.</div><div class="row"><button class="btn" id="mcode">Saisir mon code</button></div>';$('mcode').onclick=function(){ouvrir(mto,function(){closeM();prev()})};return}
  $('mpv').innerHTML='<p class="sub" style="margin:14px 0 0">Chargement…</p>';
  api({action:'message_apercu',id:mto,modele:mmod}).then(function(d){
-  if(!d.ok){$('mpv').innerHTML='<div class="err" style="margin-top:12px">'+esc(d.error||'Erreur')+'</div>';return}
+  if(!d.ok){if(d.codeRequis){delete FULL[mto];prev();return}$('mpv').innerHTML='<div class="err" style="margin-top:12px">'+esc(d.error||'Erreur')+'</div>';return}
   $('mpv').innerHTML='<div class="info">À : <b>'+esc(d.email)+'</b></div>'+(d.manquants.length?'<div class="warn">Ce modèle utilise '+d.manquants.map(function(k){return MV[k]||k}).join(', ')+', pas encore connu·e pour cette personne : complétez le texte à la main ou planifiez d’abord un rendez-vous.</div>':'')+
   '<label class="f" style="margin-top:12px">Objet<input id="mo" value="'+esc(d.objet)+'" maxlength="200"></label><label class="f" style="margin-top:12px">Message<textarea id="mc" rows="12" maxlength="4000">'+esc(d.corps)+'</textarea></label>'+
   '<div class="row"><button class="btn" id="msend"'+(mdata.mail?'':' disabled')+'>Envoyer</button><button class="btn l" id="mmail">Ouvrir dans ma messagerie</button><span id="mok" class="ok"></span></div>';
@@ -1478,10 +1489,11 @@ $('list').onchange=function(e){var sel=e.target.closest('select[data-a="mv"]');i
 $('list').onclick=function(e){
  if(e.target.closest('select'))return;
  var b=e.target.closest('button[data-a]');if(!b)return;var c=b.closest('.req'),id=c.dataset.id,a=b.dataset.a,rid=b.dataset.r;
- if(a==='tog'){openId=openId===id?null:id;draw();if(openId){var el=document.querySelector('.req.open');el&&el.scrollIntoView({block:'nearest',behavior:'smooth'})}return}
+ if(a==='tog'){var old=openId;openId=openId===id?null:id;if(old&&old!==openId)delete FULL[old];draw();if(openId){var el=document.querySelector('.req.open');el&&el.scrollIntoView({block:'nearest',behavior:'smooth'});var ii=byId(openId);if(ii&&ii.droit&&!fullOf(ii))ouvrir(openId,function(){closeM();draw()})}return}
+ if(a==='ouvrir'){ouvrir(id,function(){closeM();draw()});return}
  if(a==='vu'){vu(id);return}
  if(a==='att'){attModal(id);return}
- if(a==='prendre'){b.disabled=true;api({action:'prendre',id:id}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});openId=id;draw();drawCal();toast('Fiche prise en charge : vous pouvez maintenant l’ouvrir.')}else{b.disabled=false;toast(d.error||'Erreur')}});return}
+ if(a==='prendre'){b.disabled=true;api({action:'prendre',id:id}).then(function(d){if(d.ok){items=items.map(function(x){return x.id===id?d.item:x});openId=id;draw();drawCal();toast('Fiche prise en charge.');ouvrir(id,function(){closeM();draw()})}else{b.disabled=false;toast(d.error||'Erreur')}});return}
  if(a==='plan'){planner(id);return}if(a==='mail'){mto=id;mk='envoyer';nav(7);return}if(a==='det'){detail(id,rid);return}if(a==='ok'||a==='abs'){issue(id,a==='ok'?'realisee':'absence',rid);return}
  if(a==='del'){if(!confirm('Supprimer cette demande définitivement ?'))return;api({action:'delete',id:id}).then(function(d){if(d.ok){items=items.filter(function(x){return x.id!==id});openId=null;draw();drawCal();toast('Demande supprimée.')}else toast(d.error)});return}
  var p={};Array.prototype.forEach.call(c.querySelectorAll('[data-f]'),function(f){p[f.dataset.f]=f.value});
