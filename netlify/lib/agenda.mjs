@@ -4,7 +4,7 @@
 // - Qui voit quoi : les mêmes événements que dans « Mon emploi du temps » (participant·e ou organisateur·rice). Un entretien privé n'affiche jamais son motif ni ses notes.
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
-import { chargerTout, parisToUTC, cap, LIEU } from "./rdv.mjs";
+import { chargerTout, parisToUTC, cap, LIEU, etiquette } from "./rdv.mjs";
 
 const secret = () => process.env.SESSION_SECRET || process.env.GESTION_COMPTES || "";
 const sig = (u, v) => createHmac("sha256", "agenda|" + secret()).update(u + "|" + v).digest("base64url").slice(0, 24);
@@ -61,7 +61,7 @@ export async function ics(user) {
     for (const x of rec.rdvs || []) {
       if (x.therapeute !== user) continue;
       const d = parisToUTC(x.date, x.heure); if (d < depuis) continue;
-      E.push(evt({ uid: x.uid || `rdv-${rec.id}-${x.id}`, debut: d, fin: d + 3600e3, titre: `Consultation · ${rec.prenom}`, lieu: `${x.salle}, ${LIEU}`, desc: `Rendez-vous patient·e : ${rec.prenom} (${x.salle}).` }));
+      E.push(evt({ uid: x.uid || `rdv-${rec.id}-${x.id}`, debut: d, fin: d + 3600e3, titre: `Consultation · ${etiquette(rec)}`, lieu: `${x.salle}, ${LIEU}`, desc: `Rendez-vous patient·e : ${etiquette(rec)} (${x.salle}).` }));
     }
   }
   const ss = getStore("supervisions"), { blobs } = await ss.list();

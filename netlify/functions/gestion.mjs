@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
-import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout } from "../lib/rdv.mjs";
+import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout, etiquette } from "../lib/rdv.mjs";
 import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
@@ -161,6 +161,30 @@ export default async (req) => {
   if (ADMIN_FIXE.includes(user)) role = "admin"; // Service technique : admin quel que soit le type de compte (principal ou créé dans l'onglet Comptes)
   const admin = role === "admin", sup = role === "superviseur";
   const store = getStore("demandes");
+  // ---- Patient·es : jamais de données directes dans les listes ----
+  // La liste (action « list ») ne contient que « M. · 42 » (initiale + numéro), le statut, les rendez-vous et les créneaux souhaités.
+  // Prénom, mail, téléphone, message, notes et retours ne sortent que par « patient_get » (ouverture de la fiche), réservé à l'admin et au ou à la thérapeute
+  // assigné·e, et chaque ouverture est inscrite au journal (store « acces »).
+  // « Qui suit cette personne » : l'assigné·e, sinon (anciennes fiches) le ou la thérapeute de son prochain rendez-vous.
+  // Pas la dernière séance : après une clôture d'année, les suivis conservés doivent redevenir libres pour la nouvelle équipe.
+  const proprio = (r) => r.assigne || (r.rdvs || []).map((x) => x.therapeute).find(Boolean) || "";
+  const droit = (r) => admin || (!sup && proprio(r) === user);
+  const libre = (r) => !proprio(r);
+  const clos = (r) => r.statut === "terminee" || r.statut === "sans_suite";
+  const pub = (r) => {
+    const mien = droit(r);
+    return {
+      id: r.id, num: r.num, creeLe: r.creeLe, prenom: etiquette(r), statut: r.statut, assigne: r.assigne || "", suiviPar: proprio(r), source: r.source || "", therapeute: r.therapeute,
+      attenteLe: r.attenteLe, attenteAuto: r.attenteAuto, maj: r.maj, majPar: r.majPar,
+      rdvs: (r.rdvs || []).map((x) => ({ id: x.id, date: x.date, heure: x.heure, salle: x.salle, therapeute: x.therapeute, invitEnvoyee: x.invitEnvoyee, rappelEnvoye: x.rappelEnvoye })),
+      seances: (r.seances || []).filter((x) => mien || x.therapeute === user),
+      creneaux: mien || libre(r) ? r.creneaux || [] : [], changement: mien ? r.changement : undefined,
+      retours: mien ? (r.retours || []).filter((x) => !x.vu).map((x) => ({ type: x.type, le: x.le, tardif: x.tardif, vu: false, rdv: { date: x.rdv && x.rdv.date, heure: x.rdv && x.rdv.heure, salle: x.rdv && x.rdv.salle, therapeute: x.rdv && x.rdv.therapeute } })) : [], // résumé : ni message ni jours (dans la fiche)
+      suivi: CP.enSuivi(r), email: "", tel: "", notes: "", message: "", masque: true, droit: mien, libre: libre(r),
+    };
+  };
+  const sortie = (r) => ({ item: pub(r), ...(droit(r) ? { fiche: r } : {}) });
+  const nonAutorise = (r) => J({ error: proprio(r) ? "Cette fiche est suivie par " + cap(proprio(r)) + "." : "Cette fiche n’est à personne : cliquez d’abord sur « Prendre en charge »." }, 403);
   // Rôles : admin (tout), etudiant (espace étudiant psychologue), superviseur (espace gestion : planning, supervision, activité, efficacité ; pas de coordonnées de patients)
   if (sup && !["list", "profil_photo", "res_get", "sup_list", "sup_save", "sup_delete", "sup_presence", "annonce_list", "annonce_lu", "dossier_up", "dossier_del", "res_add", "res_upd", "res_del", "msg_conv", "msg_new", "msg_list", "msg_send", "msg_del", "agenda_lien", "agenda_lien_reset"].includes(b.action)) return J({ error: "Action non autorisée pour un compte superviseur." }, 403);
   // Intervenant·e : tant que son dossier n'est pas validé par l'équipe, seul « Mon dossier » (dépôt des pièces) est accessible.
@@ -438,9 +462,9 @@ export default async (req) => {
   if (b.action === "list") {
     if (sup && verrou) return J({ ok: true, locked: true, items: [], capacite: null, compte: user, alias: await aliasMap(), admin: false, role, roles: { [user]: "superviseur" }, technique: false, techniques: TECH, photos: {}, titres: {}, bios: {}, contacts: {}, ressources: [], intervAttente: 0, equipe: [], superviseurs: [], monDossier: await monDossier(user) });
     const { blobs } = await store.list({ prefix: "d/" });
-    let items = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(norm);
+    let items = (await chargerTout(store)).map((x) => x.rec);
     const capacite = sup ? null : CP.calcul(items, await CP.etudiants(), await CP.chargerCfg());
-    if (sup) items = items.map((i) => ({ id: i.id, creeLe: i.creeLe, prenom: i.prenom, statut: i.statut, assigne: i.assigne, therapeute: i.therapeute, seances: i.seances || [], rdvs: i.rdvs || [], changement: i.changement, creneaux: [], notes: "", email: "", tel: "" }));
+    items = sup ? [] : items.map(pub); // superviseur·es : aucune donnée de patient·e
     items.sort((a, z) => z.creeLe.localeCompare(a.creeLe));
     const { blobs: cb } = await ac.list();
     const rs = getStore("ressources"); const { blobs: rb } = await rs.list({ prefix: "m/" });
@@ -463,6 +487,29 @@ export default async (req) => {
   const noms = async () => { const m = await rolesMap(); return Object.keys(m).filter((k) => m[k] !== "superviseur"); };
   const mailMsg = async (fn) => { if (!mailReady()) return "non_configure"; try { await fn(); return "envoye"; } catch (e) { console.error(e); return "echec"; } };
 
+  // Ouverture d'une fiche : seule voie par laquelle prénom, mail, téléphone, message et notes sortent. Inscrite au journal.
+  if (b.action === "patient_get") {
+    const k = await key(String(b.id)); if (!k) return J({ error: "Fiche introuvable." }, 404);
+    let r = norm(await store.get(k, { type: "json" }));
+    if (!Number.isInteger(r.num)) { await chargerTout(store); r = norm(await store.get(k, { type: "json" })); }
+    if (!droit(r)) return nonAutorise(r);
+    try { const now = new Date().toISOString(); await getStore({ name: "acces", consistency: "strong" }).setJSON("a/" + now + "_" + randomUUID().slice(0, 8), { le: now, par: user, patient: r.id, ref: etiquette(r) }); } catch (e) { console.error("journal des accès", e.message); }
+    return J({ ok: true, fiche: r });
+  }
+  if (b.action === "prendre") { // prendre en charge une personne que personne n'a encore prise : donne accès à sa fiche
+    const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
+    const r = cur.rec;
+    if (proprio(r) && proprio(r) !== user) return J({ error: etiquette(r) + " est déjà suivi·e par " + cap(proprio(r)) + "." }, 409);
+    if (clos(r) && !admin) return J({ error: "Ce suivi est clos : il n’y a plus rien à prendre en charge." }, 409);
+    r.assigne = user; r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
+    return J({ ok: true, ...sortie(r) });
+  }
+  if (b.action === "acces_journal") { // admins : qui a ouvert quelle fiche, et quand
+    if (!admin) return J({ error: "Réservé aux admins." }, 403);
+    const as = getStore({ name: "acces", consistency: "strong" }), { blobs } = await as.list({ prefix: "a/" });
+    const l = (await Promise.all(blobs.sort((x, y) => y.key.localeCompare(x.key)).slice(0, 500).map((x) => as.get(x.key, { type: "json" })))).filter(Boolean);
+    return J({ ok: true, acces: l, total: blobs.length });
+  }
   if (b.action === "planifier") {
     const all = await chargerTout(store);
     const cur = all.find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
@@ -472,10 +519,11 @@ export default async (req) => {
     if (!HEURES.includes(heure) || !SALLES.includes(salle)) return J({ error: "Créneau ou salle invalide." }, 400);
     if (!(await noms()).includes(th)) return J({ error: "Thérapeute inconnu·e." }, 400);
     if (parisToUTC(date, heure) < Date.now()) return J({ error: "Ce créneau est déjà passé." }, 400);
+    if (!(droit(r) || (libre(r) && th === user))) return proprio(r) ? nonAutorise(r) : J({ error: "Pour planifier une personne que personne n’a prise en charge, il faut en être le ou la thérapeute." }, 403);
     const ex = b.rdvId ? r.rdvs.find((y) => y.id === String(b.rdvId)) : null;
     if (b.rdvId && !ex) return J({ error: "Rendez-vous introuvable." }, 404);
     const meme = (y) => y.date === date && y.heure === heure;
-    if (r.rdvs.some((y) => y !== ex && meme(y))) return J({ error: r.prenom + " a déjà un rendez-vous à cette heure." }, 409);
+    if (r.rdvs.some((y) => y !== ex && meme(y))) return J({ error: etiquette(r) + " a déjà un rendez-vous à cette heure." }, 409);
     const autres = all.filter((x) => x.rec.id !== r.id).flatMap((x) => x.rec.rdvs.filter(meme));
     if (autres.some((y) => y.salle === salle)) return J({ error: salle + " est déjà occupée à cette heure." }, 409);
     if (autres.some((y) => y.therapeute === th)) return J({ error: cap(th) + " a déjà un rendez-vous à cette heure." }, 409);
@@ -488,7 +536,7 @@ export default async (req) => {
     }
     const sem = lundi(date);
     const dejaSem = [...r.rdvs.filter((y) => y !== ex), ...(r.seances || [])].filter((y) => lundi(y.date) === sem);
-    if (dejaSem.length && !b.confirmerSemaine) return J({ error: r.prenom + " a déjà " + dejaSem.length + " rendez-vous cette semaine-là (" + dejaSem.map((y) => jourLong(y.date)).join(", ") + "). Est-ce voulu ?", alerteSemaine: true }, 409);
+    if (dejaSem.length && !b.confirmerSemaine) return J({ error: etiquette(r) + " a déjà " + dejaSem.length + " rendez-vous cette semaine-là (" + dejaSem.map((y) => jourLong(y.date)).join(", ") + "). Est-ce voulu ?", alerteSemaine: true }, 409);
     const x = ex || { id: randomUUID(), uid: randomUUID(), seq: -1 };
     const modif = !!ex; x.seq = (x.seq || 0) + 1; if (!ex) x.seq = 0;
     Object.assign(x, { date, heure, salle, therapeute: th, rappelEnvoye: false });
@@ -500,10 +548,11 @@ export default async (req) => {
     if (b.envoyer) mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte(modif ? "modification" : "invitation", v), "REQUEST", { modele: modif ? "modification" : "invitation", par: user, type: "auto" }); });
     x.invitEnvoyee = mail === "envoye";
     await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r, mail });
+    return J({ ok: true, ...sortie(r), mail });
   }
   if (b.action === "annuler_rdv" || b.action === "renvoyer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Rendez-vous introuvable." }, 404);
+    if (!droit(cur.rec)) return nonAutorise(cur.rec);
     const r = cur.rec, x = r.rdvs.find((y) => y.id === String(b.rdvId)); if (!x) return J({ error: "Rendez-vous introuvable." }, 404);
     let mail = "non_envoye";
     if (b.action === "renvoyer") { mail = await mailMsg(async () => { const v = vue(r, x); await envoyer(v, await texte("invitation", v), "REQUEST", { modele: "invitation", par: user, type: "auto" }); }); if (mail === "envoye") x.invitEnvoyee = true; }
@@ -514,7 +563,7 @@ export default async (req) => {
       if (!r.rdvs.length && r.statut === "rdv_fixe") r.statut = "a_recontacter";
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r, mail });
+    return J({ ok: true, ...sortie(r), mail });
   }
 
   if (b.action === "demandes_mois") { // historique des demandes par mois (admins) : voir netlify/lib/compteur.mjs
@@ -534,14 +583,15 @@ export default async (req) => {
   if (b.action === "attente_mettre") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
     const r = cur.rec;
-    if (r.statut === "attente") return J({ error: r.prenom + " est déjà en liste d'attente." }, 409);
-    if (r.rdvs.length) return J({ error: r.prenom + " a déjà un rendez-vous : annulez-le avant de la mettre en liste d'attente." }, 409);
+    if (!(droit(r) || libre(r))) return nonAutorise(r);
+    if (r.statut === "attente") return J({ error: etiquette(r) + " est déjà en liste d'attente." }, 409);
+    if (r.rdvs.length) return J({ error: etiquette(r) + " a déjà un rendez-vous : annulez-le avant de la mettre en liste d'attente." }, 409);
     if (!["nouvelle", "a_recontacter", "contactee"].includes(r.statut)) return J({ error: "Cette fiche ne peut pas être mise en liste d'attente." }, 400);
     r.statut = "attente"; r.attenteLe = new Date().toISOString(); r.maj = r.attenteLe; r.majPar = user;
     let mail = "non_envoye";
     if (b.envoyer) mail = await mailMsg(async () => envoyer(r, await texte("attente", r), null, { modele: "attente", par: user, type: "manuel" }));
     await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r, mail });
+    return J({ ok: true, ...sortie(r), mail });
   }
 
   if (b.action === "profil_contact" && TECH.includes(user)) return J({ error: "Le compte Service technique n’a pas de coordonnées : photo, titre et présentation seulement." }, 400);
@@ -580,12 +630,14 @@ export default async (req) => {
     if (!prenom) return J({ error: "Indiquez un prénom." }, 400);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: "Adresse mail invalide." }, 400);
     const id = randomUUID(), now = new Date().toISOString();
-    const rec = { id, creeLe: now, prenom, email, tel, creneaux: [], message: "", statut: "a_recontacter", assigne: "", notes: "", source: "manuel", seances: [], maj: now, majPar: user };
-    await store.setJSON("d/" + now + "_" + id, rec); return J({ ok: true, item: rec });
+    const num = (await chargerTout(store)).reduce((m, x) => Math.max(m, x.rec.num || 0), 0) + 1;
+    const rec = { id, num, creeLe: now, prenom, email, tel, creneaux: [], message: "", statut: "a_recontacter", assigne: admin ? "" : user, notes: "", source: "manuel", seances: [], maj: now, majPar: user };
+    await store.setJSON("d/" + now + "_" + id, rec); return J({ ok: true, ...sortie(rec) });
   }
   if (b.action === "seance_issue" || b.action === "seance_supprimer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
     const r = cur.rec; r.seances = r.seances || [];
+    if (!droit(r)) return nonAutorise(r);
     if (b.action === "seance_issue") {
       const x = r.rdvs.find((y) => y.id === String(b.rdvId)); if (!x) return J({ error: "Pas de rendez-vous en cours." }, 400);
       if (!["realisee", "absence"].includes(b.issue)) return J({ error: "Issue invalide." }, 400);
@@ -599,12 +651,13 @@ export default async (req) => {
       r.seances.splice(i, 1);
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r });
+    return J({ ok: true, ...sortie(r) });
   }
 
   if (b.action === "seance_mesure" || b.action === "changement") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Introuvable." }, 404);
     const r = cur.rec; r.seances = r.seances || [];
+    if (!droit(r)) return nonAutorise(r);
     if (b.action === "seance_mesure") {
       const i = Number(b.index); const sc = r.seances[i];
       if (!Number.isInteger(i) || !sc || sc.issue !== "realisee") return J({ error: "Séance introuvable." }, 404);
@@ -615,7 +668,7 @@ export default async (req) => {
       if (v === null) delete r.changement; else if (Number.isInteger(v) && v >= 1 && v <= 7) r.changement = { v, le: new Date().toISOString(), par: user }; else return J({ error: "Valeur invalide." }, 400);
     }
     r.maj = new Date().toISOString(); r.majPar = user; await store.setJSON(cur.key, r);
-    return J({ ok: true, item: r });
+    return J({ ok: true, ...sortie(r) });
   }
 
   if (b.action === "sup_list" || b.action === "sup_save" || b.action === "sup_delete" || b.action === "sup_presence") {
@@ -1020,6 +1073,8 @@ export default async (req) => {
     const ms = getStore("messages"); const { blobs } = await ms.list({ prefix: "l/" });
     let journal = (await Promise.all(blobs.sort((x, y) => y.key.localeCompare(x.key)).slice(0, 200).map((x) => ms.get(x.key, { type: "json" })))).filter(Boolean);
     if (!admin) journal = journal.filter((j) => j.par === user);
+    const ref = new Map((await chargerTout(store)).map((x) => [x.rec.id, etiquette(x.rec)]));
+    journal = journal.map((j) => (j.patientId ? { ...j, nom: ref.get(j.patientId) || "Patient·e supprimé·e", a: "" } : j)); // jamais le nom ni l'adresse d'un·e patient·e
     return J({ ok: true, modeles: Object.values(await chargerModeles()), variables: VARIABLES, journal, mail: mailReady() });
   }
   if (b.action === "modele_save" || b.action === "modele_reset") {
@@ -1032,6 +1087,7 @@ export default async (req) => {
   }
   if (b.action === "message_apercu" || b.action === "message_envoyer") {
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
+    if (!droit(cur.rec)) return nonAutorise(cur.rec);
     const base = cur.rec, r = vue(base, base.rdvs[0]), m = (await chargerModeles())[String(b.modele)]; if (!m) return J({ error: "Modèle inconnu." }, 404);
     const v = variables(r);
     if (b.action === "message_apercu") return J({ ok: true, objet: rendre(m.objet, v), corps: rendre(m.corps, v), manquants: [...new Set([...manquants(m.objet, v), ...manquants(m.corps, v)])], email: r.email });
@@ -1039,7 +1095,7 @@ export default async (req) => {
     if (!objet || !corps) return J({ error: "L'objet et le message sont obligatoires." }, 400);
     const mail = await mailMsg(async () => envoyer(r, { subject: objet, text: corps }, null, { modele: m.id, par: user, type: "manuel" }));
     if (mail === "envoye") { base.maj = new Date().toISOString(); base.majPar = user; if (base.statut === "nouvelle") base.statut = "contactee"; await store.setJSON(cur.key, base); }
-    return J({ ok: mail === "envoye", mail, item: base, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
+    return J({ ok: mail === "envoye", mail, ...sortie(base), error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
   /* Fiches de prévention pour les patients : fiches de base (texte : netlify/lib/fiches.mjs) + fiches créées sur le site par les admins (store « fiches », une clé f/<id> par fiche).
@@ -1069,14 +1125,18 @@ export default async (req) => {
   if (b.action === "fiche_envoyer") {
     const f = (await fichesTout()).find((x) => x.id === String(b.fiche)); if (!f) return J({ error: "Fiche introuvable." }, 404);
     const cur = (await chargerTout(store)).find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Personne introuvable." }, 404);
+    if (!droit(cur.rec)) return nonAutorise(cur.rec);
     const r = vue(cur.rec, cur.rec.rdvs[0]), c = FI.courrier(f, { prenom: r.prenom, note: clean(b.note, 600) });
     const mail = await mailMsg(async () => envoyer(r, { subject: c.objet, text: c.text, html: c.html }, null, { modele: "Fiche · " + f.titre, par: user, type: "manuel" }));
-    return J({ ok: mail === "envoye", mail, prenom: r.prenom, error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
+    return J({ ok: mail === "envoye", mail, prenom: etiquette(r), error: mail === "envoye" ? undefined : mail === "non_configure" ? "L'envoi de mails n'est pas encore configuré." : "Le mail n'a pas pu partir." });
   }
 
   if (b.action === "update") {
     const k = await key(String(b.id)); if (!k) return J({ error: "Demande introuvable." }, 404);
     const r = norm(await store.get(k, { type: "json" })); const p = b.patch || {};
+    if (!droit(r)) { // fiche de quelqu'un d'autre : seul le statut d'une demande que personne n'a prise peut bouger (sans rien révéler)
+      if (!libre(r) || Object.keys(p).some((x) => x !== "statut")) return nonAutorise(r);
+    }
     if ("statut" in p && STATUTS.includes(p.statut)) {
       if (p.statut === "attente" && r.statut !== "attente" && r.rdvs.length) return J({ error: "Cette personne a déjà un rendez-vous : annulez-le avant de la mettre en liste d'attente." }, 409);
       r.statut = p.statut;
@@ -1090,10 +1150,11 @@ export default async (req) => {
     if ("email" in p && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(p.email, 120).trim())) r.email = clean(p.email, 120).trim().toLowerCase();
     r.maj = new Date().toISOString(); r.majPar = user;
     await store.setJSON(k, r);
-    return J({ ok: true, item: r });
+    return J({ ok: true, ...sortie(r) });
   }
   if (b.action === "delete") {
     const k = await key(String(b.id)); if (!k) return J({ error: "Demande introuvable." }, 404);
+    const r0 = norm(await store.get(k, { type: "json" })); if (!droit(r0)) return nonAutorise(r0);
     await store.delete(k); return J({ ok: true });
   }
   return J({ error: "Action inconnue" }, 400);

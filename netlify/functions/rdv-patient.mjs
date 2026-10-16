@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
-import { norm, vue, parisToUTC, jourLong, heureFr, cap, LIEU } from "../lib/rdv.mjs";
+import { norm, vue, parisToUTC, jourLong, heureFr, cap, LIEU, etiquette } from "../lib/rdv.mjs";
 import { lireLien, siteUrl } from "../lib/lien.mjs";
 import { texte } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
@@ -30,7 +30,7 @@ async function prevenirEquipe(rec, x, { type, tardif, creneaux, message }) {
   const quand = `${jourLong(x.date)} à ${heureFr(x.heure)}`, annule = type === "annuler";
   // Le message libre de la personne reste dans la plateforme : il peut contenir des éléments personnels.
   const text = [
-    `${rec.prenom} a ${annule ? "annulé son rendez-vous" : "demandé à reporter son rendez-vous"} depuis le lien de son mail.`, "",
+    `${etiquette(rec)} (patient·e) a ${annule ? "annulé son rendez-vous" : "demandé à reporter son rendez-vous"} depuis le lien de son mail.`, "",
     `Rendez-vous : ${quand}, ${x.salle}, avec ${cap(x.therapeute)}`,
     ...(tardif ? ["Prévenu·e moins de 24 h avant : dernière minute."] : []),
     ...(!annule && creneaux.length ? [`Jours qui conviennent : ${creneaux.join(", ")}`] : []),
@@ -38,7 +38,7 @@ async function prevenirEquipe(rec, x, { type, tardif, creneaux, message }) {
     "", annule ? "Le créneau est libéré. La fiche passe dans « À recontacter » s'il n'y a pas d'autre rendez-vous." : "Le créneau est libéré. Pour replanifier : Demandes › À recontacter, puis « Planifier ».",
     `${siteUrl()}/gestion`,
   ].join("\n");
-  const subject = `${tardif ? "Dernière minute · " : ""}${annule ? "Annulation" : "Demande de report"} : ${rec.prenom}, ${quand}`;
+  const subject = `${tardif ? "Dernière minute · " : ""}${annule ? "Annulation" : "Demande de report"} : ${etiquette(rec)}, ${quand}`;
   for (const a of dest) {
     try { await envoyer({ email: a, prenom: "Équipe CAPSULE", id: "" }, { subject, text }, null, { modele: annule ? "Annulation par la personne (alerte équipe)" : "Report demandé (alerte équipe)", par: "système", type: "auto" }); }
     catch (e) { console.error("alerte équipe", e.message); }

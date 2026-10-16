@@ -22,6 +22,11 @@ export function tomorrowParis() { const p = parisParts(Date.now() + 24 * 3600e3)
 export const weekday = (date) => new Date(date + "T12:00:00Z").getUTCDay();
 export const cap = (s) => String(s || "").charAt(0).toUpperCase() + String(s || "").slice(1);
 
+// Pseudonymisation des patient·es : on n'affiche jamais le prénom en liste, seulement « M. · 42 » (initiale du prénom + numéro stable).
+// Le numéro (rec.num) est attribué une fois pour toutes par chargerTout, dans l'ordre d'arrivée des demandes.
+export const initiale = (prenom) => { const m = String(prenom || "").normalize("NFC").match(/\p{L}/u); return m ? m[0].toLocaleUpperCase("fr") : "?"; };
+export const etiquette = (r) => `${initiale(r && r.prenom)}. · ${r && r.num != null ? r.num : "?"}`;
+
 export function jourLong(date) { return new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(new Date(date + "T12:00:00Z")); }
 export function heureFr(h) { const [H, M] = h.split(":"); return `${+H} h${M === "00" ? "" : " " + M}`; }
 
@@ -35,7 +40,7 @@ function vevent(r, { method, summary, forPatient }) {
   const lien = forPatient ? lienRdv(r.id, r.rdvId) : "";
   const desc = forPatient
     ? `Consultation CAPSULE avec ${cap(r.therapeute)} (étudiant·e de M2 en psychologie).\nLieu : ${LIEU}, ${r.salle}.\n` + (lien ? `Un empêchement ? Annulez ou demandez un autre créneau : ${lien}` : "En cas d'empêchement, répondez au mail d'invitation.")
-    : `${r.prenom} · ${r.salle} · ${cap(r.therapeute)}`;
+    : `${etiquette(r)} · ${r.salle} · ${cap(r.therapeute)}`;
   const L = ["BEGIN:VEVENT", `UID:${r.uid}@capsule-paris8`, `SEQUENCE:${r.seq || 0}`, `DTSTAMP:${stamp(Date.now())}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
     `SUMMARY:${esc(summary)}`, `LOCATION:${esc(LIEU + ", " + r.salle)}`, `DESCRIPTION:${esc(desc)}`, `STATUS:${method === "CANCEL" ? "CANCELLED" : "CONFIRMED"}`];
   if (lien && method !== "CANCEL") L.push(`URL:${lien}`);
@@ -50,7 +55,7 @@ const wrap = (method, ev) => ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CAPSU
 
 export const icsPatient = (r, method) => wrap(method, vevent(r, { method, summary: "Rendez-vous CAPSULE", forPatient: true }));
 export function icsFeed(rdvs) {
-  return wrap("PUBLISH", rdvs.flatMap((r) => vevent(r, { method: "PUBLISH", summary: `${r.prenom} · ${r.salle} · ${cap(r.therapeute)}`, forPatient: false })))
+  return wrap("PUBLISH", rdvs.flatMap((r) => vevent(r, { method: "PUBLISH", summary: `${etiquette(r)} · ${r.salle} · ${cap(r.therapeute)}`, forPatient: false })))
     .replace("CALSCALE:GREGORIAN", "CALSCALE:GREGORIAN\r\nX-WR-CALNAME:CAPSULE – rendez-vous");
 }
 
@@ -73,5 +78,14 @@ export function lundi(date) { const d = new Date(date + "T12:00:00Z"); d.setUTCD
 
 export async function chargerTout(store) {
   const { blobs } = await store.list({ prefix: "d/" });
-  return (await Promise.all(blobs.map(async (x) => { const rec = norm(await store.get(x.key, { type: "json" })); return rec && { key: x.key, rec }; }))).filter(Boolean);
+  const all = (await Promise.all(blobs.map(async (x) => { const rec = norm(await store.get(x.key, { type: "json" })); return rec && { key: x.key, rec }; }))).filter(Boolean);
+  // Numéro stable des patient·es (rec.num) : les fiches sans numéro en reçoivent un, dans l'ordre d'arrivée, à la suite du plus grand déjà donné.
+  const sans = all.filter((x) => !Number.isInteger(x.rec.num));
+  if (sans.length) {
+    let n = all.reduce((m, x) => (Number.isInteger(x.rec.num) ? Math.max(m, x.rec.num) : m), 0);
+    sans.sort((a, z) => String(a.rec.creeLe).localeCompare(String(z.rec.creeLe)) || a.key.localeCompare(z.key));
+    for (const x of sans) x.rec.num = ++n;
+    for (let i = 0; i < sans.length; i += 12) await Promise.all(sans.slice(i, i + 12).map((x) => store.setJSON(x.key, x.rec)));
+  }
+  return all;
 }

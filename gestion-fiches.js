@@ -170,17 +170,17 @@
   /* ---------- envoi par mail ---------- */
   function envoyer(id) {
     var f = fiche(id); if (!f) return; css();
-    var peo = ((C().data().items) || []).slice().sort(function (a, z) { return String(a.prenom).localeCompare(String(z.prenom), 'fr'); });
-    if (!peo.length) { C().modal('<div class="fis"><h3>Envoyer une fiche</h3><p class="sub">Personne à qui écrire pour l’instant : les personnes apparaissent dès qu’une demande arrive.</p><div class="row"><button type="button" class="btn l" data-m="x">Fermer</button></div></div>', true); return; }
+    var peo = ((C().data().items) || []).filter(function (p) { return p.droit; }).sort(function (a, z) { return (a.num || 0) - (z.num || 0); });
+    if (!peo.length) { C().modal('<div class="fis"><h3>Envoyer une fiche</h3><p class="sub">Personne à qui écrire pour l’instant : vous pouvez écrire aux personnes que vous avez prises en charge (Demandes › Prendre en charge).</p><div class="row"><button type="button" class="btn l" data-m="x">Fermer</button></div></div>', true); return; }
     C().modal('<div class="fis" data-fid="' + e(f.id) + '"><h3>Envoyer « ' + e(f.titre) + ' »</h3><p class="sub">La fiche s’affiche directement dans le mail, avec les numéros utiles. Rien à télécharger pour la personne.</p>' +
       (data.mail ? '' : '<div class="warn">L’envoi de mails n’est pas encore configuré. Vous pouvez imprimer la fiche pour la remettre en séance.</div>') +
-      '<label class="f">Destinataire<select id="fis-to">' + peo.map(function (p) { return '<option value="' + e(p.id) + '">' + e(p.prenom + ' · ' + p.email) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Destinataire<select id="fis-to">' + peo.map(function (p) { return '<option value="' + e(p.id) + '">' + e(p.prenom) + '</option>'; }).join('') + '</select></label>' +
       '<label class="f" style="margin-top:12px">Un mot personnel (facultatif)<textarea id="fis-note" rows="4" maxlength="600" placeholder="ex. Comme on en a parlé, voici quelques repères pour les nuits difficiles."></textarea></label>' +
       '<p class="inf">Le mail part de CAPSULE ; la personne peut y répondre directement. L’envoi est noté dans l’historique des Messages.</p>' +
       '<div class="row"><button type="button" class="btn" id="fis-go"' + (data.mail ? '' : ' disabled') + '>Envoyer</button><button type="button" class="btn l" data-fi="lire">Relire la fiche</button><button type="button" class="btn l" data-m="x">Annuler</button></div><div class="err" id="fis-err" style="margin-top:10px"></div></div>', true);
     $('fis-go').onclick = function () {
       var b = this, to = $('fis-to').value, who = peo.filter(function (p) { return p.id === to; })[0];
-      if (!confirm('Envoyer la fiche « ' + f.titre + ' » à ' + (who ? who.prenom + ' (' + who.email + ')' : 'cette personne') + ' ?')) return;
+      if (!confirm('Envoyer la fiche « ' + f.titre + ' » à ' + (who ? who.prenom : 'cette personne') + ' ?')) return;
       b.disabled = true; $('fis-err').textContent = '';
       api({ action: 'fiche_envoyer', fiche: f.id, id: to, note: $('fis-note').value }).then(function (r) {
         if (r && r.ok) { C().closeModal(); toast('Fiche envoyée à ' + (r.prenom || 'la personne') + '.'); }
