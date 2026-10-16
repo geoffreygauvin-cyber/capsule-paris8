@@ -253,3 +253,9 @@ Chaque compte (étudiant·e, superviseur·e validé·e, admin) a un **lien d'age
 - Confidentialité : le lien donne accès à l'agenda de la personne, avec les prénoms de ses patient·es (comme l'« Agenda général » du Calendrier). Il est personnel, jamais indexé (`x-robots-tag: noindex`). À inscrire dans le registre RGPD avec le reste.
 - Il n'y a pas d'invitation par mail : l'agenda est un abonnement, pas une synchronisation écrite dans les agendas Google.
 
+
+## Touches de chaleur du site public (pastilles, icônes, ombres douces)
+- Pastilles sous le titre d'accueil (Gratuit, Confidentiel, Sans justificatif, Sur le campus) : modifiables en mode édition (`?edit`), comme le reste. Elles sont créées automatiquement si le contenu enregistré ne les a pas encore (fonction `defaults` de `site.js`).
+- Encart « Une autre question ? » sous les questions fréquentes : titre et texte modifiables, l'adresse mail est celle du site.
+- Les icônes des raisons de venir, des questions et des numéros d'urgence sont choisies d'après les mots du texte (tableaux `IC_RAISON`, `IC_FAQ`, `IC_NUM` dans `site.js`) : pas besoin de les régler à la main si l'on change ou réordonne les textes. Icône par défaut : un cœur (raisons), une bulle d'aide (questions), un téléphone (numéros).
+- Les icônes elles-mêmes sont les symboles `i-…` en haut de `index.html`. Les couleurs, ombres et le relief au survol sont dans le bloc « chaleur » à la fin de la feuille de style.
