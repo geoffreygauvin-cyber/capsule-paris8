@@ -27,8 +27,17 @@
     var s = document.createElement('style'); s.id = 'arcss';
     s.textContent =
       '.arc{margin-top:16px}.arc p{margin:6px 0 12px;color:var(--muted);font-size:14px;line-height:1.55;max-width:70ch}' +
-      '.arc .al{margin-top:14px;border-top:1px solid var(--line)}.arc .ar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}' +
+      '.arc .al{margin-top:4px}.arc .ar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}' +
       '.arc .ar b{font-size:15px}.arc .ar span{color:var(--muted);font-size:13px;flex:1;min-width:200px}' +
+      '.arc .at{display:block;font-size:17px;margin-bottom:2px}.arc .al0{margin:4px 0 14px;max-width:72ch}' +
+      '.arc .agrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}' +
+      '.arc .ac{border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px}' +
+      '.arc .ac .ak{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.78)}' +
+      '.arc .ac b{font-size:15px;line-height:1.3;color:inherit}.arc .ac small{font-size:13px;line-height:1.5;color:var(--muted)}' +
+      '.arc .ac.del{background:#FFE4E0}.arc .ac.del .ak{color:#A5161F}.arc .ac.ano{background:#EFE3F4}.arc .ac.ano .ak{color:#7B206B}.arc .ac.keep{background:#E4F0E2}.arc .ac.keep .ak{color:#1F5E24}' +
+      '.arc .ago{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.arc .ago .sub{margin:0;font-size:13px;flex:1;min-width:220px}' +
+      '.arc .alh{margin:22px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--rasp)}' +
+      '@media(max-width:820px){.arc .agrid{grid-template-columns:1fr}}' +
       '.arm h3{margin:0 0 4px}.arm .ul{margin:10px 0;padding:0;list-style:none}.arm .ul li{padding:7px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5}.arm .ul li:first-child{border-top:0}' +
       '.arm .ul b{color:var(--rasp)}.arm .wn{background:#FFF1D6;border:1px solid #E0AA3E;color:#5A3B00;border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.5;margin:10px 0}.arm .wn ul{margin:6px 0 0;padding-left:18px}.arm .wn li{padding:3px 0}' +
       '.arm .st{display:flex;gap:12px;align-items:flex-start;margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line)}.arm .st .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--rose);color:var(--rasp);font-weight:700;display:grid;place-items:center;font-size:13px}' +
@@ -43,17 +52,21 @@
 
   /* ---------- carte dans Comptes ---------- */
   function carte() {
-    var h = '<div class="newc arc"><b>Archives et clôture d’année</b>' +
-      '<p>Chaque année l’équipe change. « Clôturer l’année » garde une trace des données des comptes étudiant·es et superviseur·es (heures, présences, séances, règlement signé…), puis supprime ces comptes et remet la plateforme à zéro. ' +
-      'Les patient·es dont le suivi est terminé sont anonymisé·es ; la liste d’attente et les suivis en cours restent pour la nouvelle équipe. Les admins, le compte Services techniques, les ressources, la charte, les annonces, le budget et le texte du règlement ne changent pas.</p>' +
-      '<div class="row"><button class="btn" id="arcgo">Clôturer l’année…</button></div><div class="al" id="arclist">';
+    var h = '<div class="newc arc"><b class="at">Fin d’année : archiver et repartir à zéro</b>' +
+      '<p class="al0">À faire une fois par an, quand l’équipe change. Avant de supprimer quoi que ce soit, la plateforme vous montre le détail, vous fait télécharger une sauvegarde et demande confirmation.</p>' +
+      '<div class="agrid">' +
+      '<div class="ac del"><span class="ak">Archivé puis supprimé</span><b>Les comptes étudiant·es et superviseur·es</b><small>Leurs heures, présences, séances et règlement signé sont gardés dans l’archive. Ensuite les comptes sont supprimés.</small></div>' +
+      '<div class="ac ano"><span class="ak">Anonymisé</span><b>Les patient·es dont le suivi est terminé</b><small>Plus de nom, de mail, de téléphone ni de notes. Restent les dates de séances, les issues et les scores.</small></div>' +
+      '<div class="ac keep"><span class="ak">Conservé tel quel</span><b>Tout le reste</b><small>Liste d’attente et suivis en cours (à réaffecter à la nouvelle équipe), admins, compte Services techniques, ressources, charte, annonces, budget et texte du règlement.</small></div></div>' +
+      '<div class="ago"><button class="btn" id="arcgo">Clôturer l’année…</button><span class="sub">Trois étapes : aperçu détaillé, sauvegarde à télécharger, confirmation en retapant l’année.</span></div>' +
+      '<div class="alh">Années archivées</div><div class="al" id="arclist">';
     if (liste === null) h += '<div class="sub" style="padding:12px 0">Chargement des archives…</div>';
     else if (!liste.length) h += '<div class="sub" style="padding:12px 0">Aucune année archivée pour l’instant.</div>';
     else h += liste.map(function (a) {
       return '<div class="ar"><b>' + e(a.annee) + '</b><span>Clôturée le ' + e(dt(a.creeLe)) + (a.par ? ' par ' + e(nom(a.par)) : '') + ' · ' + pl(a.personnes, 'personne') + ', ' + pl(a.patients, 'patient·e anonymisé·e', 'patient·es anonymisé·es') + (a.termine === false ? ' · <b style="color:#B3121B">nettoyage interrompu : relancez « Clôturer l’année » avec la même année pour le terminer</b>' : '') + '</span>' +
         '<button class="btn s regbtn" data-arc="voir" data-a="' + e(a.annee) + '">Consulter</button><button class="btn s regbtn" data-arc="xls" data-a="' + e(a.annee) + '">Excel</button></div>';
     }).join('');
-    return h + '</div></div>';
+    return nb(h + '</div></div>');
   }
   function draw() {
     var b = $('arch'); if (!b || !C() || !C().admin()) { if (b) b.innerHTML = ''; return; }
