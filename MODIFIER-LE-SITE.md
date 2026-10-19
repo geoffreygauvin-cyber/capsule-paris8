@@ -51,7 +51,7 @@ Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisé
 
 # Ressources
 
-Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Tous les comptes peuvent les télécharger. Stockage : Netlify Blobs, store « ressources ».
+Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Les catégories s'affichent toujours pour tout le monde, même vides (une catégorie vide indique « Rien dans cette catégorie pour le moment »). Tous les comptes peuvent les télécharger. Stockage : Netlify Blobs, store « ressources ».
 
 # Messages
 
