@@ -138,7 +138,7 @@ main h1{font-size:26px;margin:10px 0 4px;letter-spacing:-.01em}main .sub{color:v
 .link{margin-left:auto;background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px}
 .empty{text-align:center;color:var(--muted);padding:48px 20px;background:var(--paper);border:1px dashed var(--line);border-radius:var(--r)}
 .empty b{display:block;font-size:17px;color:var(--ink);margin-bottom:4px}
-.note{background:var(--lilac);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:18px;color:var(--purple)}
+.note{background:var(--lilac);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:18px;color:var(--purple)}.proto{padding:14px 18px;line-height:1.5}.proto .pt{display:block;font-size:14.5px;margin-bottom:6px}.proto ol{margin:0;padding:0;list-style:none;counter-reset:p;display:grid;gap:9px}.proto li{position:relative;padding-left:34px;counter-increment:p}.proto li::before{content:counter(p);position:absolute;left:0;top:0;width:23px;height:23px;border-radius:50%;background:rgba(123,32,107,.15);color:#7B206B;font-weight:700;font-size:12.5px;display:grid;place-items:center}.proto li b{color:#4A1442}.proto .pf{margin:10px 0 0}
 /* calendrier */
 .wk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .wk .t{flex:1;min-width:150px;text-align:center;font-weight:600;font-size:16px}
@@ -443,7 +443,7 @@ aside{overflow:hidden!important}
 <div class="filters" id="tabs"></div>
 <div class="tools"><input id="q" type="search" placeholder="Rechercher une initiale ou un numéro…" aria-label="Rechercher"></div>
 <div id="list"></div>
-<p class="note" style="margin-top:18px">Données sensibles : les personnes apparaissent sous une initiale et un numéro ; leurs coordonnées ne s’ouvrent qu’après « Prendre en charge » (les admins voient tout, mais ne prennent pas de suivi), et le code de votre compte est redemandé à chaque ouverture de fiche. Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p></section>
+<div class="note proto" style="margin-top:18px" id="dnote"></div></section>
 
 <section id="v2" class="hide"><header class="ph0 pastel t2"><div class="tag">Planning</div><h1>Calendrier</h1><p class="sub">3 salles, créneaux d’1 h, du lundi au mercredi. Cliquez sur un <b>+</b> pour planifier.</p></header>
 <div class="wk"><button class="ib" id="wp" aria-label="Semaine précédente">‹</button><div class="t" id="wt"></div><button class="ib" id="wn" aria-label="Semaine suivante">›</button><button class="btn l s" id="wt0">Aujourd’hui</button></div>
@@ -455,7 +455,7 @@ aside{overflow:hidden!important}
 <div class="mkpis" id="pkp"></div>
 <div class="filters" id="ptabs"></div>
 <div class="tools"><input id="pq" type="search" placeholder="Rechercher une initiale ou un numéro…" aria-label="Rechercher un patient"><button class="btn s" id="padd">+ Ajouter une personne</button><button class="btn l s hide" id="pjrn">Journal des accès aux fiches</button></div>
-<p class="note" style="margin:0 0 14px" id="pnote">Pour protéger les patient·es, la liste n’affiche que l’initiale du prénom et un numéro. Le prénom, le mail et le téléphone ne se voient qu’en ouvrant la fiche, réservée au ou à la thérapeute qui suit la personne et aux admins ; chaque ouverture est notée.</p>
+<div class="note proto" style="margin:0 0 14px" id="pnote"></div>
 <div class="tbl" id="ptbl"></div></section>
 <section id="v5" class="hide"><header class="ph0 pastel t1"><div class="tag">Heures</div><h1>Activité</h1><p class="sub" id="asub">Heures de consultation et personnes accompagnées, pour chaque étudiant·e. Une séance réalisée = 1 h.</p></header><div class="filters ssw hide"></div>
 <div id="amy" class="hide"></div>
@@ -563,6 +563,12 @@ function ouvrir(id,cb){
  go.onclick=envoi;inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();envoi()}}}
 function clos(i){return i.statut==='terminee'||i.statut==='sans_suite'}
 function refus(i){return i.libre?'Cette demande n’est à personne : cliquez d’abord sur « Prendre en charge ».':'Cette fiche est suivie par '+cap(i.suiviPar||i.assigne)+'.'}
+(function(){var N='\u00a0',h='<b class="pt">Comment les données des patient·es sont protégées</b><ol>'+
+ '<li><b>La demande arrive sur la plateforme.</b> Elle apparaît dans «'+N+'Demandes'+N+'» sous une initiale et un numéro (par exemple «'+N+'M.'+N+'·'+N+'42'+N+'»), avec les jours qui conviennent à la personne. Dans les listes, tout le monde, admins compris, ne voit que ça : jamais le prénom, le mail ni le téléphone.</li>'+
+ '<li><b>Elle est attribuée à un·e étudiant·e psy.</b> De deux façons'+N+': l’étudiant·e clique sur «'+N+'Prendre en charge'+N+'» sur une demande qui n’est à personne, ou un·e admin l’attribue (champ «'+N+'Pris en charge par'+N+'» de la fiche, ou en planifiant un rendez-vous avec lui ou elle). Les admins ne suivent pas de patient·es.</li>'+
+ '<li><b>Dès lors, la fiche est verrouillée.</b> Seul·e l’étudiant·e qui suit la personne et les admins peuvent l’ouvrir, et à chaque ouverture il faut retaper le code de son compte (après 5 erreurs de suite, blocage de 10 minutes). Le prénom, le mail, le téléphone et les notes ne s’affichent qu’à ce moment-là.</li>'+
+ '<li><b>Chaque ouverture est notée.</b> Qui, quand, quelle fiche'+N+': les admins consultent ce journal depuis la page Patients.</li></ol>';
+ var p=$('pnote'),d=$('dnote');if(p)p.innerHTML=h;if(d)d.innerHTML=h+'<p class="pf">Dans les notes, n’écrivez que de l’organisationnel (créneaux, relances), jamais de détails de santé ou de situation personnelle. Supprimez une demande dès qu’elle n’a plus d’utilité.</p>'})();
 function logout(){token='';FULL={};FICHE_OUV=null;try{sessionStorage.clear()}catch(e){}$('app').classList.add('hide');$('login').classList.remove('hide')}
 function load(cb){api({action:'list'}).then(function(d){
  if(d._s===401&&token){logout();$('lerr').textContent=d.error;return}
