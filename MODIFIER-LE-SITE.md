@@ -51,7 +51,7 @@ Chaque rendez-vous passé se confirme depuis la plateforme (« Séance réalisé
 
 # Ressources
 
-Onglet « Ressources » de `/gestion` : les comptes principaux ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Les catégories s'affichent toujours pour tout le monde, même vides (une catégorie vide indique « Rien dans cette catégorie pour le moment »). Tous les comptes peuvent les télécharger. Stockage : Netlify Blobs, store « ressources ».
+Onglet « Ressources » de `/gestion`, le **drive commun de l'équipe** : tous les comptes (étudiant·es, superviseur·es, admins) ajoutent des fichiers (4 Mo maximum : PDF, Word, Excel, PowerPoint, image, texte) ou des liens, classés par catégorie (`CATS` dans `netlify/functions/gestion.mjs`). Les catégories s'affichent toujours pour tout le monde, même vides (une catégorie vide indique « Rien dans cette catégorie pour le moment »). Tous les comptes peuvent les télécharger. Chacun·e ne modifie ou ne supprime que ce qu'il ou elle a ajouté (« ajouté par … » est affiché sur chaque carte) ; les admins peuvent tout modifier et supprimer, ce qui sert de modération. Le formulaire rappelle de ne jamais déposer de données de patient·es. Droits côté serveur : actions `res_add`, `res_upd`, `res_del` dans `netlify/functions/gestion.mjs`. Stockage : Netlify Blobs, store « ressources ».
 
 # Messages
 

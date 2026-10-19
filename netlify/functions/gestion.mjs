@@ -1086,10 +1086,9 @@ export default async (req) => {
     return J({ ok: true, nom: m.nom, mime: m.mime, data: Buffer.from(buf).toString("base64") });
   }
   if (["res_add", "res_upd", "res_del"].includes(b.action)) {
-    if (!admin && !sup) return J({ error: "Réservé aux comptes principaux et aux superviseur·es." }, 403);
     const rs = getStore("ressources");
-    // Un·e superviseur·e peut déposer des documents et ne modifie ou supprime que les siens.
-    if (sup && b.action !== "res_add") { const m0 = await rs.get("m/" + String(b.id), { type: "json" }); if (!m0 || m0.par !== user) return J({ error: "Vous ne pouvez modifier que les documents que vous avez ajoutés." }, 403); }
+    // Drive commun : tout compte actif dépose des documents ou des liens ; chacun·e ne modifie ou ne supprime que les siens (les admins : tous).
+    if (!admin && b.action !== "res_add") { const m0 = await rs.get("m/" + String(b.id), { type: "json" }); if (!m0 || m0.par !== user) return J({ error: "Vous ne pouvez modifier que les documents que vous avez ajoutés." }, 403); }
     if (b.action === "res_del") { const id = String(b.id); await rs.delete("m/" + id); await rs.delete("f/" + id); return J({ ok: true }); }
     const titre = clean(b.titre, 120).trim(), description = clean(b.description, 500).trim(), categorie = CATS.includes(b.categorie) ? b.categorie : CATS[0];
     if (!titre) return J({ error: "Donnez un titre." }, 400);
