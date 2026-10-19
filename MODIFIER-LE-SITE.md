@@ -257,6 +257,17 @@ Le protocole est expliqué en quatre étapes numérotées, au-dessus de la liste
 - **Ce qui reste nominatif, volontairement** : le fichier de sauvegarde de la clôture d'année (téléchargé par un admin, avec avertissement) et le formulaire de la fiche ouverte. Les suivis terminés sont anonymisés à la clôture (« P001 »).
 - **Si une fiche manque** : si quelqu'un ne voit pas une fiche qui est la sienne, vérifier le champ « Pris en charge par » (admin : Demandes ou fiche ouverte). Si une fiche reste sans propriétaire, un·e admin peut l'assigner.
 
+### Réorienter un suivi vers un·e autre étudiant·e psy
+Bouton **Réorienter…** dans la fiche (Demandes et Patients), pour l'étudiant·e qui suit la personne et pour les admins (action `reorienter` dans `netlify/functions/gestion.mjs`).
+- **Motif obligatoire** (liste `MOTIFS_REO` : connaît la personne, indisponibilité, plus de place, demande de la personne, hors du cadre, autre), jamais de texte libre. Il n'est visible que des admins, dans le journal.
+- **Destination** : une collègue (étudiant·e psy active, jamais un admin) ou « Remettre à disposition de l'équipe » (la fiche redevient libre, statut « à recontacter », n'importe quel·le étudiant·e peut la « Prendre en charge »).
+- **Rendez-vous à venir** : transférés à la nouvelle personne (mêmes jour, heure, salle ; calendrier et agenda suivent) ou annulés avec libération du créneau en cas de remise à disposition. Refus si la nouvelle personne a déjà un rendez-vous ou une supervision à ce moment-là. Refus aussi si un rendez-vous est déjà passé sans avoir été clos (« réalisée » ou « absence ») : il faut le clore d'abord.
+- **Capacité** : si la capacité d'accueil est activée et que la nouvelle personne est au maximum, la réorientation est refusée pour une étudiante ; un·e admin peut forcer après confirmation.
+- **Mail à la personne** (case cochée par défaut, sans le motif) : modèle « Changement de psychologue » (`reorientation`), ou « Suivi repris par un·e autre étudiant·e » (`reorientation_attente`) quand la fiche est remise à disposition sans rendez-vous ; avec rendez-vous annulés, c'est le modèle « Annulation de rendez-vous » habituel. Tous modifiables dans Messages.
+- **Accès** : l'ancien·ne suiveur·e perd l'accès immédiatement ; le nouveau ou la nouvelle ouvre la fiche avec le code de son compte, comme d'habitude.
+- **Traçabilité** : chaque réorientation est inscrite dans le store `acces` (clés `t/…` : qui, quand, de qui vers qui, motif, nombre de rendez-vous, personne prévenue ou non) et s'affiche, avec les motifs, dans « Journal des accès aux fiches » (admins), onglet Excel « Réorientations » inclus.
+- Rappel du protocole en cinq étapes numérotées au-dessus des listes de Demandes et de Patients (étape 5).
+
 ## Annonces par public et programmation des supervisions
 **Annonces** : chaque annonce a un public (« Pour qui ? ») : étudiant·es psy (par défaut, y compris pour les anciennes annonces), superviseur·es, ou les deux (champ `pour` : `etudiants`, `superviseurs`, `tous`). Le filtrage se fait côté serveur (`annonce_list`, bloc annonces de `gestion.mjs`) ; les comptes superviseur peuvent lire les annonces et les marquer lues. Le suivi « lu par X sur N » se calcule sur le public visé.
 

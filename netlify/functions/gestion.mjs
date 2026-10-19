@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { createHmac, timingSafeEqual, createHash, scryptSync, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
-import { norm, vue, lundi, jourLong, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout, etiquette } from "../lib/rdv.mjs";
+import { norm, vue, lundi, jourLong, heureFr, SALLES, HEURES, JOURS, LIEU, weekday, cap, parisToUTC, chargerTout, etiquette } from "../lib/rdv.mjs";
 import { texte, chargerModeles, DEFAUTS, VARIABLES, variables, rendre, manquants } from "../lib/modeles.mjs";
 import { envoyer, mailReady } from "../lib/mail.mjs";
 import { randomUUID } from "node:crypto";
@@ -65,6 +65,8 @@ const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: 
 const h = (x) => createHash("sha256").update(String(x)).digest();
 const STATUTS_PRES = ["present", "retard", "excuse", "absent"];
 const CATS = ["Documents", "Modèles", "Protocoles", "Formation", "Liens utiles"];
+// Réorientation d'un suivi vers un·e autre étudiant·e psy : motifs proposés (le motif n'est visible que des admins, dans le journal).
+const MOTIFS_REO = { connait: "Connaît la personne (conflit d’intérêts)", indispo: "Indisponibilité (examens, départ, maladie)", complet: "Plus de place", demande: "Demande de la personne", cadre: "Situation hors du cadre de CAPSULE", autre: "Autre" };
 const MIMES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", odt: "application/vnd.oasis.opendocument.text", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", txt: "text/plain" };
 const MAX_FICHIER = 4 * 1024 * 1024;
 const ROLES = ["etudiant", "admin"];
@@ -507,7 +509,7 @@ export default async (req) => {
     for (const n of TECH) delete contacts[n]; // Service technique : photo, titre et présentation seulement, pas de coordonnées
     const roles = await rolesMap();
     const IVP = admin ? await IV.chargerPieces().catch(() => IV.PIECES_DEFAUT) : null;
-    return J({ ok: true, items, capacite, compte: user, alias: await aliasMap(), admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
+    return J({ ok: true, items, capacite, compte: user, alias: await aliasMap(), admin, role, roles, technique: TECH.includes(user), techniques: TECH, photos, titres, bios, contacts, ressources, monDossier: sup ? await monDossier(user) : null, intervAttente: admin ? await IV.lister().then((l) => l.filter((r) => !r.valide && IV.progression(r, IVP).complet).length).catch(() => 0) : 0, equipe: Object.keys(roles).filter((k) => roles[k] !== "superviseur"), superviseurs: Object.keys(roles).filter((k) => roles[k] === "superviseur" || roles[k] === "admin"), cfg: { motifsReo: MOTIFS_REO, heuresSup: HEURES_SUP, durees: DUREES, categories: CATS, seancesMax: 8, salles: SALLES, heures: HEURES, jours: JOURS, lieu: LIEU, mail: mailReady(), calUrl: process.env.CAL_TOKEN ? "/api/calendrier.ics?k=" + process.env.CAL_TOKEN : "" } });
   }
 
   const key = async (id) => { const { blobs } = await store.list({ prefix: "d/" }); const k = blobs.find((x) => x.key.endsWith("_" + id)); return k && k.key; };
@@ -550,7 +552,8 @@ export default async (req) => {
     if (!admin) return J({ error: "Réservé aux admins." }, 403);
     const as = getStore({ name: "acces", consistency: "strong" }), { blobs } = await as.list({ prefix: "a/" });
     const l = (await Promise.all(blobs.sort((x, y) => y.key.localeCompare(x.key)).slice(0, 500).map((x) => as.get(x.key, { type: "json" })))).filter(Boolean);
-    return J({ ok: true, acces: l, total: blobs.length });
+    const { blobs: tb } = await as.list({ prefix: "t/" }), transferts = (await Promise.all(tb.sort((x, y) => y.key.localeCompare(x.key)).slice(0, 200).map((x) => as.get(x.key, { type: "json" })))).filter(Boolean);
+    return J({ ok: true, acces: l, total: blobs.length, transferts, motifs: MOTIFS_REO });
   }
   if (b.action === "planifier") {
     const all = await chargerTout(store);
@@ -609,6 +612,55 @@ export default async (req) => {
     return J({ ok: true, ...sortie(r), mail });
   }
 
+  if (b.action === "reorienter") { // la personne qui suit (ou un·e admin) passe le suivi à une collègue ou le remet à disposition ; les rendez-vous à venir suivent
+    const all = await chargerTout(store), cur = all.find((x) => x.rec.id === String(b.id)); if (!cur) return J({ error: "Demande introuvable." }, 404);
+    const r = cur.rec;
+    if (!droit(r)) return nonAutorise(r);
+    const de = proprio(r), vers = clean(b.vers, 40).toLowerCase(), motif = Object.keys(MOTIFS_REO).includes(b.motif) ? b.motif : "";
+    if (!de) return J({ error: "Cette demande n’est à personne : il n’y a rien à réorienter." }, 409);
+    if (clos(r)) return J({ error: "Ce suivi est clos : il n’y a rien à réorienter." }, 409);
+    if (!motif) return J({ error: "Choisissez un motif." }, 400);
+    if (vers) {
+      if (vers === de) return J({ error: cap(vers) + " suit déjà cette personne." }, 400);
+      if (!(await CP.etudiants()).includes(vers)) return J({ error: "Choisissez un·e étudiant·e psy." }, 400);
+    }
+    const passes = r.rdvs.filter((x) => parisToUTC(x.date, x.heure) < Date.now());
+    if (passes.length) return J({ error: "Le rendez-vous du " + jourLong(passes[0].date) + " est passé : indiquez d’abord s’il a eu lieu ou si la personne était absente, puis réorientez." }, 409);
+    if (vers) {
+      const autres = all.filter((x) => x.rec.id !== r.id).flatMap((x) => x.rec.rdvs);
+      const ss = getStore("supervisions"), { blobs: sb } = await ss.list(), sv = (await Promise.all(sb.map((x) => ss.get(x.key, { type: "json" })))).filter(Boolean);
+      for (const x of r.rdvs) {
+        if (autres.some((y) => y.date === x.date && y.heure === x.heure && y.therapeute === vers)) return J({ error: cap(vers) + " a déjà un rendez-vous le " + jourLong(x.date) + " à " + heureFr(x.heure) + " : réorientez vers quelqu’un d’autre, ou déplacez d’abord ce rendez-vous." }, 409);
+        const v = sv.find((q) => q.date === x.date && (q.participants || []).includes(vers) && mn(q.heure) < mn(x.heure) + 60 && mn(x.heure) < mn(q.heure) + q.duree);
+        if (v) return J({ error: cap(vers) + " est en supervision de " + v.heure + " à " + fin(v.heure, v.duree) + " le " + jourLong(x.date) + " : réorientez vers quelqu’un d’autre, ou déplacez d’abord ce rendez-vous." }, 409);
+      }
+      const cfgCap = await CP.chargerCfg();
+      if (cfgCap.actif && CP.enSuivi(r)) {
+        const max = cfgCap.parEtudiant[vers] || cfgCap.defaut, suivies = all.filter((x) => x.rec.id !== r.id && CP.enSuivi(x.rec) && x.rec.assigne === vers).length;
+        if (suivies >= max && !(admin && b.confirmerCapacite)) return J({ error: cap(vers) + " suit déjà " + suivies + " personne" + (suivies > 1 ? "s" : "") + " (maximum " + max + ").", alerteCapacite: true, peutForcer: admin }, 409);
+      }
+    }
+    const now = new Date().toISOString(), rdvs = [...r.rdvs], prevenir = b.prevenir === true && !!r.email; let mail = "non_envoye";
+    if (vers) {
+      r.assigne = vers;
+      for (const x of rdvs) { x.therapeute = vers; x.seq = (x.seq || 0) + 1; x.rappelEnvoye = false; }
+      if (prevenir) mail = await mailMsg(async () => { const v = { ...(rdvs[0] ? vue(r, rdvs[0]) : r), therapeute: vers }; await envoyer(v, await texte("reorientation", v), null, { modele: "reorientation", par: user, type: "auto" }); });
+    } else {
+      r.assigne = "";
+      const avertir = [];
+      for (const x of rdvs) { x.seq = (x.seq || 0) + 1; if (prevenir && x.invitEnvoyee) avertir.push(x); }
+      r.rdvs = [];
+      if (["rdv_fixe", "en_cours"].includes(r.statut)) r.statut = "a_recontacter";
+      if (prevenir) mail = await mailMsg(async () => {
+        if (avertir.length) for (const x of avertir) { const v = vue(r, x); await envoyer(v, await texte("annulation", v), "CANCEL", { modele: "annulation", par: user, type: "auto" }); }
+        else await envoyer(r, await texte("reorientation_attente", r), null, { modele: "reorientation_attente", par: user, type: "auto" });
+      });
+    }
+    r.maj = now; r.majPar = user;
+    await store.setJSON(cur.key, r);
+    try { await getStore({ name: "acces", consistency: "strong" }).setJSON("t/" + now + "_" + randomUUID().slice(0, 8), { le: now, par: user, patient: r.id, ref: etiquette(r), de, vers, motif, rdv: rdvs.length, prevenu: mail === "envoye" }); } catch (e) { console.error("journal des réorientations", e.message); }
+    return J({ ok: true, ...sortie(r), mail, rdv: rdvs.length });
+  }
   if (b.action === "demandes_mois") { // historique des demandes par mois (admins) : voir netlify/lib/compteur.mjs
     if (!admin) return J({ error: "Réservé aux administrateurs." }, 403);
     return J({ ok: true, ...(await CO.parMois()) });
