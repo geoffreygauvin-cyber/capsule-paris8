@@ -13,11 +13,59 @@
   function jour(s) { var t = new Date(s); return isNaN(t) ? '' : t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
   function sd(s) { var t = new Date(s + 'T12:00:00'); return isNaN(t) ? s : t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
+
+  /* ---------- Démo (compte « Services techniques » en mode superviseur·e) ----------
+     Ce compte n'a pas de vrai dossier : on lui montre un exemple fictif, modifiable à l'écran mais jamais envoyé au serveur.
+     Désactivée dès qu'un vrai dossier existe (window.CAPSULE.dos()), donc sans effet pour les superviseur·es. */
+  var DEMO = null;
+  function demoOn() { var c = C(); return !!(c && c.tech && c.tech() && c.mode && c.mode() === 'sup' && !(c.dos && c.dos())); }
+  function iso(j) { return new Date(Date.now() - j * 864e5).toISOString(); }
+  function ymd(j) { return iso(j).slice(0, 10); }
+  function fauxDoc(id, j) { return { nom: id + '-exemple.pdf', taille: 184320, le: iso(j) }; }
+  function demoInit(valide) {
+    var P = [
+      { id: 'devis', label: 'Devis', aide: 'Devis signé pour la mission', obl: true },
+      { id: 'rib', label: 'RIB', aide: 'Relevé d’identité bancaire', obl: true },
+      { id: 'kbis', label: 'Kbis ou avis de situation SIRENE', aide: 'De moins de 3 mois', obl: true },
+      { id: 'identite', label: 'Pièce d’identité', aide: 'Recto et verso, en cours de validité', obl: true },
+      { id: 'urssaf', label: 'Attestation de vigilance URSSAF', aide: 'Attestation à jour', obl: true },
+      { id: 'assurance', label: 'Assurance responsabilité civile professionnelle', aide: '', obl: false }
+    ];
+    P.forEach(function (p) { p.doc = (valide || p.id === 'devis' || p.id === 'rib') ? fauxDoc(p.id, valide ? 12 : 2) : null; });
+    DEMO = { valide: !!valide, pieces: P };
+  }
+  function demoDossier() {
+    if (!DEMO) demoInit(false);
+    var manque = DEMO.pieces.filter(function (p) { return p.obl && !p.doc; }), n = new Date(), y = n.getMonth() >= 8 ? n.getFullYear() : n.getFullYear() - 1;
+    return {
+      nom: 'Exemple', complet: !manque.length, manquantes: manque.map(function (p) { return p.label; }), valide: DEMO.valide ? iso(3) : null, tarif: 80, pieces: DEMO.pieces,
+      seances: { faites: 6, avenir: 3, heures: 9, heuresAvenir: 4.5, debut: y + '-09', fin: (y + 1) + '-08' },
+      argent: { tarif: 80, du: 720, paye: 480, aPayer: 240, reste: 240 },
+      reglements: [{ date: ymd(40), libelle: 'Supervision de groupe · septembre', montant: 480, statut: 'payee' }, { date: ymd(5), libelle: 'Supervision de groupe · octobre', montant: 240, statut: 'a_payer' }]
+    };
+  }
+  function demoBar() {
+    var v = DEMO && DEMO.valide;
+    return '<div class="mdb demo"><b>Exemple fictif</b><p>Ce compte n’a pas de vrai dossier : voici ce que voit un·e superviseur·e. Les boutons fonctionnent à l’écran, mais rien n’est envoyé ni enregistré. Tant que le dossier n’est pas validé, la personne ne voit que cette page (le menu est réduit à « Mon dossier »).</p>' +
+      '<span class="filters" style="margin:10px 0 0"><button type="button" class="chip' + (v ? '' : ' on') + '" data-ds="0">Dossier à compléter</button><button type="button" class="chip' + (v ? ' on' : '') + '" data-ds="1">Dossier validé</button></span></div>';
+  }
+  function demoClick(ev) {
+    var b = ev.target.closest('[data-ds]');
+    if (b) { demoInit(b.getAttribute('data-ds') === '1'); draw(); return; }
+    b = ev.target.closest('[data-du]');
+    if (b) {
+      var id = b.getAttribute('data-du'); DEMO.pieces.forEach(function (p) { if (p.id === id) p.doc = fauxDoc(id, 0); });
+      draw(); C().toast('Exemple : aucun fichier n’est envoyé.'); return;
+    }
+    b = ev.target.closest('[data-dd]');
+    if (b) { var k = b.getAttribute('data-dd'); DEMO.pieces.forEach(function (p) { if (p.id === k) p.doc = null; }); draw(); }
+  }
+
   function css() {
     if (document.getElementById('mdcss')) return;
     var s = document.createElement('style'); s.id = 'mdcss';
     s.textContent =
-      '.mdb{border-radius:18px;padding:16px 20px;margin:0 0 18px;border:1.5px solid var(--line,#EBDDD6);background:var(--paper,#fff)}.mdb b{display:block;font-size:16px;margin-bottom:2px}.mdb.ok{background:#EEF7EE;border-color:#9CCBA0}.mdb.wait{background:#FFF4DE;border-color:#E0AA3E}.mdb.ko{background:#FDE9EA;border-color:#E58A92}.mdb p{margin:4px 0 0;color:var(--muted,#6B5861);font-size:14px;line-height:1.5}' +
+      '.mdb{border-radius:18px;padding:16px 20px;margin:0 0 18px;border:1.5px solid var(--line,#EBDDD6);background:var(--paper,#fff)}.mdb b{display:block;font-size:16px;margin-bottom:2px}.mdb.ok{background:#EEF7EE;border-color:#9CCBA0}.mdb.wait{background:#FFF4DE;border-color:#E0AA3E}.mdb.ko{background:#FDE9EA;border-color:#E58A92}.mdb.demo{background:var(--lilac,#EADCF0);border:1.5px dashed var(--rasp,#AE164E)}.mdb.demo b{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--rasp,#AE164E)}.mdb p{margin:4px 0 0;color:var(--muted,#6B5861);font-size:14px;line-height:1.5}' +
       '.mdl{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:10px}.mdl li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--paper,#fff);border:1px solid var(--line,#EBDDD6);border-radius:16px;padding:12px 16px}.mdl li.y{border-color:#9CCBA0}' +
       '.mdl .ck{width:26px;height:26px;border-radius:50%;border:2px solid #D8C9C2;display:grid;place-items:center;font-size:14px;color:#fff}.mdl li.y .ck{background:#4E9B57;border-color:#4E9B57}.mdl b{display:block;font-size:15px}.mdl small{display:block;color:var(--muted,#6B5861);font-size:12.5px;overflow-wrap:anywhere}.mdl .tg{font-size:11px;font-weight:600;border-radius:99px;padding:1px 9px;background:#F1E9E4;color:#6B5861;margin-left:6px}' +
       '.mdl .ac{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.mdl input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}' +
@@ -29,7 +77,7 @@
 
   function draw() {
     if (!box) return;
-    var d = C().dos && C().dos();
+    var demo = demoOn(), d = demo ? demoDossier() : (C().dos && C().dos());
     if (!d) { box.innerHTML = '<div class="empty"><b>Aucun dossier</b>Ce compte n’est pas rattaché à un dossier d’intervenant·e.</div>'; return; }
     var manque = d.pieces.filter(function (p) { return p.obl && !p.doc; }), lock = !!d.valide;
     var ban = d.valide ? '<div class="mdb ok"><b>✓ Dossier validé</b><p>Validé le ' + e(jour(d.valide)) + '. Toute la plateforme est ouverte et vos paiements peuvent être traités. Vous pouvez remplacer une pièce (nouveau RIB, nouvelle attestation…) ; pour en retirer une, contactez la coordination.</p></div>'
@@ -38,8 +86,9 @@
     var pcs = '<h3 class="hh" style="margin-top:0">Mes pièces justificatives</h3><ul class="mdl">' + d.pieces.map(function (p) {
       var id = 'mdf_' + p.id;
       return '<li class="' + (p.doc ? 'y' : '') + '"><span class="ck">' + (p.doc ? '✓' : '') + '</span><div><b>' + e(p.label) + '<span class="tg">' + (p.obl ? 'obligatoire' : 'facultatif') + '</span></b>' + (p.doc ? '<small>' + e(p.doc.nom) + ' · ' + taille(p.doc.taille) + ' · déposé le ' + e(jour(p.doc.le)) + '</small>' : (p.aide ? '<small>' + e(p.aide) + '</small>' : '')) + '</div><div class="ac">' +
-        '<input type="file" id="' + id + '" data-p="' + e(p.id) + '" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"><label for="' + id + '" class="btn s' + (p.doc ? ' l' : '') + '" role="button" tabindex="0">' + (busy === p.id ? 'Envoi…' : p.doc ? 'Remplacer' : 'Choisir un fichier') + '</label>' +
-        (p.doc && !lock ? '<button class="link" data-del="' + e(p.id) + '" type="button">Supprimer</button>' : '') + '</div></li>';
+        (demo ? '<button type="button" class="btn s' + (p.doc ? ' l' : '') + '" data-du="' + e(p.id) + '">' + (p.doc ? 'Remplacer' : 'Choisir un fichier') + '</button>'
+          : '<input type="file" id="' + id + '" data-p="' + e(p.id) + '" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"><label for="' + id + '" class="btn s' + (p.doc ? ' l' : '') + '" role="button" tabindex="0">' + (busy === p.id ? 'Envoi…' : p.doc ? 'Remplacer' : 'Choisir un fichier') + '</label>') +
+        (p.doc && !lock ? '<button class="link" ' + (demo ? 'data-dd' : 'data-del') + '="' + e(p.id) + '" type="button">Supprimer</button>' : '') + '</div></li>';
     }).join('') + '</ul><p class="sub">Formats acceptés : PDF, image (JPG, PNG) ou Word, 4 Mo maximum par pièce. Vos documents ne sont consultables que par la coordination.</p>';
     var fin = '';
     if (d.valide) {
@@ -49,7 +98,7 @@
         '<p class="sub">Calculé sur vos séances de supervision (groupe et individuelles) du ' + e(S.debut) + ' au ' + e(S.fin) + ' (année universitaire). Les réunions ne sont pas facturées. Le détail séance par séance est dans « Mon récap ».</p>';
       if (d.reglements.length) fin += '<h3 class="hh">Mes règlements</h3><div class="smtw"><table class="mdr"><tbody>' + d.reglements.map(function (r) { return '<tr><td>' + e(sd(r.date)) + '</td><td>' + e(r.libelle) + '</td><td class="' + (r.statut === 'payee' ? 'p' : 'a') + '">' + (r.statut === 'payee' ? 'réglé' : 'à régler') + '</td><td>' + eur(r.montant) + '</td></tr>'; }).join('') + '</tbody></table></div>';
     }
-    box.innerHTML = ban + pcs + fin;
+    box.innerHTML = (demo ? demoBar() : '') + ban + pcs + fin;
   }
 
   function lire(f, cb) {
@@ -63,10 +112,12 @@
     if (el !== box) {
       box = el;
       el.onchange = function (ev) {
+        if (demoOn()) return;
         var i = ev.target; if (!i.dataset || !i.dataset.p || !i.files[0]) return; var f = i.files[0], p = i.dataset.p; busy = p; draw();
         lire(f, function (data) { C().api({ action: 'dossier_up', piece: p, nom: f.name, data: data }).then(function (d) { busy = ''; maj(d, 'Pièce déposée.'); }); });
       };
       el.onclick = function (ev) {
+        if (demoOn()) { demoClick(ev); return; }
         var b = ev.target.closest('[data-del]'); if (!b) return;
         if (confirm('Retirer cette pièce de votre dossier ?')) C().api({ action: 'dossier_del', piece: b.dataset.del }).then(function (d) { maj(d, 'Pièce retirée.'); });
       };

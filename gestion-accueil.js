@@ -17,7 +17,11 @@
   /* étape « règlement » : signée dans la fenêtre du règlement (gestion-reglement.js) ; elle n'apparaît qu'une fois le texte publié par un·e admin */
   var REGSTEP = { id: 'reglement', auto: true, sign: true, t: 'Lire et signer le règlement intérieur', d: 'Les règles de l’équipe, à commencer par la confidentialité.', go: 'Lire et signer', short: 'règlement' };
   var regPub = false;
-  function steps() { return regPub ? [REGSTEP].concat(BASE) : BASE; }
+  /* Démo : le compte « Services techniques » (Alfred) en mode étudiant·e voit un exemple fictif du parcours, modifiable à l'écran, jamais envoyé au serveur. */
+  function demo() { var c = C(); return !!(c && c.tech && c.tech() && c.mode && c.mode() === 'etu'); }
+  var dst = null;
+  function demoState() { if (!dst) dst = { photo: true, charte: new Date().toISOString() }; return dst; }
+  function steps() { return (regPub || demo()) ? [REGSTEP].concat(BASE) : BASE; }
   var mine = null, team = null, fetching = false;
   function $(i) { return document.getElementById(i); }
   function e(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -50,6 +54,7 @@
       '.accck:hover{background:var(--rose,#F9DEE5)}.accck[aria-pressed=true]{background:var(--rasp,#AE164E)}.accck[aria-pressed=true] svg{opacity:1}' +
       '.accck.auto{cursor:default;border-color:rgba(174,22,78,.4)}.accck.auto:hover{background:#fff}.accck.auto[aria-pressed=true]:hover{background:var(--rasp,#AE164E)}' +
       '.accl .btn.s{flex:none;white-space:nowrap}' +
+      '.accdemo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 14px;padding:8px 12px;border-radius:12px;border:1.5px dashed var(--rasp,#AE164E);background:rgba(255,255,255,.55);font-size:13px}.accdemo b{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--rasp,#AE164E)}' +
       '@media(max-width:640px){.accbox{padding:16px 14px 8px}.accl li{flex-wrap:wrap}.accl li>div{flex-basis:calc(100% - 44px)}.accl .btn.s{margin-left:40px}}' +
       '.eqacc{margin:0 0 16px;border:1px solid var(--line,#EBDDD6);border-radius:18px;background:var(--paper,#fff);padding:4px 18px}.eqacc summary{cursor:pointer;list-style:none;padding:12px 0;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.eqacc summary::-webkit-details-marker{display:none}' +
       '.eqacc summary:before{content:"▸";color:var(--rasp,#AE164E)}.eqacc[open] summary:before{content:"▾"}.eqacc summary small{font-weight:500;color:var(--muted,#6B5861)}' +
@@ -65,12 +70,14 @@
   /* ---------- carte étudiant·e (Accueil) ---------- */
   function drawMine() {
     var head = document.querySelector('#v11 > header'), box = $('hacc'); if (!head || !C()) return;
-    if (!isStu() || !mine) { if (box) box.remove(); return; }
-    var st = live(), n = count(st);
-    if (n === steps().length) { if (box) box.remove(); return; }
+    var dm = demo();
+    if (!dm && (!isStu() || !mine)) { if (box) box.remove(); return; }
+    var st = dm ? demoState() : live(), n = count(st);
+    if (!dm && n === steps().length) { if (box) box.remove(); return; }
     css();
     if (!box) { ($('hsav') || head).insertAdjacentHTML('afterend', '<div class="accbox" id="hacc"></div>'); box = $('hacc'); }
-    box.innerHTML = '<div class="acch"><div><span class="acck">Parcours d’accueil</span><h3>Bienvenue dans l’équipe</h3></div><b class="accn">' + n + ' / ' + steps().length + '</b></div>' +
+    box.innerHTML = (dm ? '<div class="accdemo"><span><b>Exemple fictif</b> \u00b7 ce que voit un·e nouvel·le étudiant·e. Rien n’est enregistré.</span><button type="button" class="btn l s" data-ademo="reset">Recommencer l’exemple</button></div>' : '') +
+      '<div class="acch"><div><span class="acck">Parcours d’accueil</span><h3>Bienvenue dans l’équipe</h3></div><b class="accn">' + n + ' / ' + steps().length + '</b></div>' +
       '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="' + steps().length + '" aria-valuenow="' + n + '"><i style="width:' + Math.round(100 * n / steps().length) + '%"></i></div>' +
       '<ul class="accl">' + steps().map(function (s) {
         var ok = done(st, s.id);
@@ -126,7 +133,14 @@
 
   document.addEventListener('click', function (ev) {
     var c = C(); if (!c) return;
+    var rz = ev.target.closest && ev.target.closest('#hacc [data-ademo]');
+    if (rz && demo()) { dst = null; drawMine(); return; }
     var t = ev.target.closest && ev.target.closest('#hacc [data-as]');
+    if (t && demo()) {
+      var k0 = t.getAttribute('data-as'), st0 = demoState(); st0[k0] = st0[k0] ? '' : new Date().toISOString(); drawMine();
+      if (count(st0) === steps().length) c.toast('Exemple\u00a0: à la fin du parcours, la carte disparaît de l’Accueil.');
+      return;
+    }
     if (t) {
       var k = t.getAttribute('data-as'), prev = mine && mine[k] || '', on = !prev;
       mine = mine || {}; mine[k] = on ? new Date().toISOString() : ''; drawMine();
@@ -138,6 +152,7 @@
     }
     var g = ev.target.closest && ev.target.closest('#hacc [data-ag]'); if (!g) return;
     var s = g.getAttribute('data-ag');
+    if (demo() && (s === 'photo' || s === 'bio' || s === 'reglement')) { c.toast('Exemple\u00a0: ici s’ouvre ' + (s === 'reglement' ? 'le règlement intérieur, à lire et signer.' : 'ton profil (photo et présentation).')); return; }
     if (s === 'photo' || s === 'bio') c.profil();
     else if (s === 'charte') { if (window.charteTab) window.charteTab('charte'); c.nav(13); }
     else if (s === 'modeles') { if (window.charteTab) window.charteTab('ppt'); c.nav(13); }
@@ -148,7 +163,11 @@
   /* le règlement vient d'être signé ou publié : on relit l'avancement */
   document.addEventListener('cap-reglement', function () { if (isStu()) load(); });
 
-  window.accLoad = function () { if (isStu()) load(); };
+  window.accLoad = function () {
+    if (demo()) { drawMine(); return; }
+    var b = $('hacc'); if (b && !isStu()) b.remove(); /* on quitte le mode étudiant·e de la démo */
+    if (isStu()) load();
+  };
   window.accAdmin = function () {
     if (C() && C().admin()) { if (team) drawTeam(); load(); } else { var b = $('eqacc'); if (b) b.remove(); }
   };
