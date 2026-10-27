@@ -2,6 +2,20 @@
   publish = "."
   functions = "netlify/functions"
 
+# Sous-domaine passe-ton-stage.capsule-paris8.fr : même site Netlify, contenu du dossier /stage.
+# L'accueil du sous-domaine est forcé (sinon il afficherait l'index.html de CAPSULE) ; les autres adresses
+# du sous-domaine cherchent d'abord dans /stage. Voir MODIFIER-LE-SITE.md, section « Sous-domaine passe-ton-stage ».
+[[redirects]]
+  from = "https://passe-ton-stage.capsule-paris8.fr/"
+  to = "/stage/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://passe-ton-stage.capsule-paris8.fr/*"
+  to = "/stage/:splat"
+  status = 200
+
 [[redirects]]
   from = "/gestion"
   to = "/gestion.html"
@@ -42,3 +56,9 @@
   for = "/charte/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/stage/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
